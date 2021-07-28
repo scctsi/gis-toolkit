@@ -12,13 +12,15 @@ The GIS toolkit also guides institutions on how they can integrate this with dat
 
 ## Components
 The GIS toolkit has three main components:
-* Python program:
-* Guides:
-  * Integrating with the [Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM)](https://www.ohdsi.org/data-standardization/the-common-data-model/)
-  * Integrating with the i2b2 CDM
-* Utility to help extend the i2b2 ontology 
+1. Python program
+2. Guides
+   * Integrating with the [Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM)](https://www.ohdsi.org/data-standardization/the-common-data-model/)
+   * Integrating with the i2b2 CDM
+3. Excel utility to help extend an i2b2 ontology 
 
 ## Instructions on using the Python program
+
+## Typical enhancement workflow
 
 ## Who developed it
 The GIS Toolkit was developed at the Southern California Clinical and Translational Institute [(SC CTSI)](https://www.sc-ctsi.org) in collaboration with ...
