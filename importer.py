@@ -14,13 +14,13 @@ def import_file(full_file_path):
 
     if file_extension == '.csv':
         try:
-            input_data_frame = pd.read_csv(full_file_path, dtype='str')
+            input_data_frame = pd.read_csv(full_file_path, dtype=str)
         except IOError:
             print(f"There was an error opening file {full_file_path}. It might be open in another program. "
                   f"Please close the program keeping the file open and try again.")
     elif file_extension == '.xls' or file_extension.lower() == '.xlsx':
         try:
-            input_data_frame = pd.read_excel(full_file_path, dtype='str')
+            input_data_frame = pd.read_excel(full_file_path, dtype=str)
         except IOError:
             print(f"There was an error opening file {full_file_path}. It might be open in Excel. "
                   f"Please close Excel and try again.")

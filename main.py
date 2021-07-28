@@ -14,7 +14,9 @@ def load_data_files():
         sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
     }
 
-    print(data_files[sds.SedohDataSource.sds.SedohDataSource.CalEPA_CES][0].head())
+    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
+    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
+    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
 
     return data_files
 
@@ -40,7 +42,7 @@ def main():
     # # Step 3: Export the enhanced data. Currently supports .csv, .xls, .xlsx
     # # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     exporter.export_file(enhanced_data_frame, "./output/geocoded.xlsx")
-    print("Exported file located at ./output/geocoded.xlsx")
+    print("Exported enhanced file to ./output/geocoded.xlsx")
 
     # test_data_element = DataElement(sedoh_data_structure.SedohDataSource.ACS, "Gini Inequality Coefficient",
     #                                 "gini_inequality_coefficient", "B19083_001E", GetStrategy.PUBLIC_API)
