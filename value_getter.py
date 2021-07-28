@@ -8,15 +8,26 @@ from sedoh_data_structure import SedohDataSource
 
 load_dotenv()
 
+
 # Note on naming scheme: parameters = named variables passed to a function,
 #                        arguments = expressions used when calling the function,
 #                        options = optional arguments which allow yoy to customize the function
 
 
-def get_value(data_element, arguments):
+def get_value(data_element, arguments, data_files):
     if data_element.source == SedohDataSource.ACS:
-        if data_element.get_strategy == GetStrategy.PUBLIC_API:
+        if data_element.get_strategy == GetStrategy.PRIVATE_API:
             return get_acs_value(data_element.source_variable, arguments)
+        elif data_element.get_strategy == GetStrategy.CALCULATION:
+            return None
+        else:
+            return None
+            # TODO: raise error
+    elif data_element.get_strategy == GetStrategy.FILE:
+        return get_file_value(data_element.source_variable,
+                              arguments,
+                              data_files[data_element.source][0],
+                              data_files[data_element.source][1])
 
 
 # ACS specific methods
@@ -25,7 +36,7 @@ def construct_geography_argument(arguments):
         state_code = arguments['state_code']
         county_code = arguments['county_code']
         tract_code = arguments['tract_code']
-    elif "fips_concatenated_code" in arguments: # TODO: Ask Beau for better name
+    elif "fips_concatenated_code" in arguments:  # TODO: Come up with better name for fips_concatenated_code
         state_code = arguments["fips_concatenated_code"][0:2]
         county_code = arguments["fips_concatenated_code"][2:5]
         tract_code = arguments["fips_concatenated_code"][5:11]
@@ -47,7 +58,7 @@ def get_acs_dataset_name(variable_name):
         return "acs/acs5"
 
 
-def get_acs_value(variable_name, arguments):
+def get_acs_value(source_variable, arguments):
     # census_api_interpolation_string = \
     #     "https://api.census.gov/data/2018/acs/acs5?get=NAME,B19083_001E,B19083_001M&for=tract:*&in=state:06"
 
@@ -56,8 +67,8 @@ def get_acs_value(variable_name, arguments):
     api_parameters = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
-        "dataset_name": get_acs_dataset_name(variable_name),
-        "variables": variable_name,
+        "dataset_name": get_acs_dataset_name(source_variable),
+        "variables": source_variable,
         "geographies": construct_geography_argument(arguments),
         "key": os.getenv("census_api_key")
     }
@@ -69,8 +80,8 @@ def get_acs_value(variable_name, arguments):
 
 
 # API specific methods
-def construct_api_url(interpolation_string, parameters):
-    return interpolation_string.format(**parameters)
+def construct_api_url(interpolation_string, arguments):
+    return interpolation_string.format(**arguments)
 
 
 def get_api_response(url):
@@ -95,20 +106,14 @@ def get_api_value(url):
     return truncated_response[0][0]
 
 
-# def get_api_values(response, has_header_row=False):
-#     # Sample FIPS code: '06001400100'
-#     api_values = []
-#
-#     response_json = response.json()
-#
-#     if has_header_row:
-#         processed_json = get_header_row_and_truncated_json(response_json)
-#         header_row = processed_json[0]
-#         response_json = processed_json[1]
-#
-#         for row in response_json:
-#             for header_column, index in enumerate(header_row):
-#                 a = 1
-#
-#     # print(response_json)
-#     return 0
+# File specific methods
+def get_file_value(source_variable, arguments, data_file, data_file_search_column_name):
+    # TODO: Fix the naming and the intent of this function
+    indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
+
+    if len(indexes) == 0:
+        return "Missing"
+    elif len(indexes) == 1:
+        return data_file.iloc[indexes[0]][source_variable]
+    else:
+        return "Error"

@@ -3,9 +3,10 @@ import progress_bar
 
 
 class DataFrameEnhancer:
-    def __init__(self, data_frame, data_elements):
+    def __init__(self, data_frame, data_elements, data_files):
         self.data_frame = data_frame
         self.data_elements = data_elements
+        self.data_files = data_files
 
     def add_data_elements(self):
         for data_element in self.data_elements:
@@ -17,7 +18,7 @@ class DataFrameEnhancer:
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index]['SPATIAL_GEOID']}
             for data_element in self.data_elements:
                 self.data_frame.iloc[index][data_element.variable_name] = \
-                    value_getter.get_value(data_element, arguments)
+                    value_getter.get_value(data_element, arguments, self.data_files)
 
     def enhance(self):
         self.add_data_elements()
