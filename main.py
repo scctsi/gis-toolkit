@@ -5,6 +5,9 @@ import value_getter
 import importer
 import exporter
 
+sedoh_data_elements = sds.SedohDataElements()
+print(len(sedoh_data_elements.data_elements))
+
 
 def load_data_files():
     data_files = {
@@ -22,7 +25,9 @@ def load_data_files():
 
 
 def main():
-    sedoh_data_elements = sds.SedohDataElements()
+    data_elements = sds.SedohDataElements().filtered_data_elements(sds.SedohDataSource.USDA)
+
+    # elements = sds.SedohDataElements().data_elements
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
     data_files = load_data_files()
@@ -35,7 +40,7 @@ def main():
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, sedoh_data_elements.data_elements, data_files)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files)
     enhanced_data_frame = sedoh_enhancer.enhance()
     print("Finished enhancement with SEDoH data")
 

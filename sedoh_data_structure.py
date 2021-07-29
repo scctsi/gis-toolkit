@@ -221,11 +221,17 @@ class SedohDataElements:
             DataElement(SedohDataSource.USDA,
                         "Food - Fraction of Population with Low Access",
                         "food_fraction_of_population_with_low_access",
-                        "...",
-                        GetStrategy.CALCULATION),
+                        ["Urban", "lapop1shar", "lapop10sha"],
+                        GetStrategy.FILE_AND_CALCULATION),
             DataElement(SedohDataSource.USDA,
                         "Food - Low-Access Tract",
                         "food_low_access_tract",
                         "LA1and10",
                         GetStrategy.FILE),
         ]
+
+    def filtered_data_elements(self, data_source):
+        filtered_data_elements = \
+            filter(lambda data_element: data_element.data_source == data_source, self.data_elements)
+
+        return(list(filtered_data_elements))

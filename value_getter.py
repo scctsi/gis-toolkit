@@ -15,19 +15,30 @@ load_dotenv()
 
 
 def get_value(data_element, arguments, data_files):
-    if data_element.source == SedohDataSource.ACS:
+    if data_element.data_source == SedohDataSource.ACS:
         if data_element.get_strategy == GetStrategy.PRIVATE_API:
             return get_acs_value(data_element.source_variable, arguments)
         elif data_element.get_strategy == GetStrategy.CALCULATION:
-            return None
+            # TODO: Refactor this code to use a list for source variables
+            source_value = get_acs_value(data_element.source_variable, arguments)
+            return get_acs_calculation(data_element.variable_name, source_value)
         else:
             return None
             # TODO: raise error
     elif data_element.get_strategy == GetStrategy.FILE:
+        # if type(data_element.source_variable) == list:
+        #     else:
+        #
         return get_file_value(data_element.source_variable,
                               arguments,
-                              data_files[data_element.source][0],
-                              data_files[data_element.source][1])
+                              data_files[data_element.data_source][0],
+                              data_files[data_element.data_source][1])
+    elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+        return get_calculated_file_value(data_element.source_variable,
+                                         arguments,
+                                         data_files[data_element.data_source][0],
+                                         data_files[data_element.data_source][1],
+                                         data_element.variable_name)
 
 
 # ACS specific methods
@@ -49,10 +60,10 @@ def construct_geography_argument(arguments):
     return f"for=tract:{tract_code}&in=state:{state_code}&in=county:{county_code}"
 
 
-def get_acs_dataset_name(variable_name):
-    if variable_name[0].lower() == 's':
+def get_acs_dataset_name(source_variable):
+    if source_variable[0].lower() == 's':
         return 'acs/acs5/subject'
-    elif variable_name[0:2].lower() == 'dp':
+    elif source_variable[0:2].lower() == 'dp':
         return 'acs/acs5/profile'
     else:
         return "acs/acs5"
@@ -77,6 +88,16 @@ def get_acs_value(source_variable, arguments):
                                       "&key={key}"
     api_url = construct_api_url(census_api_interpolation_string, api_parameters)
     return get_api_value(api_url)
+
+
+def get_acs_calculation(variable_name, source_value):
+    # TODO: Change from using hardcoded variable_name checks
+    if variable_name == 'housing_percent_occupied_units_lacking_plumbing':
+        return 100 - source_value
+    elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
+        return 100 - source_value
+    else:
+        return None
 
 
 # API specific methods
@@ -117,3 +138,22 @@ def get_file_value(source_variable, arguments, data_file, data_file_search_colum
         return data_file.iloc[indexes[0]][source_variable]
     else:
         return "Error"
+
+
+def get_calculated_file_value(source_variables, arguments, data_file, data_file_search_column_name, variable_name):
+    source_values = {}
+
+    for source_variable in source_variables:
+        indexes = data_file.index[
+            data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
+        source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
+
+    # TODO: Refactor these condition based calculations
+    if variable_name == 'food_fraction_of_population_with_low_access':
+        if source_values['Urban'] == '1':
+            return source_values['lapop1shar']
+        else:
+            return source_values['lapop10sha']
+
+    print(source_values)
+    return None
