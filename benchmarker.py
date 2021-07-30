@@ -44,14 +44,14 @@ class Benchmarker:
             grouped_acs_data_elements[key] = [source_variable[1] for source_variable in group]
 
         # Step 4: For testing, pick the letter code 'S' (which should have the most number of source_variables)
-        # for benchmarking. Reduce this to a string contenating all of the elements of that list.
+        # for benchmarking. Reduce this to a string concatenating all of the elements of that list.
         source_variables_string = ",".join(grouped_acs_data_elements['S'])
 
         start_time = timeit.default_timer()
         for index in range(5):
             value_getter.get_acs_values(source_variables_string, arguments)
 
-        return (timeit.default_timer() - start_time) / 5, len(grouped_acs_data_elements['S'])
+        return ((timeit.default_timer() - start_time) / 5), len(grouped_acs_data_elements['S'])
 
 
 benchmarker = Benchmarker()
