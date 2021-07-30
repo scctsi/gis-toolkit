@@ -70,9 +70,6 @@ def get_acs_dataset_name(source_variable):
 
 
 def get_acs_value(source_variable, arguments):
-    # census_api_interpolation_string = \
-    #     "https://api.census.gov/data/2018/acs/acs5?get=NAME,B19083_001E,B19083_001M&for=tract:*&in=state:06"
-
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
     api_parameters = {
@@ -88,6 +85,24 @@ def get_acs_value(source_variable, arguments):
                                       "&key={key}"
     api_url = construct_api_url(census_api_interpolation_string, api_parameters)
     return get_api_value(api_url)
+
+
+def get_acs_values(source_variables, arguments):
+    # The vintage year (e.g., V2019) refers to the final year of the time series.
+    # The reference date for all estimates is July 1, unless otherwise specified.
+    api_parameters = {
+        "host_name": "https://api.census.gov/data",
+        "data_year": "2018",
+        "dataset_name": 'acs/acs5/subject',
+        "variables": source_variables,
+        "geographies": construct_geography_argument(arguments),
+        "key": os.getenv("census_api_key")
+    }
+
+    census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
+                                      "&key={key}"
+    api_url = construct_api_url(census_api_interpolation_string, api_parameters)
+    get_api_values(api_url)
 
 
 def get_acs_calculation(variable_name, source_value):
@@ -125,6 +140,11 @@ def get_api_value(url):
     # [['B19083_001E', 'state', 'county', 'tract'], ['0.4981', '06', '001', '400100']]
     # For now, only ACS has an API, but this function needs expansion once we have more API data sources
     return truncated_response[0][0]
+
+
+def get_api_values(url):
+    # This call is currently just used for benchmarking
+    get_api_response(url)
 
 
 # File specific methods

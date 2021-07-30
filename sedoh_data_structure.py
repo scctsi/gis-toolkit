@@ -230,8 +230,13 @@ class SedohDataElements:
                         GetStrategy.FILE),
         ]
 
-    def filtered_data_elements(self, data_source):
-        filtered_data_elements = \
-            filter(lambda data_element: data_element.data_source == data_source, self.data_elements)
+    def filtered_data_elements(self, data_source, get_strategy=None):
+        if not (get_strategy is None):
+            filtered_data_elements = \
+                filter(lambda data_element: data_element.data_source == data_source and
+                                            data_element.get_strategy == get_strategy, self.data_elements)
+        else:
+            filtered_data_elements = \
+                filter(lambda data_element: data_element.data_source == data_source, self.data_elements)
 
-        return(list(filtered_data_elements))
+        return list(filtered_data_elements)
