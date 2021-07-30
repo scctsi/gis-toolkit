@@ -147,17 +147,17 @@ class SedohDataElements:
                         "S1701_C03_001E",
                         GetStrategy.PRIVATE_API),
             # Percent Below 200% of Fed Poverty Level
-            DataElement(SedohDataSource.ACS,
-                        "Percent Below 200% of Fed Poverty Level",
-                        "percent_below_200_of_fed_poverty_level",
-                        "...",
-                        GetStrategy.CALCULATION),
-            # Percent Below 300% of Fed Poverty Level
-            DataElement(SedohDataSource.ACS,
-                        "Percent Below 300% of Fed Poverty Level",
-                        "percent_below_300_of_fed_poverty_level",
-                        "...",
-                        GetStrategy.CALCULATION),
+            # DataElement(SedohDataSource.ACS,
+            #             "Percent Below 200% of Fed Poverty Level",
+            #             "percent_below_200_of_fed_poverty_level",
+            #             "...",
+            #             GetStrategy.CALCULATION),
+            # # Percent Below 300% of Fed Poverty Level
+            # DataElement(SedohDataSource.ACS,
+            #             "Percent Below 300% of Fed Poverty Level",
+            #             "percent_below_300_of_fed_poverty_level",
+            #             "...",
+            #             GetStrategy.CALCULATION),
             # Percent Households that Receive SNAP
             DataElement(SedohDataSource.ACS,
                         "Percent Households that Receive SNAP",

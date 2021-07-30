@@ -1,5 +1,7 @@
 import timeit
 from itertools import groupby
+
+import geocoder
 import sedoh_data_structure as sds
 from data_structure import GetStrategy
 import value_getter
@@ -52,10 +54,28 @@ class Benchmarker:
 
         return ((timeit.default_timer() - start_time) / 5), len(grouped_acs_data_elements['S'])
 
+    def benchmark_single_geocoder_call(self):
+        address = geocoder.Address('1745 T Street Southeast', 'Washington', 'DC', '20020')
+
+        start_time = timeit.default_timer()
+        for index in range(5):
+            geocoder.geocode_address_to_census_tract(address)
+        return (timeit.default_timer() - start_time) / 5
+
 
 benchmarker = Benchmarker()
+
+# Benchmark Census Geocoder service
+time = benchmarker.benchmark_single_geocoder_call()
+print("Time to geocode one physical address via API call: " + str(time))
+
+# Benchmark Census API ACS API calls
 time = benchmarker.benchmark_acs_api_call_with_single_variable()
 print("Time to get one ACS variable via API call: " + str(time))
 
 time, number_of_acs_variables = benchmarker.benchmark_acs_api_call_with_multiple_variables()
 print(f"Time to get {number_of_acs_variables} ACS variable via API call: {time}")
+
+# Calling Census API with multiple variables instead of 1 variable at a time should reduce our runtime by a factor
+# of 0.125. NOTE: This is based on our current set of data elements.
+

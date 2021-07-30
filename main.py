@@ -1,3 +1,4 @@
+import geocoder
 from data_frame_enhancer import DataFrameEnhancer
 from data_structure import DataElement, GetStrategy
 import sedoh_data_structure as sds
@@ -25,7 +26,7 @@ def load_data_files():
 
 
 def main():
-    data_elements = sds.SedohDataElements().filtered_data_elements(sds.SedohDataSource.USDA)
+    data_elements = sds.SedohDataElements().data_elements
 
     # elements = sds.SedohDataElements().data_elements
     # Setup: Load data files for data sources that do not have an existing API
@@ -34,9 +35,14 @@ def main():
 
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    test_file_path = './input/single_geocoded.xlsx'
+    test_file_path = './input/single_address.xlsx'
     print(f"Importing input file located at {test_file_path}")
     input_data_frame = importer.import_file(test_file_path)
+
+    # Optional Step: Geocode addresses
+    if geocoder.geocodable(input_data_frame):
+        input_data_frame = geocoder.geocode_data_frame(input_data_frame)
+        print(input_data_frame.head())
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")

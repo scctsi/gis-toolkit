@@ -1,13 +1,10 @@
 import os
-
-import requests
+import api
 from dotenv import load_dotenv
-
 from data_structure import GetStrategy
 from sedoh_data_structure import SedohDataSource
 
 load_dotenv()
-
 
 # Note on naming scheme: parameters = named variables passed to a function,
 #                        arguments = expressions used when calling the function,
@@ -72,7 +69,7 @@ def get_acs_dataset_name(source_variable):
 def get_acs_value(source_variable, arguments):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
-    api_parameters = {
+    arguments = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
         "dataset_name": get_acs_dataset_name(source_variable),
@@ -83,14 +80,15 @@ def get_acs_value(source_variable, arguments):
 
     census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
                                       "&key={key}"
-    api_url = construct_api_url(census_api_interpolation_string, api_parameters)
-    return get_api_value(api_url)
+    api_url = api.construct_url(census_api_interpolation_string, arguments)
+    print(api_url)
+    return api.get_value(api_url)
 
 
 def get_acs_values(source_variables, arguments):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
-    api_parameters = {
+    arguments = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
         "dataset_name": 'acs/acs5/subject',
@@ -101,50 +99,18 @@ def get_acs_values(source_variables, arguments):
 
     census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
                                       "&key={key}"
-    api_url = construct_api_url(census_api_interpolation_string, api_parameters)
-    get_api_values(api_url)
+    api_url = api.construct_url(census_api_interpolation_string, arguments)
+    api.get_values(api_url)
 
 
 def get_acs_calculation(variable_name, source_value):
     # TODO: Change from using hardcoded variable_name checks
     if variable_name == 'housing_percent_occupied_units_lacking_plumbing':
-        return 100 - source_value
+        return 100 - float(source_value)
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
-        return 100 - source_value
+        return 100 - float(source_value)
     else:
         return None
-
-
-# API specific methods
-def construct_api_url(interpolation_string, arguments):
-    return interpolation_string.format(**arguments)
-
-
-def get_api_response(url):
-    # TODO: Assert 200
-    response = requests.get(url)
-    return response.json()
-
-
-def get_header_row_and_truncated_json(json_to_process):
-    header_row = json_to_process[0].copy()
-    del json_to_process[0]
-
-    return header_row, json_to_process
-
-
-def get_api_value(url):
-    response = get_api_response(url)
-    header_row, truncated_response = get_header_row_and_truncated_json(response)
-    # TODO: This is specific to ACS which returns JSON like this example below:
-    # [['B19083_001E', 'state', 'county', 'tract'], ['0.4981', '06', '001', '400100']]
-    # For now, only ACS has an API, but this function needs expansion once we have more API data sources
-    return truncated_response[0][0]
-
-
-def get_api_values(url):
-    # This call is currently just used for benchmarking
-    get_api_response(url)
 
 
 # File specific methods
@@ -153,7 +119,7 @@ def get_file_value(source_variable, arguments, data_file, data_file_search_colum
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
 
     if len(indexes) == 0:
-        return "Missing"
+        return "N/A"
     elif len(indexes) == 1:
         return data_file.iloc[indexes[0]][source_variable]
     else:
@@ -166,7 +132,13 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
     for source_variable in source_variables:
         indexes = data_file.index[
             data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
-        source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
+
+        if len(indexes) == 0:
+            # The data file cound not find the fips_concatenated_code,
+            # possibly because the data file does not cover the census tract
+            return 'N/A'
+        else:
+            source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
 
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
@@ -175,5 +147,4 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
         else:
             return source_values['lapop10sha']
 
-    print(source_values)
     return None
