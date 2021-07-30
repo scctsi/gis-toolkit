@@ -1,11 +1,10 @@
 import timeit
 from itertools import groupby
-
 import sedoh_data_structure as sds
 from data_structure import GetStrategy
 import value_getter
-from functools import reduce
 import re
+
 
 class Benchmarker:
     def __init__(self):
