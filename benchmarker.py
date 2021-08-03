@@ -3,6 +3,7 @@ from itertools import groupby
 
 import geocoder
 import sedoh_data_structure as sds
+from address import Address
 from data_structure import GetStrategy
 import value_getter
 import re
@@ -62,12 +63,26 @@ class Benchmarker:
             geocoder.geocode_address_to_census_tract(address)
         return (timeit.default_timer() - start_time) / 5
 
+    def benchmark_batch_geocoder_call(self):
+        address_1 = Address('1745 T Street Southeast', 'Washington', 'DC', '20020')
+        address_2 = Address('6007 Applegate Lane', 'Louisville', 'KY', '40219')
+        address_3 = Address('560 Penstock Drive', 'Grass Valley', 'CA', '95945')
+        address_4 = Address('150 Carter Street', 'Manchester', 'CT', '06040')
+        address_5 = Address('2721 Lindsay Avenue', 'Louisville', 'KY', '20022')
+
+        start_time = timeit.default_timer()
+        geocoder.geocode_addresses_to_census_tract([address_1, address_2, address_3, address_4, address_5])
+        return timeit.default_timer() - start_time
+
 
 benchmarker = Benchmarker()
 
 # Benchmark Census Geocoder service
 time = benchmarker.benchmark_single_geocoder_call()
 print("Time to geocode one physical address via API call: " + str(time))
+
+time = benchmarker.benchmark_batch_geocoder_call()
+print("Time to geocode five physical addresses in a single batch via API call: " + str(time))
 
 # Benchmark Census API ACS API calls
 time = benchmarker.benchmark_acs_api_call_with_single_variable()
