@@ -8,7 +8,7 @@ The GIS toolkit enables institutions to enhance physical addresses with a set of
 * Physical infrastructure
 * Environmental conditions
 
-The GIS toolkit also guides institutions on how they can integrate this with data warehouses and cohort discovery tools like [Informatics for Integrating Biology & the Bedside (i2b2)](https://www.i2b2.org/), enabling researchers at those institutions to discover cohorts using criteria based on SEDoH variables.
+The GIS toolkit also guides institutions on how they can integrate these variables with data warehouses and cohort discovery tools like [Informatics for Integrating Biology & the Bedside (i2b2)](https://www.i2b2.org/), enabling researchers at those institutions to search for cohorts using criteria based on SEDoH variables.
 
 ## Components
 The GIS toolkit has three main components:
