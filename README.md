@@ -25,6 +25,6 @@ Please refer to the instructions here: [Enhancement with SEDoH values] (https://
 Please visit the home page of the Wiki here: [Wiki home] (https://github.com/scctsi/gis-toolkit/wiki)
 
 ## Who developed it
-The GIS Toolkit was developed at the Southern California Clinical and Translational Institute [(SC CTSI)](https://www.sc-ctsi.org) in collaboration with the [USC mHealth Collaboratory] (https://mhealth.usc.edu/)
+The GIS Toolkit was developed at the Southern California Clinical and Translational Institute [(SC CTSI)](https://www.sc-ctsi.org) in collaboration with the [USC mHealth Collaboratory](https://mhealth.usc.edu/)
 
 
