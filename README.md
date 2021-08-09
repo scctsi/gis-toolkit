@@ -16,7 +16,6 @@ The GIS toolkit has three main components:
 2. Guides
    * Integrating with the [Observational Medical Outcomes Partnership (OMOP) Common Data Model (CDM)](https://www.ohdsi.org/data-standardization/the-common-data-model/)
    * Integrating with the i2b2 CDM
-3. Excel utility to help extend an i2b2 ontology 
 
 ## Instructions on using the Python program
 Please refer to the instructions here: [Enhancement with SEDoH values](https://github.com/scctsi/gis-toolkit/wiki/Enhancement-with-SEDoH-values)
