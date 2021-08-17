@@ -3,6 +3,7 @@ import api
 from dotenv import load_dotenv
 from data_structure import GetStrategy
 from sedoh_data_structure import SedohDataSource
+import constant
 
 load_dotenv()
 
@@ -16,9 +17,9 @@ def get_value(data_element, arguments, data_files):
         if data_element.get_strategy == GetStrategy.PRIVATE_API:
             return get_acs_value(data_element.source_variable, arguments)
         elif data_element.get_strategy == GetStrategy.CALCULATION:
-            # TODO: Refactor this code to use a list for source variables
+            # TODO: Refactor this code to use a list for even a single source variable
             source_value = get_acs_value(data_element.source_variable, arguments)
-            return get_acs_calculation(data_element.variable_name, source_value)
+            return get_acs_calculation(data_element.variable_name, source_value, arguments, data_files)
         else:
             return None
             # TODO: raise error
@@ -81,7 +82,6 @@ def get_acs_value(source_variable, arguments):
     census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
                                       "&key={key}"
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    print(api_url)
     return api.get_value(api_url)
 
 
@@ -103,12 +103,19 @@ def get_acs_values(source_variables, arguments):
     api.get_values(api_url)
 
 
-def get_acs_calculation(variable_name, source_value):
+def get_acs_calculation(variable_name, source_value, arguments, data_files):
     # TODO: Change from using hardcoded variable_name checks
     if variable_name == 'housing_percent_occupied_units_lacking_plumbing':
         return 100 - float(source_value)
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return 100 - float(source_value)
+    elif variable_name == 'population_density':
+        aland = get_file_value("ALAND", arguments,
+                               data_files[SedohDataSource.Gazetteer][0],
+                               data_files[SedohDataSource.Gazetteer][1])
+        print(aland)
+        print(arguments)
+        return round((float(source_value) / int(aland)), 0)
     else:
         return None
 
@@ -119,7 +126,7 @@ def get_file_value(source_variable, arguments, data_file, data_file_search_colum
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
 
     if len(indexes) == 0:
-        return "N/A"
+        return constant.NOT_AVAILABLE
     elif len(indexes) == 1:
         return data_file.iloc[indexes[0]][source_variable]
     else:
@@ -134,9 +141,9 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
             data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
 
         if len(indexes) == 0:
-            # The data file cound not find the fips_concatenated_code,
+            # The data file could not find the fips_concatenated_code,
             # possibly because the data file does not cover the census tract
-            return 'N/A'
+            return constant.NOT_AVAILABLE
         else:
             source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
 

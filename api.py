@@ -16,6 +16,7 @@ def get_response(url):
         print(response)
         quit(1)
 
+
 def get_header_row_and_truncated_json(json_to_process):
     header_row = json_to_process[0].copy()
     del json_to_process[0]

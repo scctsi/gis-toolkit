@@ -4,6 +4,8 @@ import requests
 import api
 from dotenv import load_dotenv
 import os
+import sys
+from io import StringIO
 import pandas as pd
 
 import constant
@@ -46,13 +48,19 @@ def geocode_data_frame(data_frame):
 
 def geocode_addresses_to_census_tract(addresses):
     addresses_data_frame = Address.to_data_frame(addresses)
-    addresses_data_frame.to_csv('./temp/addresses.csv')
+    addresses_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
 
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
     payload = {'benchmark': BENCHMARK, 'vintage': VINTAGE}
     files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
-    r = requests.post(api_url, files=files, data=payload)
-    print(r.text)
+    response = requests.post(api_url, files=files, data=payload)
+
+    column_names = ["address_id", "input_address", "match_indicator", "match_type", "output_address",
+                    "latitude_longitude", "line_id", "line_id_side",
+                    "state_code", "county_code", "tract_code", "block_code"]
+    geocoded_addresses_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
+    pd.set_option('display.max_columns', None)
+    pd.reset_option('display.max_columns')
     return None
 
 
@@ -77,6 +85,14 @@ def geocode_address_to_census_tract(address):
     response = api.get_response(api_url)
 
     # TODO: Raise error if response returns multiple address matches
-    print(response)
     census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
     return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
+
+
+# address_1 = Address('1745 T Street Southeast', 'Washington', 'DC', '20020')
+# address_2 = Address('6007 Applegate Lane', 'Louisville', 'KY', '40219')
+# address_3 = Address('560 Penstock Drive', 'Grass Valley', 'CA', '95945')
+# address_4 = Address('150 Carter Street', 'Manchester', 'CT', '06040')
+# address_5 = Address('2721 Lindsay Avenue', 'Louisville', 'KY', '20022')
+#
+# geocode_addresses_to_census_tract([address_1, address_2, address_3, address_4, address_5])
