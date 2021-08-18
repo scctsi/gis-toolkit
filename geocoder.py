@@ -85,6 +85,7 @@ def geocode_address_to_census_tract(address):
     response = api.get_response(api_url)
 
     # TODO: Raise error if response returns multiple address matches
+    print(response)
     census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
     return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
 

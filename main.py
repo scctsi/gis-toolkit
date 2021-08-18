@@ -34,7 +34,7 @@ def main():
 
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    test_file_path = './input/addresses_in_ca_and_dc.xlsx'
+    test_file_path = './input/addresses.xlsx'
     print(f"Importing input file located at {test_file_path}")
     input_data_frame = importer.import_file(test_file_path)
 

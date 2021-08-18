@@ -26,7 +26,6 @@ def import_file(full_file_path):
                   f"Please close Excel and try again.")
     elif file_extension == '.txt': # NOTE: Support is included only for tab delimited text files
         input_data_frame = pd.read_csv(full_file_path, sep='\t', lineterminator='\r', dtype=str)
-        print(input_data_frame.head())
     else:
         raise FileNotFoundError(f"{file_extension} files are not currently supported. "
                                 f"Please convert to CSV or Microsoft Excel")
