@@ -1,5 +1,6 @@
 import os
 import json
+import csv
 from address import Address
 from geocoder import *
 
@@ -86,7 +87,7 @@ def good_file(file_path, state):
             if(check_address_validity(address, state)):
                 file_names.append(file_name)
     os.chdir(oldcwd)
-    return file_names 
+    return file_names
 
 
 def read_json_files(file_path, file_range):
@@ -165,7 +166,7 @@ def geocode_dict(address_dict):
 def read_test_addresses():
     address_dict = {}
     oldcwd = os.getcwd()
-    folder_path = oldcwd+r'\gis-toolkit\input\test_addresses'
+    folder_path = oldcwd+r'\input\test_addresses'
     os.chdir(folder_path)
     for file in os.listdir():
         state_name = file.replace('.json','')
@@ -180,9 +181,10 @@ def read_test_addresses():
     return address_dict
 
 
-# address_data = parse_json_dict(read_test_addresses())
-# address_data = parse_json_dict(read_json_files(<Add_OpenAddresses_Folder_Directory_Here>, 100))
-capitalize_states(r"C:\Users\Hakob.Abajian\Desktop\test")
+address_data = parse_json_dict(read_test_addresses())
+# open_addresses_file_path = "<Add_OpenAddresses_Folder_Directory_Here>"
+# address_data = parse_json_dict(read_json_files(open_addresses_file_path, 100))
+# capitalize_states(open_addresses_file_path)
 
 
 
