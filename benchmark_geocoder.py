@@ -58,7 +58,7 @@ def geocode_list(parsed_addresses):
         except(IndexError, KeyError):
             errors+=1
             pass
-    return
+    return errors
 
 ad = parse_json_file(read_json_file(os.getcwd()+r'\gis-toolkit\input\rrad\addresses-us-all.json'))
 
