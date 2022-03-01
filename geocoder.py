@@ -1,4 +1,5 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
+from ssl import VerifyFlags
 import requests
 
 import api
@@ -59,6 +60,8 @@ def geocode_addresses_to_census_tract(addresses):
                     "latitude_longitude", "line_id", "line_id_side",
                     "state_code", "county_code", "tract_code", "block_code"]
     geocoded_addresses_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
+    geocoded_addresses_data_frame['census_tract'] = geocoded_addresses_data_frame['state_code'] + geocoded_addresses_data_frame['county_code'] + geocoded_addresses_data_frame['tract_code']
+    geocoded_addresses_data_frame.to_csv('./output/geocoded_addresses.csv')
     pd.set_option('display.max_columns', None)
     pd.reset_option('display.max_columns')
     return None

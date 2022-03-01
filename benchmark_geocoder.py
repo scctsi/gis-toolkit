@@ -49,7 +49,7 @@ def parse_json_dict_seperate_states(address_dict):
     return parsed_dict
 
 
-def geocode_list(parsed_addresses, list_range):
+def geocode_address_list(parsed_addresses, list_range):
     start_time = timeit.default_timer()
     for address in parsed_addresses[:list_range]:
         try:
@@ -58,7 +58,14 @@ def geocode_list(parsed_addresses, list_range):
             pass
     return (timeit.default_timer() - start_time)/list_range
 
-ad = parse_json_file(read_json_file(os.getcwd()+r'\input\addresses-us-all.json'))
+def geocode_addresses_list(parsed_addresses, list_range):
+    start_time = timeit.default_timer()
+    geocode_addresses_to_census_tract(parsed_addresses[:list_range])
+    return (timeit.default_timer() - start_time)/list_range
 
-print(geocode_list(ad,100))
+
+rrad_addresses = parse_json_file(read_json_file(os.getcwd()+r'\input\addresses-us-all.json'))
+address_count = 5
+geocoding_avg_time = round(geocode_addresses_list(rrad_addresses,address_count), 3)
+print(str(geocoding_avg_time) + " seconds per address to batch geocode "+str(address_count)+" addresses")
 
