@@ -9,18 +9,6 @@ def read_json_file(file):
         address_list = json.load(address_file)['addresses']
     return address_list
 
-def read_json_file_seperate_states(file):
-    address_dict = {}
-    with open(file) as address_file:
-        address_list = json.load(address_file)['addresses']
-    for address in address_list:
-        state = address['state']
-        if state in address_dict.keys():
-            address_dict[state].append(address)
-        else:
-            address_dict.update({state : [address]})
-    return address_dict
-
 
 def parse_json_file(address_list):
     parsed_addresses = []
@@ -32,21 +20,6 @@ def parse_json_file(address_list):
             postalcode = address['postalCode']
             parsed_addresses.append(Address(street, city, region, postalcode))
     return parsed_addresses
-
-
-def parse_json_dict_seperate_states(address_dict):
-    parsed_dict = {}
-    for state in address_dict:
-        parsed_addresses = []
-        for address in address_dict[state]:
-            if 'city' in address.keys():
-                street = address['address1']
-                city = address['city']
-                region = address['state']
-                postalcode = address['postalCode']
-                parsed_addresses.append(Address(street, city, region, postalcode))
-        parsed_dict.update({state : parsed_addresses})
-    return parsed_dict
 
 
 def geocode_address_list(parsed_addresses, list_range):
@@ -67,5 +40,5 @@ def geocode_addresses_list(parsed_addresses, list_range):
 rrad_addresses = parse_json_file(read_json_file(os.getcwd()+r'\input\addresses-us-all.json'))
 address_count = 5
 geocoding_avg_time = round(geocode_addresses_list(rrad_addresses,address_count), 3)
-print(str(geocoding_avg_time) + " seconds per address to batch geocode "+str(address_count)+" addresses")
+print(str(geocoding_avg_time) + " seconds per address to batch geocode " + str(address_count) + " addresses")
 
