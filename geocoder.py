@@ -60,10 +60,10 @@ def geocode_addresses_to_census_tract(addresses, batch_limit=10000):
                     "state_code", "county_code", "tract_code", "block_code"]
                   
     for i in range(batch_calls):
-        if i+1==batch_calls:
-            addresses_data_frame = Address.to_data_frame(addresses[i*batch_limit:])
+        if i + 1 == batch_calls:
+            addresses_data_frame = Address.to_data_frame(addresses[i * batch_limit:])
         else:
-            addresses_data_frame = Address.to_data_frame(addresses[i*batch_limit:(i+1)*batch_limit])
+            addresses_data_frame = Address.to_data_frame(addresses[i * batch_limit:(i + 1) * batch_limit])
         addresses_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         response = requests.post(api_url, files=files, data=payload, verify=False)
@@ -72,7 +72,7 @@ def geocode_addresses_to_census_tract(addresses, batch_limit=10000):
     geocoded_addresses_data_frame = pd.concat(geocoded_addresses_data_frames, ignore_index=True)
     geocoded_addresses_data_frame['address_id'] = geocoded_addresses_data_frame.index
     geocoded_addresses_data_frame['census_tract'] = geocoded_addresses_data_frame['state_code'] + geocoded_addresses_data_frame['county_code'] + geocoded_addresses_data_frame['tract_code']
-    geocoded_addresses_data_frame.to_csv('./output/geocoded_addresses.csv')
+    geocoded_addresses_data_frame.to_csv('./temp/geocoded_addresses.csv')
     pd.set_option('display.max_columns', None)
     pd.reset_option('display.max_columns')
     return None
