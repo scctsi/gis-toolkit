@@ -31,6 +31,7 @@ def geocode_address_list(parsed_addresses, list_range):
             pass
     return (timeit.default_timer() - start_time)/list_range
 
+
 def geocode_addresses_list(parsed_addresses, list_range):
     start_time = timeit.default_timer()
     geocode_addresses_to_census_tract(parsed_addresses[:list_range])

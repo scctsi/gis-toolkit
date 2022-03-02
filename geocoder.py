@@ -48,9 +48,12 @@ def geocode_data_frame(data_frame):
 
 
 def geocode_addresses_to_census_tract(addresses, batch_limit=10000):
-    batch_calls = (int)(len(addresses)/batch_limit)
+    if not os.path.isdir('./temp'):
+        os.mkdir('./temp')
+    
+    batch_calls = int(len(addresses) / batch_limit)
     if len(addresses) % batch_limit != 0:
-        batch_calls+=1
+        batch_calls += 1
     geocoded_addresses_data_frames = []
 
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
