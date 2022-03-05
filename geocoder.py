@@ -111,12 +111,11 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
             addresses_batch_data_frame = Address.to_data_frame(addresses[i * batch_limit:(i + 1) * batch_limit])
         addresses_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
-        # try:
-        response = requests.post(api_url, files=files, data=payload)
-            # print(response.content)
-        # except requests.exceptions.RequestException as e:
-        #     save_geocode_progress(data_key, i, "Incomplete", str(e))
-        #     raise SystemExit(e)
+        try:
+            response = requests.post(api_url, files=files, data=payload)
+        except requests.exceptions.RequestException as e:
+             save_geocode_progress(data_key, i, "Incomplete", str(e))
+             raise SystemExit(e)
 
         geocoded_addresses_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
         geocoded_addresses_data_frame.index = geocoded_addresses_data_frame['address_id'].astype(int).add(i * batch_limit).astype(str)
