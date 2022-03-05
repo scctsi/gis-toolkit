@@ -62,14 +62,19 @@ def check_save_file():
     return None
 
 
-def save_geocode_progress(data_key, batch_index):
+def save_geocode_progress(data_key, batch_index, status="Incomplete", error_message=""):
     check_save_file()
     with open('./temp/save_file.json', "r+") as save_file:
         data = json.load(save_file)
-        data[data_key] = batch_index
+        if data_key not in data.keys():
+            data[data_key] = {'last_successful_batch' : batch_index, "status" : "Incomplete", "error_message" : ""}
+        else:
+            data[data_key]['last_successful_batch'] = batch_index
+            data[data_key]['status'] = status
+            data[data_key]['error_message'] = error_message
         print("SAVING: ", data_key, " AS ", batch_index)
         save_file.seek(0)
-        json.dump(data, save_file, indent=2)
+        json.dump(data, save_file, indent=4)
         save_file.truncate()
     return None
 
@@ -77,10 +82,11 @@ def load_geocode_progress(data_key):
     check_save_file()
     with open('./temp/save_file.json') as save_file:
         data = json.load(save_file)
-        if data_key in data.keys():
-            batch_index = data[data_key]
+        if data_key in data.keys() and data[data_key]['status'] == "Incomplete":
+            batch_index = data[data_key]['last_successful_batch']
         else:
             batch_index = 0
+            save_geocode_progress(data_key, batch_index)
     print("LOADING: ", batch_index)
     return batch_index
 
@@ -90,22 +96,28 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
     batch_calls = int(len(addresses) / batch_limit)
     if len(addresses) % batch_limit != 0:
         batch_calls += 1
-
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
     payload = {'benchmark': BENCHMARK, 'vintage': VINTAGE}
     column_names = ["address_id", "input_address", "match_indicator", "match_type", "output_address",
                     "latitude_longitude", "line_id", "line_id_side",
                     "state_code", "county_code", "tract_code", "block_code"]
-    print("DATA_KEY: ", data_key)
+
     batch_progress = load_geocode_progress(data_key)
+
     for i in range(batch_progress, batch_calls):
         if i + 1 == batch_calls:
-            addresses_data_frame = Address.to_data_frame(addresses[i * batch_limit:])
+            addresses_batch_data_frame = Address.to_data_frame(addresses[i * batch_limit:])
         else:
-            addresses_data_frame = Address.to_data_frame(addresses[i * batch_limit:(i + 1) * batch_limit])
-        addresses_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
+            addresses_batch_data_frame = Address.to_data_frame(addresses[i * batch_limit:(i + 1) * batch_limit])
+        addresses_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
-        response = requests.post(api_url, files=files, data=payload, verify=False)
+        # try:
+        response = requests.post(api_url, files=files, data=payload)
+            # print(response.content)
+        # except requests.exceptions.RequestException as e:
+        #     save_geocode_progress(data_key, i, "Incomplete", str(e))
+        #     raise SystemExit(e)
+
         geocoded_addresses_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
         geocoded_addresses_data_frame.index = geocoded_addresses_data_frame['address_id'].astype(int).add(i * batch_limit).astype(str)
         geocoded_addresses_data_frame['address_id'] = geocoded_addresses_data_frame.index
@@ -116,8 +128,9 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
             geocoded_addresses_data_frame.to_csv('./temp/geocoded_' + data_key + '.csv')
         else:
             geocoded_addresses_data_frame.to_csv('./temp/geocoded_' + data_key + '.csv', header=False, mode='a')
-        save_geocode_progress(data_key, i + 1)
-    save_geocode_progress(data_key, 0)
+        new_batch_index = i + 1
+        save_geocode_progress(data_key, new_batch_index)
+    save_geocode_progress(data_key, new_batch_index, "Complete")
     pd.set_option('display.max_columns', None)
     pd.reset_option('display.max_columns')
     return None
