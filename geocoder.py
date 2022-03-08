@@ -12,6 +12,7 @@ import json
 
 import constant
 from address import Address
+import importer
 
 load_dotenv()
 
@@ -45,6 +46,20 @@ def geocode_data_frame(data_frame):
         data_frame.iloc[index][constant.GEO_ID_NAME] = geocode_address_to_census_tract(
             Address(row['street'], row['city'], row['state'], row['zip']))
 
+    return data_frame
+
+
+def geocode_addresses_in_data_frame(data_key, data_frame):
+    # TODO: Create addresses list using DataFrame function
+    data_frame[constant.GEO_ID_NAME] = ''
+    addresses = []
+    for index, row in data_frame.iterrows():
+        addresses.append(Address(row['street'], row['city'], row['state'], row['zip']))
+    try:
+        geocode_addresses_to_census_tract(addresses, data_key)
+        data_frame[constant.GEO_ID_NAME] = importer.import_file('./temp/geocoded_' + data_key + '.csv')['census_tract']
+    except:
+        raise Exception("Batch Geocoding Failed")
     return data_frame
 
 
@@ -118,8 +133,9 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
              raise SystemExit(e)
 
         geocoded_addresses_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
-        geocoded_addresses_data_frame.index = geocoded_addresses_data_frame['address_id'].astype(int).add(i * batch_limit).astype(str)
+        geocoded_addresses_data_frame.index = geocoded_addresses_data_frame['address_id'].astype(int).add(i * batch_limit)
         geocoded_addresses_data_frame['address_id'] = geocoded_addresses_data_frame.index
+        geocoded_addresses_data_frame = geocoded_addresses_data_frame.sort_index()
         geocoded_addresses_data_frame['census_tract'] = geocoded_addresses_data_frame['state_code'] + \
                                                         geocoded_addresses_data_frame['county_code'] + \
                                                         geocoded_addresses_data_frame['tract_code']
