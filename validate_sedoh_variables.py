@@ -5,6 +5,7 @@ import value_getter
 import pandas as pd
 import main
 import csv
+import math
 
 data_elements = sds.SedohDataElements().data_elements
 file_read_data_elements = []
@@ -29,11 +30,13 @@ for i, true_data_frame in enumerate(true_data_frames):
     for index, row in true_data_frame.iterrows():
         arguments = {"fips_concatenated_code": true_data_frame.iloc[index][constant.GEO_ID_NAME]}
         data_value = value_getter.get_value(file_read_data_elements[i], arguments, data_files)
-        if data_value is not constant.NOT_AVAILABLE:
+        if data_value is not constant.NOT_AVAILABLE and (not math.isnan(float(true_data_frame.iloc[index]['NUMERIC']))) and (not math.isnan(float(data_value))):
             total += 1
             if i != 5:
-                if true_data_frame.iloc[index]["NUMERIC"] == str(round(float(data_value), 4)):
+                if abs(float(true_data_frame.iloc[index]["NUMERIC"]) - float(data_value))<.01:
                     matched += 1
+                else:
+                    print(true_data_frame.iloc[index]['NUMERIC'], data_value)
             else:
                 if true_data_frame.iloc[index]["NUMERIC"] == data_value:
                     matched += 1
