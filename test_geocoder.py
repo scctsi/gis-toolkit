@@ -20,11 +20,8 @@ Outputs of read_test_addresses() and read_json_files() must be passed through pa
 """
 
 def capitalize_states(folder_path):
-    oldcwd = os.getcwd()
-    os.chdir(folder_path)
-    for folder in os.listdir():
+    for folder in os.listdir(folder_path):
         os.rename(folder, folder.upper())
-    os.chdir(oldcwd)
     return None
 
 
@@ -73,11 +70,9 @@ def good_file(file_path, state):
     
     returns: list of directories of well formatted files from file_path folder: [str]
     """
-    oldcwd = os.getcwd()
-    os.chdir(file_path)
     file_names = []
-    for file in os.listdir():
-        file_name = f'{file_path}\{file}'
+    for file in os.listdir(file_path):
+        file_name = f'{file_path}/{file}'
         if(file.endswith('addresses-county.geojson') or file.endswith('addresses-city.geojson')):
             with open(file_name) as address_file:
                 for line in address_file:
@@ -86,7 +81,6 @@ def good_file(file_path, state):
             address_file.close()
             if(check_address_validity(address, state)):
                 file_names.append(file_name)
-    os.chdir(oldcwd)
     return file_names
 
 
@@ -98,20 +92,17 @@ def read_json_files(file_path, file_range):
 
     returns: {state code : list of addresses}
     """
-    oldcwd = os.getcwd()
     state_addresses = {}
-    os.chdir(file_path)
-    for folder in os.listdir():
+    for folder in os.listdir(file_path):
         state_name = folder
         state_list = []
-        temp_cwd = f'{file_path}\{folder}'
+        temp_cwd = f'{file_path}/{folder}'
         file_names = good_file(temp_cwd, state_name)
         if(len(file_names)!=0):
             state_range = (int)(file_range/len(file_names))
             for file_name in file_names:
                 state_list = state_list + read_json_file(file_name, state_range, state_name)
         state_addresses.update({state_name : state_list})
-    os.chdir(oldcwd)
     return state_addresses
 
 
@@ -165,26 +156,24 @@ def geocode_dict(address_dict):
 
 def read_test_addresses():
     address_dict = {}
-    oldcwd = os.getcwd()
-    folder_path = oldcwd+r'\input\test_addresses'
-    os.chdir(folder_path)
-    for file in os.listdir():
+    folder_path = './input/test_addresses'
+    for file in os.listdir(folder_path):
         state_name = file.replace('.json','')
         state_list = []
-        with open(f'{folder_path}\{file}') as address_file:
+        with open(f'{folder_path}/{file}') as address_file:
             for line in address_file:
                 address = json.loads(line)
                 state_list.append(address)
         address_file.close()
         address_dict.update({state_name : state_list})
-    os.chdir(oldcwd)
     return address_dict
 
 
 address_data = parse_json_dict(read_test_addresses())
 # open_addresses_file_path = "<Add_OpenAddresses_Folder_Directory_Here>"
-# address_data = parse_json_dict(read_json_files(open_addresses_file_path, 100))
 # capitalize_states(open_addresses_file_path)
+# address_data = parse_json_dict(read_json_files(open_addresses_file_path, 100))
+
 
 
 
