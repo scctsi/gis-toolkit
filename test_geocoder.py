@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 import csv
 from address import Address
 from geocoder import *
@@ -131,52 +132,50 @@ def geocode_dict(address_dict):
     parameter:
         address_dict, accepts output of parse_address_dict()
     
-    returns: {state code : geocodability %}
+    returns: [state code : geocodability %]]
     """
-    result_dict = {}
+    results_list = []
     for state in address_dict:
-        print("OPEN STATE: "+state)
+        print("OPEN STATE: " + state)
         den = len(address_dict[state])
         num = 0
         for i, address in enumerate(address_dict[state]):
-            print("ADDRESS: "+str(i))
+            print("ADDRESS: " + str(i))
             try:
                 geocode_address_to_census_tract(address)
-                num+=1
+                num += 1
             except (IndexError, KeyError):
                 pass
         if(den>0):
             geocodability = round(100*(num/den), 2)
         else:
             geocodability = -1
-        print("CLOSE STATE: "+state, "GEOCODABILITY: "+str(geocodability))
-        result_dict.update({state : geocodability})
-    return result_dict
+        print("CLOSE STATE: "+state, "GEOCODABILITY: " + str(geocodability))
+        results_list.append([state, geocodability])
+    return results_list
 
 
-def read_test_addresses():
-    address_dict = {}
-    folder_path = './input/test_addresses'
+def read_test_addresses_from_csv():
+    parsed_dict = {}
+    folder_path = './validation/test_addresses/'
     for file in os.listdir(folder_path):
-        state_name = file.replace('.json','')
+        state_name = file.replace('.csv', '')
         state_list = []
-        with open(f'{folder_path}/{file}') as address_file:
-            for line in address_file:
-                address = json.loads(line)
-                state_list.append(address)
-        address_file.close()
-        address_dict.update({state_name : state_list})
-    return address_dict
+        state_addresses_data_frame = pd.read_csv(f'{folder_path}/{file}', dtype='str')
+        for index, row in state_addresses_data_frame.iterrows():
+            state_list.append(Address(row['street'], row['city'], row['state'], row['zip']))
+        parsed_dict.update({state_name: state_list})
+    return parsed_dict
 
 
-address_data = parse_json_dict(read_test_addresses())
+address_data = read_test_addresses_from_csv()
 # open_addresses_file_path = "<Add_OpenAddresses_Folder_Directory_Here>"
 # capitalize_states(open_addresses_file_path)
 # address_data = parse_json_dict(read_json_files(open_addresses_file_path, 100))
 
 
-
-
 # result_data = geocode_dict(address_data)
-# for state in result_data:
-    # print(state, result_data[state])
+# with open('./validation/geocoded_percentage.csv', 'w', newline='') as result_file:
+#     writer = csv.writer(result_file)
+#     writer.writerow(['state', 'geocoded_percentage'])
+#     writer.writerows(result_data)
