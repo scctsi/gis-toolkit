@@ -132,7 +132,7 @@ def geocode_dict(address_dict):
     parameter:
         address_dict, accepts output of parse_address_dict()
     
-    returns: [state code : geocodability %]]
+    returns: [[state code : geocodability %]]
     """
     results_list = []
     for state in address_dict:
@@ -146,7 +146,7 @@ def geocode_dict(address_dict):
                 num += 1
             except (IndexError, KeyError):
                 pass
-        if(den>0):
+        if(den > 0):
             geocodability = round(100*(num/den), 2)
         else:
             geocodability = -1
