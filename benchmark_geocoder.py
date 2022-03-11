@@ -31,6 +31,7 @@ def geocode_address_list(parsed_addresses, list_range):
             pass
     return (timeit.default_timer() - start_time)/list_range
 
+
 def geocode_addresses_list(parsed_addresses, list_range):
     start_time = timeit.default_timer()
     geocode_addresses_to_census_tract(parsed_addresses[:list_range])
@@ -39,6 +40,6 @@ def geocode_addresses_list(parsed_addresses, list_range):
 
 rrad_addresses = parse_json_file(read_json_file(os.getcwd()+r'\input\addresses-us-all.json'))
 address_count = 5
-geocoding_avg_time = round(geocode_addresses_list(rrad_addresses,address_count), 3)
+geocoding_avg_time = round(geocode_addresses_list(rrad_addresses, address_count), 3)
 print(str(geocoding_avg_time) + " seconds per address to batch geocode " + str(address_count) + " addresses")
 
