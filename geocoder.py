@@ -1,5 +1,4 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
-from ssl import VerifyFlags
 import requests
 
 import api
