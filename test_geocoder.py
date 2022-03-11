@@ -34,7 +34,14 @@ def check_address_validity(data, state):
 
     rtype: bool
     """
-    if(data['properties']['number'] != "" and data['properties']['street'] != "" and data['properties']['city'] != "" and data['properties']['region'] != "" and data['properties']['postcode'] != "" and data['properties']['number'] != " " and data['properties']['street'] != " " and data['properties']['city'] != " " and data['properties']['region'] != " " and data['properties']['postcode'] != " " and len(data['properties']['city']) < 40 and data['properties']['region']==state):
+    if data['properties']['number'] != "" and data['properties']['street'] != "" and data['properties']['city'] != "" and data['properties']['region'] != "" and data['properties']['postcode'] != "" and data['properties']['number'] != " " and data['properties']['street'] != " " and data['properties']['city'] != " " and data['properties']['region'] != " " and data['properties']['postcode'] != " " and len(data['properties']['city']) < 40 and data['properties']['region']==state:
+        return True
+    else:
+        return False
+
+
+def updated_check_address_validity(data, state):
+    if data['properties']['number'] != "" and data['properties']['street'] != "" and len(data['properties']['city']) < 40:
         return True
     else:
         return False
@@ -56,14 +63,13 @@ def read_json_file(file_name, file_range, state):
             if(count==file_range):
                 break
             address = json.loads(line)
-            if(check_address_validity(address, state)):
+            if check_address_validity(address, state):
                 addresses.append(address)
-                count+=1
-    address_file.close()
+                count += 1
     return addresses
 
 
-def good_file(file_path, state):
+def good_file(file_path, state, file_range):
     """
     parameters:
         file_path, directory of folder including address files: str
@@ -73,14 +79,15 @@ def good_file(file_path, state):
     """
     file_names = []
     for file in os.listdir(file_path):
+        if len(file_names) == file_range:
+            break
         file_name = f'{file_path}/{file}'
         if(file.endswith('addresses-county.geojson') or file.endswith('addresses-city.geojson')):
             with open(file_name) as address_file:
                 for line in address_file:
                     address = json.loads(line)
                     break
-            address_file.close()
-            if(check_address_validity(address, state)):
+            if check_address_validity(address, state):
                 file_names.append(file_name)
     return file_names
 
@@ -98,7 +105,7 @@ def read_json_files(file_path, file_range):
         state_name = folder
         state_list = []
         temp_cwd = f'{file_path}/{folder}'
-        file_names = good_file(temp_cwd, state_name)
+        file_names = good_file(temp_cwd, state_name, file_range)
         if(len(file_names)!=0):
             state_range = (int)(file_range/len(file_names))
             for file_name in file_names:
