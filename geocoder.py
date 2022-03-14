@@ -49,11 +49,10 @@ def geocode_data_frame(data_frame):
 
 
 def geocode_addresses_in_data_frame(data_key, data_frame):
-    # TODO: Create addresses list using DataFrame function
     data_frame[constant.GEO_ID_NAME] = ''
     addresses = []
-    for index, row in data_frame.iterrows():
-        addresses.append(Address(row['street'], row['city'], row['state'], row['zip']))
+    for row in data_frame.itertuples():
+        addresses.append(Address(row.street, row.city, row.state, row.zip))
     try:
         geocode_addresses_to_census_tract(addresses, data_key)
         data_frame[constant.GEO_ID_NAME] = importer.import_file('./temp/geocoded_' + data_key + '.csv')['census_tract']

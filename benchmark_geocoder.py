@@ -1,8 +1,5 @@
 import csv
 import timeit
-
-import pandas as pd
-
 from geocoder import *
 
 def read_json_file(file):
@@ -36,8 +33,8 @@ def json_to_data_frame(address_list):
         writer = csv.writer(csv_file)
         writer.writerow(['street', 'city', 'state', 'zip'])
         writer.writerows(parsed_addresses)
-    json_data_frame = pd.read_csv('./validation/addresses-us-all.csv', dtype='str')
-    return json_data_frame
+    return None
+
 
 def geocode_address_list(parsed_addresses, list_range):
     start_time = timeit.default_timer()
@@ -54,12 +51,14 @@ def geocode_addresses_list(parsed_addresses, list_range):
     geocode_addresses_to_census_tract(parsed_addresses[:list_range], "rrad test addresses")
     return (timeit.default_timer() - start_time) / list_range
 
+
 def parse_data_frame3(data_frame):
     start_time = timeit.default_timer()
     addresses = []
     for row in data_frame.itertuples():
         addresses.append(Address(row.street, row.city, row.state, row.zip))
     return timeit.default_timer() - start_time
+
 
 def parse_data_frame1(data_frame):
     start_time = timeit.default_timer()
