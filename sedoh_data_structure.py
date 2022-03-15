@@ -180,7 +180,7 @@ class SedohDataElements:
             DataElement(SedohDataSource.ACS,
                         "Percent Bachelor's Degree - Age 25 or Over",
                         "percent_bachelors_degree_age_25_or_over",
-                        "S1501_C01_012E",
+                        "S1501_C02_012E",
                         GetStrategy.PRIVATE_API),
             # Median Household Income
             DataElement(SedohDataSource.ACS,
