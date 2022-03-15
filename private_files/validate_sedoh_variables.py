@@ -15,9 +15,8 @@ for data_element in data_elements:
     if data_element.data_source == sds.SedohDataSource.ACS and data_element.get_strategy == GetStrategy.PRIVATE_API:
         filtered_data_elements.append(data_element)
 
-validation_file = pd.ExcelFile('./validation/GIS_Measurement_V2_03-04-2022_Validation.xlsx')
+validation_file = pd.ExcelFile('./GIS_Measurement_V2_03-04-2022_Validation.xlsx')
 true_data_frames = []
-
 true_data_frames.append(pd.read_excel(validation_file, 'GINI', dtype='str'))
 true_data_frames.append(pd.read_excel(validation_file, 'POP_OLD', dtype='str'))
 true_data_frames.append(pd.read_excel(validation_file, 'POP_CHILD', dtype='str'))
@@ -69,7 +68,7 @@ for i, true_data_frame in enumerate(true_data_frames):
     validation_results.append([filtered_data_elements[i].variable_name, round((matched / total) * 100, 5)])
 
 header = ['variable', 'percent_accurate']
-with open('./validation/acs_validation_results.csv', 'w', newline='') as result_file:
+with open('./acs_validation_results.csv', 'w', newline='') as result_file:
     writer = csv.writer(result_file)
     writer.writerow(header)
     writer.writerows(validation_results)
