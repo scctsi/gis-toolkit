@@ -4,29 +4,16 @@ from data_structure import GetStrategy
 import sedoh_data_structure as sds
 import value_getter
 import pandas as pd
-import importer
 import main
 import json
 import csv
 import math
 
-def load_data_files():
-    data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("../data_files/calepa_ces.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("../data_files/cdc.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("../data_files/gazetteer.txt"), "GEOID"),
-        sds.SedohDataSource.USDA: (importer.import_file('../data_files/usda.xls'), "CensusTrac")
-    }
-    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
-    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
-    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
-    return data_files
-
 
 def validate_sedoh_data_element(data_element, data_files, api_validation_range=5):
-    with open('../private_files/validation_source_key.json', 'r+') as key_file:
+    with open('./private_files/validation_source_key.json', 'r+') as key_file:
         data = json.load(key_file)
-    validation_file = pd.ExcelFile('../private_files/GIS_Measurement_V2_03-04-2022_Validation.xlsx')
+    validation_file = pd.ExcelFile('./private_files/GIS_Measurement_V2_03-04-2022_Validation.xlsx')
     true_data_frame = pd.read_excel(validation_file, data[data_element.friendly_name], dtype='str')
     total = 0
     matched = 0
@@ -61,13 +48,13 @@ def validate_sedoh_data_element(data_element, data_files, api_validation_range=5
     return result
 
 data_elements = sds.SedohDataElements().data_elements
-data_files = load_data_files()
+data_files = main.load_data_files()
 validation_results = []
 for data_element in data_elements:
     validation_results.append([data_element.friendly_name, validate_sedoh_data_element(data_element, data_files)])
-
+    
 header = ['variable', 'percent_accurate']
-with open('../private_files/validation_results.csv', 'w', newline='') as result_file:
+with open('./private_files/validation_results.csv', 'w', newline='') as result_file:
     writer = csv.writer(result_file)
     writer.writerow(header)
     writer.writerows(validation_results)
