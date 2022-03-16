@@ -38,7 +38,7 @@ def geocode_addresses_list(parsed_addresses, list_range):
     return (timeit.default_timer() - start_time) / list_range
 
 
-rrad_addresses = parse_json_file(read_json_file('private_files/addresses-us-all.json'))
+rrad_addresses = parse_json_file(read_json_file('./validation/addresses-us-all.json'))
 address_count = 5
 geocoding_avg_time = round(geocode_addresses_list(rrad_addresses, address_count), 3)
 print(str(geocoding_avg_time) + " seconds per address to batch geocode " + str(address_count) + " addresses")
