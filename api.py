@@ -1,4 +1,5 @@
 import requests
+import constant
 
 
 # API specific methods
@@ -13,8 +14,11 @@ def get_response(url):
     try:
         return response.json()
     except Exception:
-        print(response)
-        quit(1)
+        if response.status_code == 204:
+            return response
+        else:
+            print(response)
+            quit(1)
 
 
 def get_header_row_and_truncated_json(json_to_process):
@@ -26,11 +30,14 @@ def get_header_row_and_truncated_json(json_to_process):
 
 def get_value(url):
     response = get_response(url)
-    header_row, truncated_response = get_header_row_and_truncated_json(response)
-    # TODO: This is specific to the Census API which returns JSON like this example below:
-    # [['B19083_001E', 'state', 'county', 'tract'], ['0.4981', '06', '001', '400100']]
-    # For now, only ACS has an API, but this function needs expansion once we have more API data sources
-    return truncated_response[0][0]
+    if response.status_code == 204:
+        return constant.NOT_AVAILABLE
+    else:
+        header_row, truncated_response = get_header_row_and_truncated_json(response)
+        # TODO: This is specific to the Census API which returns JSON like this example below:
+        # [['B19083_001E', 'state', 'county', 'tract'], ['0.4981', '06', '001', '400100']]
+        # For now, only ACS has an API, but this function needs expansion once we have more API data sources
+        return truncated_response[0][0]
 
 
 def get_values(url):
