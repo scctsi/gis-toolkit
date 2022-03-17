@@ -48,7 +48,7 @@ def geocode_data_frame(data_frame):
     return data_frame
 
 
-def geocode_addresses_in_data_frame(data_key, data_frame):
+def geocode_addresses_in_data_frame(data_frame, data_key):
     """
     :param data_key: Key of save file, associated with a file's geocoding process
     :param data_frame: Data frame of addresses, to be geocoded
@@ -100,7 +100,6 @@ def save_geocode_progress(data_key, batch_index, status="Incomplete", error_mess
             data[data_key]['last_successful_batch'] = batch_index
             data[data_key]['status'] = status
             data[data_key]['error_message'] = error_message
-        print("SAVING: ", data_key, " AS ", batch_index)
         save_file.seek(0)
         json.dump(data, save_file, indent=4)
         save_file.truncate()
@@ -119,7 +118,6 @@ def load_geocode_progress(data_key):
         else:
             batch_index = 0
             save_geocode_progress(data_key, batch_index)
-    print("LOADING: ", batch_index)
     return batch_index
 
 

@@ -60,7 +60,7 @@ class DataFrameEnhancer:
 
     def get_data_element_values(self):
         progress = self.load_enhancement_progress()
-        for index, row in self.data_frame.iterrows(progress):
+        for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
             for data_element in self.data_elements:
@@ -71,7 +71,7 @@ class DataFrameEnhancer:
                     self.save_enhancement_progress(index, "Incomplete", str(e), data_element.friendly_name)
                     raise SystemExit(e)
             if index == 0:
-                self.data_frame.iloc[[index]].to_csv('./temp/enhanced_' + self.data_key + '.csv')
+                self.data_frame.iloc[[index]].to_csv('./temp/enhanced_' + self.data_key + '.csv', index=False)
             else:
                 self.data_frame.iloc[[index]].to_csv('./temp/enhanced_' + self.data_key + '.csv', index=False, header=False, mode='a')
             self.save_enhancement_progress(index + 1)
