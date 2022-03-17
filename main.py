@@ -44,7 +44,7 @@ def main():
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key="test_start_stop_enhancement")
     enhanced_data_frame = sedoh_enhancer.enhance()
     print("Finished enhancement with SEDoH data")
 

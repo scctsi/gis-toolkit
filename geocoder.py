@@ -75,8 +75,8 @@ def check_temp_dir():
 
 def check_save_file():
     check_temp_dir()
-    if not os.path.exists('./temp/save_file.json'):
-        with open('./temp/save_file.json', "w") as save_file:
+    if not os.path.exists('temp/geocoder_save_file.json'):
+        with open('temp/geocoder_save_file.json', "w") as save_file:
             json.dump({}, save_file)
     return None
 
@@ -92,7 +92,7 @@ def save_geocode_progress(data_key, batch_index, status="Incomplete", error_mess
     :return: None
     """
     check_save_file()
-    with open('./temp/save_file.json', "r+") as save_file:
+    with open('temp/geocoder_save_file.json', "r+") as save_file:
         data = json.load(save_file)
         if data_key not in data.keys():
             data[data_key] = {'last_successful_batch' : batch_index, "status" : "Incomplete", "error_message" : ""}
@@ -112,7 +112,7 @@ def load_geocode_progress(data_key):
     :return: Batch index of batch geocoding progress
     """
     check_save_file()
-    with open('./temp/save_file.json') as save_file:
+    with open('temp/geocoder_save_file.json') as save_file:
         data = json.load(save_file)
         if data_key in data.keys() and data[data_key]['status'] == "Incomplete":
             batch_index = data[data_key]['last_successful_batch']
@@ -174,7 +174,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
         # The index of the next batch to be geocoded is saved and once the loop ends, the completion status is saved
         new_batch_index = i + 1
         save_geocode_progress(data_key, new_batch_index)
-    save_geocode_progress(data_key, new_batch_index, "Complete")
+    save_geocode_progress(data_key, load_geocode_progress(data_key), "Complete")
     pd.set_option('display.max_columns', None)
     pd.reset_option('display.max_columns')
     return None
