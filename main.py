@@ -24,6 +24,13 @@ def load_data_files():
     return data_files
 
 
+def get_data_key(file_name):
+    index = file_name.rindex('/')
+    file_name = file_name[index + 1:]
+    index = file_name.index('.')
+    return file_name[:index] + '_' + file_name[index + 1:].lower()
+
+
 def main():
     data_elements = sds.SedohDataElements().data_elements
 
@@ -35,6 +42,7 @@ def main():
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     test_file_path = './input/addresses.xlsx'
+    data_key = get_data_key(test_file_path)
     print(f"Importing input file located at {test_file_path}")
     input_data_frame = importer.import_file(test_file_path)
 
