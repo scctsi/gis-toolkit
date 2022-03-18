@@ -57,8 +57,8 @@ def geocode_addresses_in_data_frame(data_frame, data_key):
     # TODO: Create addresses list using DataFrame function
     data_frame[constant.GEO_ID_NAME] = ''
     addresses = []
-    for index, row in data_frame.iterrows():
-        addresses.append(Address(row['street'], row['city'], row['state'], row['zip']))
+    for row in data_frame.itertuples():
+        addresses.append(Address(row.street, row.city, row.state, row.zip))
     try:
         geocode_addresses_to_census_tract(addresses, data_key)
         data_frame[constant.GEO_ID_NAME] = importer.import_file('./temp/geocoded_' + data_key + '.csv')['census_tract']
@@ -152,7 +152,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
              save_geocode_progress(data_key, i, "Incomplete", str(e))
              raise SystemExit(e)
