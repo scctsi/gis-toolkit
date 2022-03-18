@@ -173,7 +173,7 @@ class SedohDataElements:
             # Percent High School Grad - Age 25 or Over
             DataElement(SedohDataSource.ACS,
                         "Percent High School Grad - Age 25 or Over",
-                        "percent_households_with_limited_english",
+                        "percent_high_school_grad_age_25_or_over",
                         "S1501_C02_009E",
                         GetStrategy.PRIVATE_API),
             # Percent Bachelor's Degree - Age 25 or Over
