@@ -26,9 +26,9 @@ def load_data_files():
 
 def get_data_key(file_path):
     index = file_path.rindex('/')
-    file_path = file_path[index + 1:]
-    index = file_path.index('.')
-    return file_path[:index] + '_' + file_path[index + 1:].lower()
+    file_name = file_path[index + 1:]
+    index = file_name.index('.')
+    return file_name[:index] + '_' + file_name[index + 1:].lower()
 
 
 def main():
