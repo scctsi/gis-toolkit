@@ -134,3 +134,4 @@ dmypy.json
 # GIS Toolkit specific
 temp/
 private_files/
+private_test_files/
