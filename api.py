@@ -14,7 +14,7 @@ def get_response(url):
     try:
         return response.json()
     except Exception:
-        if response.status_code == 204:
+        if response.status_code == 204 or 400:
             return constant.NOT_AVAILABLE
         else:
             print(response)
