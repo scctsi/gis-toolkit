@@ -1,5 +1,5 @@
 import pandas as pd
-
+import timeit
 import constant
 import value_getter
 import progress_bar
@@ -98,7 +98,6 @@ class GeoenhancedCache:
         if os.path.exists(file_path):
             self.data_frame = importer.import_file(file_path)
             self.data_frame.drop_duplicates(subset=[constant.GEO_ID_NAME], inplace=True, ignore_index=True)
-            print(self.data_frame)
 
     def in_cache(self, geo_id):
         if geo_id in self.data_frame[constant.GEO_ID_NAME].values:
