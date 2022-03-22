@@ -78,7 +78,7 @@ class SedohDataElements:
             DataElement(SedohDataSource.ACS,
                         "Housing - Percent Occupied Units with No Internet Subscription",
                         "housing_percent_occupied_units_with_no_internet_subscription",
-                        "S0101_C01_036E",
+                        "S2801_C02_019E",
                         GetStrategy.PRIVATE_API),
             # Population Density
             DataElement(SedohDataSource.ACS,
