@@ -113,7 +113,7 @@ def load_geocode_progress(data_key):
     check_save_file()
     with open('temp/geocoder_save_file.json') as save_file:
         data = json.load(save_file)
-        if data_key in data.keys() and data[data_key]['status'] == "Incomplete":
+        if data_key in data.keys():
             batch_index = data[data_key]['last_successful_batch']
         else:
             batch_index = 0

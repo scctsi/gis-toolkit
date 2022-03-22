@@ -15,7 +15,7 @@ def get_response(url):
         return response.json()
     except Exception:
         if response.status_code == 204:
-            return response
+            return constant.NOT_AVAILABLE
         else:
             print(response)
             quit(1)
@@ -30,7 +30,7 @@ def get_header_row_and_truncated_json(json_to_process):
 
 def get_value(url):
     response = get_response(url)
-    if response.status_code == 204:
+    if response == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     else:
         header_row, truncated_response = get_header_row_and_truncated_json(response)
