@@ -1,5 +1,4 @@
 import pandas as pd
-import timeit
 import constant
 import value_getter
 import progress_bar
@@ -67,19 +66,20 @@ class DataFrameEnhancer:
         self.geoenhanced_cache.load_cache(enhanced_file_path)
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
-            arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
-            for data_element in self.data_elements:
-                try:
-                    self.data_frame.iloc[index][data_element.variable_name] = \
-                        value_getter.get_value(data_element, arguments, self.data_files, self.geoenhanced_cache)
-                except requests.exceptions.RequestException as e:
-                    self.save_enhancement_progress(index, "Incomplete", str(e), data_element.friendly_name)
-                    raise SystemExit(e)
+            if not self.data_frame.iloc[index][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE:
+                arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
+                for data_element in self.data_elements:
+                    try:
+                        self.data_frame.iloc[index][data_element.variable_name] = \
+                            value_getter.get_value(data_element, arguments, self.data_files, self.geoenhanced_cache)
+                    except requests.exceptions.RequestException as e:
+                        self.save_enhancement_progress(index, "Incomplete", str(e), data_element.friendly_name)
+                        raise SystemExit(e)
+                self.geoenhanced_cache.set_cache(self.data_frame.iloc[index][constant.GEO_ID_NAME], self.data_frame.iloc[[index]])
             if index == 0:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False)
             else:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False, header=False, mode='a')
-            self.geoenhanced_cache.set_cache(self.data_frame.iloc[index][constant.GEO_ID_NAME], self.data_frame.iloc[[index]])
             self.save_enhancement_progress(index + 1)
         self.save_enhancement_progress(self.load_enhancement_progress(), "Complete")
         self.data_frame = importer.import_file(enhanced_file_path)
