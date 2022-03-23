@@ -31,6 +31,13 @@ def get_data_key(file_path):
     return file_name[:index] + '_' + file_name[index + 1:].lower()
 
 
+def data_key_to_file_name(data_key):
+    index = data_key.rindex('_')
+    file_name = data_key[:index]
+    extension = data_key[index + 1:]
+    return [file_name, extension]
+
+
 def main():
     data_elements = sds.SedohDataElements().data_elements
 
@@ -43,6 +50,7 @@ def main():
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     test_file_path = './input/addresses.xlsx'
     data_key = get_data_key(test_file_path)
+    file_name = data_key_to_file_name(data_key)
     print(f"Importing input file located at {test_file_path}")
     input_data_frame = importer.import_file(test_file_path)
 
@@ -58,8 +66,8 @@ def main():
 
     # # Step 3: Export the enhanced data. Currently supports .csv, .xls, .xlsx
     # # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    exporter.export_file(enhanced_data_frame, "./output/enhanced.xlsx")
-    print("Exported enhanced file to ./output/enhanced.xlsx")
+    exporter.export_file(enhanced_data_frame, "./output/" + file_name[0] + "_enhanced." + file_name[1])
+    print("Exported enhanced file to ./output/" + file_name[0] + "_enhanced." + file_name[1])
 
     # test_data_element = DataElement(sedoh_data_structure.SedohDataSource.ACS, "Gini Inequality Coefficient",
     #                                 "gini_inequality_coefficient", "B19083_001E", GetStrategy.PUBLIC_API)
