@@ -21,6 +21,13 @@ def check_save_file():
     return None
 
 
+def data_key_to_file_name(data_key):
+    index = data_key.rindex('_')
+    file_name = data_key[:index]
+    extension = data_key[index + 1:]
+    return [file_name, extension]
+
+
 class DataFrameEnhancer:
     def __init__(self, data_frame, data_elements, data_files, data_key):
         self.data_frame = data_frame
@@ -47,12 +54,22 @@ class DataFrameEnhancer:
         check_save_file()
         with open('temp/enhancer_save_file.json') as save_file:
             data = json.load(save_file)
-            if self.data_key in data.keys() and data[self.data_key]['status'] == "Incomplete":
+            if self.data_key in data.keys():
                 index = data[self.data_key]['last_successful_line']
             else:
                 index = 0
                 self.save_enhancement_progress(index)
         return index
+
+    def load_enhancement_status(self):
+        check_save_file()
+        with open('temp/enhancer_save_file.json') as save_file:
+            data = json.load(save_file)
+        if self.data_key in data.keys() and data[self.data_key]['status'] == 'Complete':
+            file_name = data_key_to_file_name(self.data_key)
+            print(file_name[0] + "." + file_name[1] + " has already been enhanced.")
+            print("Please look at output/" + file_name[0] + "_enhanced." + file_name[1] + " for enhanced data.")
+            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name[0] + "." + file_name[1] + ")")
 
     def add_data_elements(self):
         for data_element in self.data_elements:
@@ -60,6 +77,7 @@ class DataFrameEnhancer:
 
     def get_data_element_values(self):
         progress = self.load_enhancement_progress()
+        self.load_enhancement_status()
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
