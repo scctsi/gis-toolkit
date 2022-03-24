@@ -12,8 +12,10 @@ load_dotenv()
 #                        options = optional arguments which allow yoy to customize the function
 
 
-def get_value(data_element, arguments, data_files):
-    if data_element.data_source == SedohDataSource.ACS:
+def get_value(data_element, arguments, data_files, data_cache):
+    if data_cache.in_cache(arguments["fips_concatenated_code"]):
+        return data_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
+    elif data_element.data_source == SedohDataSource.ACS:
         if data_element.get_strategy == GetStrategy.PRIVATE_API:
             return get_acs_value(data_element.source_variable, arguments)
         elif data_element.get_strategy == GetStrategy.CALCULATION:
@@ -37,7 +39,6 @@ def get_value(data_element, arguments, data_files):
                                          data_files[data_element.data_source][0],
                                          data_files[data_element.data_source][1],
                                          data_element.variable_name)
-
 
 # ACS specific methods
 def construct_geography_argument(arguments):

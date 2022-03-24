@@ -48,11 +48,11 @@ def main():
 
     # Optional Step: Geocode addresses
     if geocoder.geocodable(input_data_frame):
-        input_data_frame = geocoder.geocode_data_frame(input_data_frame)
+        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key="test_start_stop_enhancement")
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key)
     enhanced_data_frame = sedoh_enhancer.enhance()
     print("Finished enhancement with SEDoH data")
 
