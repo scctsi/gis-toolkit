@@ -31,6 +31,13 @@ def get_data_key(file_path):
     return file_name[:index] + '_' + file_name[index + 1:].lower()
 
 
+def data_key_to_file_name(data_key):
+    index = data_key.rindex('_')
+    file_name = data_key[:index]
+    extension = data_key[index + 1:]
+    return file_name, extension
+
+
 def main():
     data_elements = sds.SedohDataElements().data_elements
 
@@ -43,23 +50,24 @@ def main():
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     test_file_path = './input/addresses.xlsx'
     data_key = get_data_key(test_file_path)
+    file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {test_file_path}")
     input_data_frame = importer.import_file(test_file_path)
 
     # Optional Step: Geocode addresses
     if geocoder.geocodable(input_data_frame):
-        input_data_frame = geocoder.geocode_data_frame(input_data_frame)
+        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key="test_start_stop_enhancement")
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key)
     enhanced_data_frame = sedoh_enhancer.enhance()
     print("Finished enhancement with SEDoH data")
 
     # # Step 3: Export the enhanced data. Currently supports .csv, .xls, .xlsx
     # # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    exporter.export_file(enhanced_data_frame, "./output/enhanced.xlsx")
-    print("Exported enhanced file to ./output/enhanced.xlsx")
+    exporter.export_file(enhanced_data_frame, "./output/" + file_name + "_enhanced." + extension)
+    print("Exported enhanced file to ./output/" + file_name + "_enhanced." + extension)
 
     # test_data_element = DataElement(sedoh_data_structure.SedohDataSource.ACS, "Gini Inequality Coefficient",
     #                                 "gini_inequality_coefficient", "B19083_001E", GetStrategy.PUBLIC_API)

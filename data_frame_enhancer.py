@@ -1,5 +1,8 @@
 import pandas as pd
+<<<<<<< HEAD
 from data_structure import GetStrategy
+=======
+>>>>>>> main
 import constant
 import sedoh_data_structure as sds
 import value_getter
@@ -24,6 +27,7 @@ def check_save_file():
     return None
 
 
+<<<<<<< HEAD
 def acs_dicts(data_elements):
     data_sets = {}
     data_sources = {}
@@ -67,6 +71,13 @@ def acs_data_set_variables_dict(data_elements):
         else:
             data_set_variables.update({data_set_name: [data_element.variable_name]})
     return data_set_variables
+=======
+def data_key_to_file_name(data_key):
+    index = data_key.rindex('_')
+    file_name = data_key[:index]
+    extension = data_key[index + 1:]
+    return file_name, extension
+>>>>>>> main
 
 
 class DataFrameEnhancer:
@@ -96,12 +107,22 @@ class DataFrameEnhancer:
         check_save_file()
         with open('temp/enhancer_save_file.json') as save_file:
             data = json.load(save_file)
-            if self.data_key in data.keys() and data[self.data_key]['status'] == "Incomplete":
+            if self.data_key in data.keys():
                 index = data[self.data_key]['last_successful_line']
             else:
                 index = 0
                 self.save_enhancement_progress(index)
         return index
+
+    def load_enhancement_status(self):
+        check_save_file()
+        with open('temp/enhancer_save_file.json') as save_file:
+            data = json.load(save_file)
+        if self.data_key in data.keys() and data[self.data_key]['status'] == 'Complete':
+            file_name, extension = data_key_to_file_name(self.data_key)
+            print(file_name + "." + extension + " has already been enhanced.")
+            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
+            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
 
     def add_data_elements(self):
         for data_element in self.data_elements:
@@ -119,7 +140,8 @@ class DataFrameEnhancer:
 
     def get_data_element_values(self):
         progress = self.load_enhancement_progress()
-        enhanced_file_path = './temp/enhanced_' + self.data_key + '2.csv'
+        self.load_enhancement_status()
+        enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
         acs_data_elements, non_acs_data_elements = self.arrange_data_elements()
         # data_sets, data_sources, data_set_variables = acs_dicts(acs_data_elements)
@@ -133,8 +155,7 @@ class DataFrameEnhancer:
                 for data_element in self.data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         self.geoenhanced_cache.get_value_from_cache(arguments['fips_concatenated_code'], data_element)
-            # NEEDS UPDATE AFTER MERGED WITH MAIN!!!
-            elif not arguments['fips_concatenated_code'] == "Placeholder_Not_Found":
+            elif not arguments['fips_concatenated_code'] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_sets:
                     try:
                         values_dict = value_getter.get_acs_values(data_set, data_sets[data_set], arguments)
@@ -159,7 +180,6 @@ class DataFrameEnhancer:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False)
             else:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False, header=False, mode='a')
-            self.geoenhanced_cache.set_cache(self.data_frame.iloc[index][constant.GEO_ID_NAME], self.data_frame.iloc[[index]])
             self.save_enhancement_progress(index + 1)
         self.save_enhancement_progress(self.load_enhancement_progress(), "Complete")
         self.data_frame = importer.import_file(enhanced_file_path)
