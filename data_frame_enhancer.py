@@ -1,8 +1,5 @@
 import pandas as pd
-<<<<<<< HEAD
 from data_structure import GetStrategy
-=======
->>>>>>> main
 import constant
 import sedoh_data_structure as sds
 import value_getter
@@ -27,7 +24,7 @@ def check_save_file():
     return None
 
 
-<<<<<<< HEAD
+
 def acs_dicts(data_elements):
     data_sets = {}
     data_sources = {}
@@ -71,13 +68,13 @@ def acs_data_set_variables_dict(data_elements):
         else:
             data_set_variables.update({data_set_name: [data_element.variable_name]})
     return data_set_variables
-=======
+
+
 def data_key_to_file_name(data_key):
     index = data_key.rindex('_')
     file_name = data_key[:index]
     extension = data_key[index + 1:]
     return file_name, extension
->>>>>>> main
 
 
 class DataFrameEnhancer:
