@@ -9,16 +9,20 @@ def construct_url(interpolation_string, arguments):
 
 def get_response(url):
     # TODO: Assert 200
-    response = requests.get(url)
-
+    response = requests.get(url, verify=False)
+    # try:
+    #     return response.json()
+    # except Exception:
+    #     if response.status_code == 204:
+    #         return constant.NOT_AVAILABLE
+    #     else:
+    #         print(response)
+    #         quit(1)
     try:
         return response.json()
-    except Exception:
-        if response.status_code == 204:
-            return constant.NOT_AVAILABLE
-        else:
-            print(response)
-            quit(1)
+    except:
+        return response
+
 
 
 def get_header_row_and_truncated_json(json_to_process):
@@ -41,5 +45,6 @@ def get_value(url):
 
 
 def get_values(url):
-    # This call is currently just used for benchmarking
-    get_response(url)
+    response = get_response(url)
+    print(response)
+    return None

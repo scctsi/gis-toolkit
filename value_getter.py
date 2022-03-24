@@ -86,13 +86,13 @@ def get_acs_value(source_variable, arguments):
     return api.get_value(api_url)
 
 
-def get_acs_values(source_variables, arguments):
+def get_acs_values(data_set, source_variables, arguments):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
     arguments = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
-        "dataset_name": 'acs/acs5/subject',
+        "dataset_name": data_set,
         "variables": source_variables,
         "geographies": construct_geography_argument(arguments),
         "key": os.getenv("census_api_key")
