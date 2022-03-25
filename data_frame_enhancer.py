@@ -24,8 +24,11 @@ def check_save_file():
     return None
 
 
-
 def acs_dicts(data_elements):
+    """
+    :param data_elements: acs data elements
+    :return: data sets dict, data sources dict, data set variables dict
+    """
     data_sets = {}
     data_sources = {}
     data_set_variables = {}
@@ -42,6 +45,10 @@ def acs_dicts(data_elements):
 
 
 def acs_data_sets_dict(data_elements):
+    """
+    :param data_elements: acs data elements
+    :return: {acs data set: joined source variable string}
+    """
     data_sets = {}
     for data_element in data_elements:
         data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
@@ -53,6 +60,10 @@ def acs_data_sets_dict(data_elements):
 
 
 def acs_data_sources_dict(data_elements):
+    """
+    :param data_elements: acs data elements
+    :return: {data element source variable: data element}
+    """
     data_sources = {}
     for data_element in data_elements:
         data_sources.update({data_element.source_variable: data_element})
@@ -60,6 +71,10 @@ def acs_data_sources_dict(data_elements):
 
 
 def acs_data_set_variables_dict(data_elements):
+    """
+    :param data_elements: acs data elements
+    :return: {acs data set: [data element variable names]}
+    """
     data_set_variables = {}
     for data_element in data_elements:
         data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
@@ -141,18 +156,17 @@ class DataFrameEnhancer:
         enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
         acs_data_elements, non_acs_data_elements = self.arrange_data_elements()
-        # data_sets, data_sources, data_set_variables = acs_dicts(acs_data_elements)
         data_sets = acs_data_sets_dict(acs_data_elements)
         data_sources = acs_data_sources_dict(acs_data_elements)
         data_set_variables = acs_data_set_variables_dict(acs_data_elements)
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
-            if self.geoenhanced_cache.in_cache(arguments['fips_concatenated_code']):
+            if self.geoenhanced_cache.in_cache(arguments["fips_concatenated_code"]):
                 for data_element in self.data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
-                        self.geoenhanced_cache.get_value_from_cache(arguments['fips_concatenated_code'], data_element)
-            elif not arguments['fips_concatenated_code'] == constant.ADDRESS_NOT_GEOCODABLE:
+                        self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
+            elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_sets:
                     try:
                         values_dict = value_getter.get_acs_values(data_set, data_sets[data_set], arguments)
@@ -163,7 +177,6 @@ class DataFrameEnhancer:
                         for variable in data_set_variables[data_set]:
                             self.data_frame.iloc[index][variable] = constant.NOT_AVAILABLE
                     else:
-                        # values_dict = {source_variable: value}, data_sources = {source_variable: data_element}
                         for source in values_dict:
                             if data_sources[source].get_strategy == GetStrategy.CALCULATION:
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = \
@@ -173,6 +186,7 @@ class DataFrameEnhancer:
                 for data_element in non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                             value_getter.get_value(data_element, arguments, self.data_files)
+                self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
             if index == 0:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False)
             else:
