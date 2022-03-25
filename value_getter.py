@@ -12,20 +12,8 @@ load_dotenv()
 #                        options = optional arguments which allow yoy to customize the function
 
 
-def get_value(data_element, arguments, data_files, data_cache):
-    if data_cache.in_cache(arguments["fips_concatenated_code"]):
-        return data_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
-    elif data_element.data_source == SedohDataSource.ACS:
-        if data_element.get_strategy == GetStrategy.PRIVATE_API:
-            return get_acs_value(data_element.source_variable, arguments)
-        elif data_element.get_strategy == GetStrategy.CALCULATION:
-            # TODO: Refactor this code to use a list for even a single source variable
-            source_value = get_acs_value(data_element.source_variable, arguments)
-            return get_acs_calculation(data_element.variable_name, source_value, arguments, data_files)
-        else:
-            return None
-            # TODO: raise error
-    elif data_element.get_strategy == GetStrategy.FILE:
+def get_value(data_element, arguments, data_files):
+    if data_element.get_strategy == GetStrategy.FILE:
         # if type(data_element.source_variable) == list:
         #     else:
         #
@@ -86,13 +74,13 @@ def get_acs_value(source_variable, arguments):
     return api.get_value(api_url)
 
 
-def get_acs_values(source_variables, arguments):
+def get_acs_values(data_set, source_variables, arguments):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
     arguments = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
-        "dataset_name": 'acs/acs5/subject',
+        "dataset_name": data_set,
         "variables": source_variables,
         "geographies": construct_geography_argument(arguments),
         "key": os.getenv("census_api_key")
@@ -101,7 +89,7 @@ def get_acs_values(source_variables, arguments):
     census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
                                       "&key={key}"
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    api.get_values(api_url)
+    return api.get_values(api_url)
 
 
 def get_acs_calculation(variable_name, source_value, arguments, data_files):
