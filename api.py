@@ -21,11 +21,21 @@ def get_response(url):
             quit(1)
 
 
+
 def get_header_row_and_truncated_json(json_to_process):
     header_row = json_to_process[0].copy()
     del json_to_process[0]
 
     return header_row, json_to_process
+
+
+def response_to_dict(response):
+    result_dict = {}
+    for i, source in enumerate(response[0]):
+        if source == 'state':
+            break
+        result_dict.update({source: response[1][i]})
+    return result_dict
 
 
 def get_value(url):
@@ -42,5 +52,8 @@ def get_value(url):
 
 
 def get_values(url):
-    # This call is currently just used for benchmarking
-    get_response(url)
+    response = get_response(url)
+    if response == constant.NOT_AVAILABLE:
+        return constant.NOT_AVAILABLE
+    else:
+        return response_to_dict(response)
