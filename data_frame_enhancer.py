@@ -24,72 +24,52 @@ def check_save_file():
     return None
 
 
-def acs_dicts(data_elements):
-    """
-    :param data_elements: acs data elements
-    :return: data sets dict, data sources dict, data set variables dict
-    """
-    data_sets = {}
-    data_sources = {}
-    data_set_variables = {}
-    for data_element in data_elements:
-        data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-        data_sources.update({data_element.source_variable: data_element})
-        if data_set_name in data_sets.keys():
-            data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
-            data_set_variables[data_set_name].append(data_element.variable_name)
-        else:
-            data_sets.update({data_set_name: data_element.source_variable})
-            data_set_variables.update({data_set_name: [data_element.variable_name]})
-    return data_sets, data_sources, data_set_variables
-
-
-def acs_data_sets_dict(data_elements):
-    """
-    :param data_elements: acs data elements
-    :return: {acs data set: joined source variable string}
-    """
-    data_sets = {}
-    for data_element in data_elements:
-        data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-        if data_set_name in data_sets.keys():
-            data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
-        else:
-            data_sets.update({data_set_name: data_element.source_variable})
-    return data_sets
-
-
-def acs_data_sources_dict(data_elements):
-    """
-    :param data_elements: acs data elements
-    :return: {data element source variable: data element}
-    """
-    data_sources = {}
-    for data_element in data_elements:
-        data_sources.update({data_element.source_variable: data_element})
-    return data_sources
-
-
-def acs_data_set_variables_dict(data_elements):
-    """
-    :param data_elements: acs data elements
-    :return: {acs data set: [data element variable names]}
-    """
-    data_set_variables = {}
-    for data_element in data_elements:
-        data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-        if data_set_name in data_set_variables.keys():
-            data_set_variables[data_set_name].append(data_element.variable_name)
-        else:
-            data_set_variables.update({data_set_name: [data_element.variable_name]})
-    return data_set_variables
-
-
 def data_key_to_file_name(data_key):
     index = data_key.rindex('_')
     file_name = data_key[:index]
     extension = data_key[index + 1:]
     return file_name, extension
+
+
+class ACSDataSource:
+    def __init__(self, acs_elements):
+        self.acs_elements = acs_elements
+
+    def data_sets(self):
+        """
+        :return: {acs data set: joined source variable string}
+        """
+        data_sets = {}
+        for data_element in self.acs_elements:
+            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+            if data_set_name in data_sets.keys():
+                data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
+            else:
+                data_sets.update({data_set_name: data_element.source_variable})
+        return data_sets
+
+    def data_sources(self):
+        """
+        :return: {data element source variable: data element}
+        """
+        data_sources = map(lambda data_element: (data_element.source_variable, data_element), self.acs_elements)
+        return dict(data_sources)
+
+    def data_set_variables(self):
+        """
+        :return: {acs data set: [data element variable names]}
+        """
+        data_set_variables = {}
+        for data_element in self.acs_elements:
+            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+            if data_set_name in data_set_variables.keys():
+                data_set_variables[data_set_name].append(data_element.variable_name)
+            else:
+                data_set_variables.update({data_set_name: [data_element.variable_name]})
+        return data_set_variables
+
+    def retrieve(self):
+        return self.data_sets(), self.data_sources(), self.data_set_variables()
 
 
 class DataFrameEnhancer:
@@ -99,6 +79,18 @@ class DataFrameEnhancer:
         self.data_files = data_files
         self.data_key = data_key
         self.geoenhanced_cache = GeoenhancedCache()
+        self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
+        self.acs_data_source = ACSDataSource(self.acs_data_elements)
+
+    def group_data_elements(self):
+        acs_data_elements = []
+        non_acs_data_elements = []
+        for data_element in self.data_elements:
+            if data_element.data_source == sds.SedohDataSource.ACS:
+                acs_data_elements.append(data_element)
+            else:
+                non_acs_data_elements.append(data_element)
+        return acs_data_elements, non_acs_data_elements
 
     def save_enhancement_progress(self, index, status="Incomplete", error_message="", data_element_on_error=""):
         check_save_file()
@@ -140,25 +132,12 @@ class DataFrameEnhancer:
         for data_element in self.data_elements:
             self.data_frame[data_element.variable_name] = ""
 
-    def arrange_data_elements(self):
-        acs_data_elements = []
-        non_acs_data_elements = []
-        for data_element in self.data_elements:
-            if data_element.data_source == sds.SedohDataSource.ACS:
-                acs_data_elements.append(data_element)
-            else:
-                non_acs_data_elements.append(data_element)
-        return acs_data_elements, non_acs_data_elements
-
     def get_data_element_values(self):
         progress = self.load_enhancement_progress()
         self.load_enhancement_status()
         enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
-        acs_data_elements, non_acs_data_elements = self.arrange_data_elements()
-        data_sets = acs_data_sets_dict(acs_data_elements)
-        data_sources = acs_data_sources_dict(acs_data_elements)
-        data_set_variables = acs_data_set_variables_dict(acs_data_elements)
+        data_sets, data_sources, data_set_variables = self.acs_data_source.retrieve()
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
@@ -183,7 +162,7 @@ class DataFrameEnhancer:
                                     value_getter.get_acs_calculation(data_sources[source].variable_name, values_dict[source], arguments, self.data_files)
                             else:
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = values_dict[source]
-                for data_element in non_acs_data_elements:
+                for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                             value_getter.get_value(data_element, arguments, self.data_files)
                 self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
