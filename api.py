@@ -10,6 +10,7 @@ def construct_url(interpolation_string, arguments):
 def get_response(url):
     # TODO: Assert 200
     response = requests.get(url)
+
     try:
         return response.json()
     except Exception:
@@ -42,6 +43,7 @@ def get_value(url):
     if response == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     else:
+        print(response)
         header_row, truncated_response = get_header_row_and_truncated_json(response)
         # TODO: This is specific to the Census API which returns JSON like this example below:
         # [['B19083_001E', 'state', 'county', 'tract'], ['0.4981', '06', '001', '400100']]

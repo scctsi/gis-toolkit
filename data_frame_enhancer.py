@@ -97,7 +97,8 @@ class DataFrameEnhancer:
         with open('temp/enhancer_save_file.json', "r+") as save_file:
             data = json.load(save_file)
             if self.data_key not in data.keys():
-                data[self.data_key] = {'last_successful_line': index, "status": "Incomplete", "error_message": "", "data_element_on_error": ""}
+                data[self.data_key] = {'last_successful_line': index, "status": "Incomplete", "error_message": "",
+                                       "data_element_on_error": ""}
             else:
                 data[self.data_key]['last_successful_line'] = index
                 data[self.data_key]['status'] = status
@@ -126,7 +127,8 @@ class DataFrameEnhancer:
             file_name, extension = data_key_to_file_name(self.data_key)
             print(file_name + "." + extension + " has already been enhanced.")
             print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+            print(
+                "If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
 
     def add_data_elements(self):
         for data_element in self.data_elements:
@@ -138,6 +140,7 @@ class DataFrameEnhancer:
         enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
         data_sets, data_sources, data_set_variables = self.acs_data_source.retrieve()
+        calculation_sources = ','.join(list(filter(lambda x: ',' in x, list(data_sources.keys()))))
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
@@ -157,14 +160,28 @@ class DataFrameEnhancer:
                             self.data_frame.iloc[index][variable] = constant.NOT_AVAILABLE
                     else:
                         for source in values_dict:
-                            if data_sources[source].get_strategy == GetStrategy.CALCULATION:
+                            if source in calculation_sources:
+                                if source == 'S1701_C01_042E':
+                                    self.data_frame.iloc[index]['percent_below_200_of_fed_poverty_level'] = \
+                                        value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
+                                                                         [values_dict[source],
+                                                                          values_dict['S1701_C01_001E']], arguments,
+                                                                         self.data_files)
+                                if source == 'S1701_C01_043E':
+                                    self.data_frame.iloc[index]['percent_below_300_of_fed_poverty_level'] = \
+                                        value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
+                                                                         [values_dict[source],
+                                                                          values_dict['S1701_C01_001E']], arguments,
+                                                                         self.data_files)
+                            elif data_sources[source].get_strategy == GetStrategy.CALCULATION:
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = \
-                                    value_getter.get_acs_calculation(data_sources[source].variable_name, values_dict[source], arguments, self.data_files)
+                                    value_getter.get_acs_calculation(data_sources[source].variable_name,
+                                                                     values_dict[source], arguments, self.data_files)
                             else:
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = values_dict[source]
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
-                            value_getter.get_value(data_element, arguments, self.data_files)
+                        value_getter.get_value(data_element, arguments, self.data_files)
                 self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
             if index == 0:
                 self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False)

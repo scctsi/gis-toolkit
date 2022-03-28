@@ -96,6 +96,8 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
     # TODO: Change from using hardcoded variable_name checks
     if source_value == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
+    elif variable_name in ["percent_below_200_of_fed_poverty_level", "percent_below_300_of_fed_poverty_level"]:
+        return round(100 * float(source_value[0]) / float(source_value[1]), 2)
     elif variable_name == 'housing_percent_occupied_units_lacking_plumbing':
         return 100 - float(source_value)
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
