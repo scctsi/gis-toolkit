@@ -9,7 +9,7 @@ def construct_url(interpolation_string, arguments):
 
 def get_response(url):
     # TODO: Assert 200
-    response = requests.get(url, verify=False)
+    response = requests.get(url)
 
     try:
         return response.json()

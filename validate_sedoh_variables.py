@@ -18,12 +18,11 @@ def validate_sedoh_data_element(data_element, data_files, api_validation_range=5
     true_data_frame = pd.read_excel(validation_file, data[data_element.friendly_name], dtype='str')
     total = 0
     matched = 0
-    empty_cache = GeoenhancedCache()
     if data_element.get_strategy == GetStrategy.FILE:
         for index, row in true_data_frame.iterrows():
             arguments = {"fips_concatenated_code": true_data_frame.iloc[index][constant.GEO_ID_NAME]}
             source_value = true_data_frame.iloc[index]["NUMERIC"]
-            data_value = value_getter.get_value(data_element, arguments, data_files, empty_cache)
+            data_value = value_getter.get_value(data_element, arguments, data_files)
             if data_value is not constant.NOT_AVAILABLE and (not math.isnan(float(source_value))):
                 total += 1
                 if abs(float(source_value) - float(data_value)) < .01:
@@ -36,8 +35,14 @@ def validate_sedoh_data_element(data_element, data_files, api_validation_range=5
             index = random.randint(total * section, (total + 1) * section)
             arguments = {"fips_concatenated_code": true_data_frame.iloc[index][constant.GEO_ID_NAME]}
             source_value = true_data_frame.iloc[index]["NUMERIC"]
-            print(source_value)
-            data_value = value_getter.get_value(data_element, arguments, data_files, empty_cache)
+            data_value = list(value_getter.get_acs_values(value_getter.get_acs_dataset_name(data_element.source_variable), data_element.source_variable, arguments).values())
+            if data_element.get_strategy == GetStrategy.CALCULATION:
+                if len(data_value) > 1:
+                    data_value = value_getter.get_acs_calculation(data_element.variable_name, [data_value[0], data_value[1]], arguments, data_files)
+                else:
+                    data_value = value_getter.get_acs_calculation(data_element.variable_name, data_value[0], arguments, data_files)
+            else:
+                data_value = data_value[0]
             if data_value is not constant.NOT_AVAILABLE and (not math.isnan(float(source_value))):
                 total += 1
                 if abs(float(source_value) - float(data_value)) < .01:
@@ -55,7 +60,7 @@ data_files = main.load_data_files()
 validation_results = []
 for data_element in data_elements:
     if data_element.friendly_name in ['Percent Below 200% of Fed Poverty Level', 'Percent Below 300% of Fed Poverty Level']:
-        validation_results.append([data_element.friendly_name, validate_sedoh_data_element(data_element, data_files)])
+        validation_results.append([data_element.friendly_name, validate_sedoh_data_element(data_element, data_files, 10)])
 
 print(validation_results)
 
