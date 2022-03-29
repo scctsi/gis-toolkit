@@ -112,6 +112,7 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         if aland == 'N/A' or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
+            print("pop_den_val", source_value, "aland", aland)
             return round(1000000 * (float(source_value) / int(aland)), 0)
     else:
         return None
