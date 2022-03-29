@@ -109,11 +109,9 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         aland = get_file_value("ALAND", arguments,
                                data_files[SedohDataSource.Gazetteer][0],
                                data_files[SedohDataSource.Gazetteer][1])
-        if aland == 'N/A' or int(aland) == 0:
-            print("Aland error")
+        if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
-            print("pop_den_val", source_value, "aland", aland)
             return round(1000000 * (float(source_value) / int(aland)), 0)
     else:
         return None
@@ -125,12 +123,8 @@ def get_file_value(source_variable, arguments, data_file, data_file_search_colum
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
 
     if len(indexes) == 0:
-        if source_variable == "ALAND":
-            print("aland==constant.NA")
         return constant.NOT_AVAILABLE
     elif len(indexes) == 1:
-        if source_variable == "ALAND":
-            print(data_file.iloc[indexes[0]][source_variable])
         return data_file.iloc[indexes[0]][source_variable]
     else:
         return "Error"
@@ -149,7 +143,6 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
             return constant.NOT_AVAILABLE
         else:
             source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
-    # print(source_values)
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':

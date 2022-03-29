@@ -175,8 +175,6 @@ class DataFrameEnhancer:
                                                                           values_dict['S1701_C01_001E']], arguments,
                                                                          self.data_files)
                             elif data_sources[source].get_strategy == GetStrategy.CALCULATION:
-                                if data_sources[source].variable_name == "population_density":
-                                    print(values_dict[source])
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = \
                                     value_getter.get_acs_calculation(data_sources[source].variable_name,
                                                                      values_dict[source], arguments, self.data_files)
