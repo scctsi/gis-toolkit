@@ -39,7 +39,7 @@ def test_enhancement_validity():
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame[:3]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, True)
     enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
     enhanced_data_frame.index = [0]
     assert enhanced_data_frame.equals(importer.import_file('./enhancement_control.csv'))

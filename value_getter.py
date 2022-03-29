@@ -74,7 +74,7 @@ def get_acs_value(source_variable, arguments):
     return api.get_value(api_url)
 
 
-def get_acs_values(data_set, source_variables, arguments):
+def get_acs_values(data_set, source_variables, arguments, test_mode=False):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
     arguments = {
@@ -89,7 +89,7 @@ def get_acs_values(data_set, source_variables, arguments):
     census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
                                       "&key={key}"
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    return api.get_values(api_url)
+    return api.get_values(api_url, test_mode)
 
 
 def get_acs_calculation(variable_name, source_value, arguments, data_files):

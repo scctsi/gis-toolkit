@@ -7,9 +7,12 @@ def construct_url(interpolation_string, arguments):
     return interpolation_string.format(**arguments)
 
 
-def get_response(url):
+def get_response(url, test_mode=False):
     # TODO: Assert 200
-    response = requests.get(url)
+    if not test_mode:
+        response = requests.get(url)
+    else:
+        response = requests.get(url, verify=False)
 
     try:
         return response.json()
@@ -51,8 +54,8 @@ def get_value(url):
         return truncated_response[0][0]
 
 
-def get_values(url):
-    response = get_response(url)
+def get_values(url, test_mode=False):
+    response = get_response(url, test_mode)
     if response == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     else:
