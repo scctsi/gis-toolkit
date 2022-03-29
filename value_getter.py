@@ -106,10 +106,10 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         aland = get_file_value("ALAND", arguments,
                                data_files[SedohDataSource.Gazetteer][0],
                                data_files[SedohDataSource.Gazetteer][1])
-        if aland == 'N/A':
-            return 'N/A'
+        if aland == 'N/A' or int(aland) == 0:
+            return constant.NOT_AVAILABLE
         else:
-            return round((float(source_value) / int(aland)), 0)
+            return round(1000000 * (float(source_value) / int(aland)), 0)
     else:
         return None
 
