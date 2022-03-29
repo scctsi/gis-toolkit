@@ -44,6 +44,10 @@ def test_enhancement_validity():
     enhanced_data_frame.index = [0]
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
+        print(data_element.variable_name)
+        print("Enhanced val", enhanced_data_frame.iloc[0][data_element.variable_name])
+        print("Control val", control_data_frame.iloc[0][data_element.variable_name])
+        print("")
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
             control_data_frame.iloc[0][data_element.variable_name]
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
