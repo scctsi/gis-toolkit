@@ -125,8 +125,12 @@ def get_file_value(source_variable, arguments, data_file, data_file_search_colum
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
 
     if len(indexes) == 0:
+        if source_variable == "ALAND":
+            print("aland==constant.NA")
         return constant.NOT_AVAILABLE
     elif len(indexes) == 1:
+        if source_variable == "ALAND":
+            print(data_file.iloc[indexes[0]][source_variable])
         return data_file.iloc[indexes[0]][source_variable]
     else:
         return "Error"
