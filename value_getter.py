@@ -85,9 +85,12 @@ def get_acs_values(data_set, source_variables, arguments, test_mode=False):
         "geographies": construct_geography_argument(arguments),
         "key": os.getenv("census_api_key")
     }
+    if not test_mode:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
+                                          "&key={key}"
+    else:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
 
-    census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
-                                      "&key={key}"
     api_url = api.construct_url(census_api_interpolation_string, arguments)
     return api.get_values(api_url, test_mode)
 
