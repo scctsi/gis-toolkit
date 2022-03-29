@@ -162,8 +162,6 @@ class DataFrameEnhancer:
                     else:
                         for source in values_dict:
                             if source in calculation_sources:
-                                if source == 'S0101_C01_001E':
-                                    print("Pop_den stuck")
                                 if source == 'S1701_C01_042E':
                                     self.data_frame.iloc[index]['percent_below_200_of_fed_poverty_level'] = \
                                         value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
@@ -178,7 +176,7 @@ class DataFrameEnhancer:
                                                                          self.data_files)
                             elif data_sources[source].get_strategy == GetStrategy.CALCULATION:
                                 if data_sources[source].variable_name == "population_density":
-                                    print("POP_DEN to calc")
+                                    print(values_dict[source])
                                 self.data_frame.iloc[index][data_sources[source].variable_name] = \
                                     value_getter.get_acs_calculation(data_sources[source].variable_name,
                                                                      values_dict[source], arguments, self.data_files)

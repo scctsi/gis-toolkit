@@ -110,6 +110,7 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
                                data_files[SedohDataSource.Gazetteer][0],
                                data_files[SedohDataSource.Gazetteer][1])
         if aland == 'N/A' or int(aland) == 0:
+            print("Aland error")
             return constant.NOT_AVAILABLE
         else:
             print("pop_den_val", source_value, "aland", aland)
