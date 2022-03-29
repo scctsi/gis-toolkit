@@ -16,21 +16,6 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
-def load_data_files():
-    data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("../data_files/calepa_ces.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("../data_files/cdc.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("../data_files/gazetteer.txt"), "GEOID"),
-        sds.SedohDataSource.USDA: (importer.import_file('../data_files/usda.xls'), "CensusTrac")
-    }
-
-    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
-    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
-    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
-
-    return data_files
-
-
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
     data_files = main.load_data_files()
