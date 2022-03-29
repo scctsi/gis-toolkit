@@ -2,7 +2,6 @@ import pytest
 import geocoder
 import importer
 import main
-import pandas
 import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
@@ -44,5 +43,7 @@ def test_enhancement_validity():
     enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
     enhanced_data_frame.index = [0]
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
-    assert enhanced_data_frame.equals(control_data_frame)
+    for data_element in data_elements:
+        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+            control_data_frame.iloc[0][data_element.variable_name]
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
