@@ -50,5 +50,5 @@ def test_enhancement_validity():
         print("")
         # assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
         #     control_data_frame.iloc[0][data_element.variable_name]
-    assert 1 > 0
+    assert 1 == 0
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
