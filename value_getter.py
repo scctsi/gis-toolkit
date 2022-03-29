@@ -143,11 +143,11 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
             return constant.NOT_AVAILABLE
         else:
             source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
-
+    # print(source_values)
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':
-            return source_values['lapop1shar']
+            return float(source_values['lapop1shar']) * 100
         else:
             return source_values['lapop10sha']
 

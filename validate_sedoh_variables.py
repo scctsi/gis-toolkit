@@ -18,7 +18,7 @@ def validate_sedoh_data_element(data_element, data_files, api_validation_range=5
     true_data_frame = pd.read_excel(validation_file, data[data_element.friendly_name], dtype='str')
     total = 0
     matched = 0
-    if data_element.get_strategy == GetStrategy.FILE:
+    if data_element.get_strategy in [GetStrategy.FILE, GetStrategy.FILE_AND_CALCULATION]:
         for index, row in true_data_frame.iterrows():
             arguments = {"fips_concatenated_code": true_data_frame.iloc[index][constant.GEO_ID_NAME]}
             source_value = true_data_frame.iloc[index]["NUMERIC"]
@@ -59,7 +59,7 @@ data_elements = sds.SedohDataElements().data_elements
 data_files = main.load_data_files()
 validation_results = []
 for data_element in data_elements:
-    if data_element.friendly_name in ['Percent Below 200% of Fed Poverty Level', 'Percent Below 300% of Fed Poverty Level']:
+    if data_element.friendly_name in ['Food - Fraction of Population with Low Access']:
         validation_results.append([data_element.friendly_name, validate_sedoh_data_element(data_element, data_files, 10)])
 
 print(validation_results)
