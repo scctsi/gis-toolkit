@@ -16,9 +16,24 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
+def load_data_files():
+    data_files = {
+        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces.xlsx"), "Census Tract"),
+        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc.csv"), "FIPS"),
+        sds.SedohDataSource.Gazetteer: (importer.import_file("./gazetteer.csv"), "GEOID"),
+        sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
+    }
+
+    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
+    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
+    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
+
+    return data_files
+
+
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
-    data_files = main.load_data_files()
+    data_files = load_data_files()
     file_path = './validation/addresses-us-all.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
@@ -29,9 +44,8 @@ def test_enhancement_validity():
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
         print(data_element.variable_name)
-        print("newly enhanced:  ", enhanced_data_frame.iloc[0][data_element.variable_name])
-        print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
-        # assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
-        #     control_data_frame.iloc[0][data_element.variable_name]
-    assert 1<0
+        # print("newly enhanced:  ", enhanced_data_frame.iloc[0][data_element.variable_name])
+        # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
+        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+            control_data_frame.iloc[0][data_element.variable_name]
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
