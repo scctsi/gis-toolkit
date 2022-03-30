@@ -73,11 +73,12 @@ class ACSDataSource:
 
 
 class DataFrameEnhancer:
-    def __init__(self, data_frame, data_elements, data_files, data_key):
+    def __init__(self, data_frame, data_elements, data_files, data_key, test_mode=False):
         self.data_frame = data_frame
         self.data_elements = data_elements
         self.data_files = data_files
         self.data_key = data_key
+        self.test_mode = test_mode
         self.geoenhanced_cache = GeoenhancedCache()
         self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
@@ -151,7 +152,7 @@ class DataFrameEnhancer:
             elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_sets:
                     try:
-                        values_dict = value_getter.get_acs_values(data_set, data_sets[data_set], arguments)
+                        values_dict = value_getter.get_acs_values(data_set, data_sets[data_set], arguments, self.test_mode)
                     except requests.exceptions.RequestException as e:
                         self.save_enhancement_progress(index, "Incomplete", str(e))
                         raise SystemExit(e)
