@@ -109,7 +109,6 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         aland = get_file_value("ALAND", arguments,
                                data_files[SedohDataSource.Gazetteer][0],
                                data_files[SedohDataSource.Gazetteer][1])
-        print(data_files[SedohDataSource.Gazetteer][0], data_files[SedohDataSource.Gazetteer][1])
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
@@ -122,8 +121,6 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
 def get_file_value(source_variable, arguments, data_file, data_file_search_column_name):
     # TODO: Fix the naming and the intent of this function
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
-    if source_variable == "ALAND":
-        print(indexes)
     if len(indexes) == 0:
         return constant.NOT_AVAILABLE
     elif len(indexes) == 1:
