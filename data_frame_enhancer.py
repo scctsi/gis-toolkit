@@ -31,6 +31,16 @@ def data_key_to_file_name(data_key):
     return file_name, extension
 
 
+def get_geography():
+    state_codes = ""
+    for i in range(1, 57):
+        if i < 10:
+            state_codes += "0" + str(i) + ","
+        else:
+            state_codes += str(i) + ","
+    return "for=tract:*&in=county:*&in=state:" + state_codes[:-1:]
+
+
 class ACSDataSource:
     def __init__(self, acs_elements):
         self.acs_elements = acs_elements
@@ -67,6 +77,22 @@ class ACSDataSource:
             else:
                 data_set_variables.update({data_set_name: [data_element.variable_name]})
         return data_set_variables
+
+    def data_set_elements(self):
+        data_set_elements = {}
+        for data_element in self.acs_elements:
+            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+            if data_set_name in data_set_elements.keys():
+                data_set_elements[data_set_name].append(data_element)
+            else:
+                data_set_elements.update({data_set_name: [data_element]})
+        return data_set_elements
+
+    def data_frames(self):
+        data_sets = self.data_sets()
+        geography = get_geography()
+        data_frames = map(lambda data_set: value_getter.get_acs_batch(data_set, data_sets[data_set], geography), data_sets)
+        return list(data_frames)
 
     def retrieve(self):
         return self.data_sets(), self.data_sources(), self.data_set_variables()
@@ -140,46 +166,46 @@ class DataFrameEnhancer:
         self.load_enhancement_status()
         enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
-        data_sets, data_sources, data_set_variables = self.acs_data_source.retrieve()
-        calculation_sources = ','.join(list(filter(lambda x: ',' in x, list(data_sources.keys()))))
+        data_frames = self.acs_data_source.data_frames()
+        data_set_elements = self.acs_data_source.data_set_elements()
+        # data_sets, data_sources, data_set_variables = self.acs_data_source.retrieve()
+        # calculation_sources = ','.join(list(filter(lambda x: ',' in x, list(data_sources.keys()))))
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
+            geo_id = arguments["fips_concatenated_code"]
             if self.geoenhanced_cache.in_cache(arguments["fips_concatenated_code"]):
                 for data_element in self.data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
-                        self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
-            elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                for data_set in data_sets:
-                    try:
-                        values_dict = value_getter.get_acs_values(data_set, data_sets[data_set], arguments, self.test_mode)
-                    except requests.exceptions.RequestException as e:
-                        self.save_enhancement_progress(index, "Incomplete", str(e))
-                        raise SystemExit(e)
-                    if values_dict == constant.NOT_AVAILABLE:
-                        for variable in data_set_variables[data_set]:
-                            self.data_frame.iloc[index][variable] = constant.NOT_AVAILABLE
-                    else:
-                        for source in values_dict:
-                            if source in calculation_sources:
-                                if source == 'S1701_C01_042E':
-                                    self.data_frame.iloc[index]['percent_below_200_of_fed_poverty_level'] = \
-                                        value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
-                                                                         [values_dict[source],
-                                                                          values_dict['S1701_C01_001E']], arguments,
-                                                                         self.data_files)
-                                if source == 'S1701_C01_043E':
-                                    self.data_frame.iloc[index]['percent_below_300_of_fed_poverty_level'] = \
-                                        value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
-                                                                         [values_dict[source],
-                                                                          values_dict['S1701_C01_001E']], arguments,
-                                                                         self.data_files)
-                            elif data_sources[source].get_strategy == GetStrategy.CALCULATION:
-                                self.data_frame.iloc[index][data_sources[source].variable_name] = \
-                                    value_getter.get_acs_calculation(data_sources[source].variable_name,
-                                                                     values_dict[source], arguments, self.data_files)
-                            else:
-                                self.data_frame.iloc[index][data_sources[source].variable_name] = values_dict[source]
+                        self.geoenhanced_cache.get_value_from_cache(geo_id, data_element)
+            elif not geo_id == constant.ADDRESS_NOT_GEOCODABLE:
+                for data_set in data_frames:
+                    for data_element in data_set_elements[data_set]:
+                        state_code = geo_id[0:2]
+                        county_code = geo_id[2:5]
+                        tract_code = geo_id[5:11]
+                        # TODO: Find index based on codes
+                        idx = 1
+                        # if source in calculation_sources:
+                        #     if source == 'S1701_C01_042E':
+                        #         self.data_frame.iloc[index]['percent_below_200_of_fed_poverty_level'] = \
+                        #             value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
+                        #                                              [values_dict[source],
+                        #                                               values_dict['S1701_C01_001E']], arguments,
+                        #                                              self.data_files)
+                        #     if source == 'S1701_C01_043E':
+                        #         self.data_frame.iloc[index]['percent_below_300_of_fed_poverty_level'] = \
+                        #             value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
+                        #                                              [values_dict[source],
+                        #                                               values_dict['S1701_C01_001E']], arguments,
+                        #                                              self.data_files)
+                        value = data_frames[data_set].iloc[idx][data_element.source_variable]
+                        if data_element.get_strategy == GetStrategy.CALCULATION:
+                            self.data_frame.iloc[index][data_element.variable_name] = \
+                                value_getter.get_acs_calculation(data_element.variable_name,
+                                                                 value, arguments, self.data_files)
+                        else:
+                            self.data_frame.iloc[index][data_element.variable_name] = value
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)

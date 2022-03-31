@@ -95,6 +95,26 @@ def get_acs_values(data_set, source_variables, arguments, test_mode=False):
     return api.get_values(api_url, test_mode)
 
 
+def get_acs_batch(data_set, source_variables, geographies, test_mode=False):
+    arguments = {
+        "host_name": "https://api.census.gov/data",
+        "data_year": "2018",
+        "dataset_name": data_set,
+        "variables": source_variables,
+        "geographies": geographies,
+        "key": os.getenv("census_api_key")
+    }
+    if not test_mode:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
+                                          "&key={key}"
+    else:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
+
+    api_url = api.construct_url(census_api_interpolation_string, arguments)
+    print(api_url)
+    return api.get_batch_values(api_url, test_mode)
+
+
 def get_acs_calculation(variable_name, source_value, arguments, data_files):
     # TODO: Change from using hardcoded variable_name checks
     if source_value == constant.NOT_AVAILABLE:

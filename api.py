@@ -1,3 +1,4 @@
+import pandas as pd
 import requests
 import constant
 
@@ -10,7 +11,7 @@ def construct_url(interpolation_string, arguments):
 def get_response(url, test_mode=False):
     # TODO: Assert 200
     if not test_mode:
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
     else:
         response = requests.get(url, verify=False)
 
@@ -59,4 +60,13 @@ def get_values(url, test_mode=False):
     if response == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     else:
+        print(response)
         return response_to_dict(response)
+
+
+def get_batch_values(url, test_mode=False):
+    response = get_response(url, test_mode)
+    if response == constant.NOT_AVAILABLE:
+        return constant.NOT_AVAILABLE
+    else:
+        return pd.DataFrame(data=response[1:], columns=response[0], dtype="str")
