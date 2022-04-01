@@ -13,17 +13,7 @@ load_dotenv()
 
 
 def get_value(data_element, arguments, data_files):
-    if data_element.data_source == SedohDataSource.ACS:
-        if data_element.get_strategy == GetStrategy.PRIVATE_API:
-            return get_acs_value(data_element.source_variable, arguments)
-        elif data_element.get_strategy == GetStrategy.CALCULATION:
-            # TODO: Refactor this code to use a list for even a single source variable
-            source_value = get_acs_value(data_element.source_variable, arguments)
-            return get_acs_calculation(data_element.variable_name, source_value, arguments, data_files)
-        else:
-            return None
-            # TODO: raise error
-    elif data_element.get_strategy == GetStrategy.FILE:
+    if data_element.get_strategy == GetStrategy.FILE:
         # if type(data_element.source_variable) == list:
         #     else:
         #
@@ -37,7 +27,6 @@ def get_value(data_element, arguments, data_files):
                                          data_files[data_element.data_source][0],
                                          data_files[data_element.data_source][1],
                                          data_element.variable_name)
-
 
 # ACS specific methods
 def construct_geography_argument(arguments):
@@ -85,27 +74,53 @@ def get_acs_value(source_variable, arguments):
     return api.get_value(api_url)
 
 
-def get_acs_values(source_variables, arguments):
+def get_acs_values(data_set, source_variables, arguments, test_mode=False):
     # The vintage year (e.g., V2019) refers to the final year of the time series.
     # The reference date for all estimates is July 1, unless otherwise specified.
     arguments = {
         "host_name": "https://api.census.gov/data",
         "data_year": "2018",
-        "dataset_name": 'acs/acs5/subject',
+        "dataset_name": data_set,
         "variables": source_variables,
         "geographies": construct_geography_argument(arguments),
         "key": os.getenv("census_api_key")
     }
+    if not test_mode:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
+                                          "&key={key}"
+    else:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
 
-    census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
-                                      "&key={key}"
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    api.get_values(api_url)
+    return api.get_values(api_url, test_mode)
+
+
+def get_acs_batch(data_set, source_variables, geographies, test_mode=False):
+    arguments = {
+        "host_name": "https://api.census.gov/data",
+        "data_year": "2018",
+        "dataset_name": data_set,
+        "variables": source_variables,
+        "geographies": geographies,
+        "key": os.getenv("census_api_key")
+    }
+    if not test_mode:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}" \
+                                          "&key={key}"
+    else:
+        census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
+
+    api_url = api.construct_url(census_api_interpolation_string, arguments)
+    return api.get_batch_values(api_url, test_mode)
 
 
 def get_acs_calculation(variable_name, source_value, arguments, data_files):
     # TODO: Change from using hardcoded variable_name checks
-    if variable_name == 'housing_percent_occupied_units_lacking_plumbing':
+    if source_value == constant.NOT_AVAILABLE:
+        return constant.NOT_AVAILABLE
+    elif variable_name in ["percent_below_200_of_fed_poverty_level", "percent_below_300_of_fed_poverty_level"]:
+        return round(100 * float(source_value[0]) / float(source_value[1]), 2)
+    elif variable_name == 'housing_percent_occupied_units_lacking_plumbing':
         return 100 - float(source_value)
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return 100 - float(source_value)
@@ -113,10 +128,10 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         aland = get_file_value("ALAND", arguments,
                                data_files[SedohDataSource.Gazetteer][0],
                                data_files[SedohDataSource.Gazetteer][1])
-        if aland == 'N/A':
-            return 'N/A'
+        if aland == constant.NOT_AVAILABLE or int(aland) == 0:
+            return constant.NOT_AVAILABLE
         else:
-            return round((float(source_value) / int(aland)), 0)
+            return round(1000000 * (float(source_value) / int(aland)), 0)
     else:
         return None
 
@@ -125,7 +140,6 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
 def get_file_value(source_variable, arguments, data_file, data_file_search_column_name):
     # TODO: Fix the naming and the intent of this function
     indexes = data_file.index[data_file[data_file_search_column_name] == arguments["fips_concatenated_code"]].tolist()
-
     if len(indexes) == 0:
         return constant.NOT_AVAILABLE
     elif len(indexes) == 1:
@@ -147,11 +161,10 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
             return constant.NOT_AVAILABLE
         else:
             source_values[source_variable] = data_file.iloc[indexes[0]][source_variable]
-
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':
-            return source_values['lapop1shar']
+            return float(source_values['lapop1shar']) * 100
         else:
             return source_values['lapop10sha']
 

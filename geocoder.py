@@ -113,7 +113,7 @@ def load_geocode_progress(data_key):
     check_save_file()
     with open('temp/geocoder_save_file.json') as save_file:
         data = json.load(save_file)
-        if data_key in data.keys() and data[data_key]['status'] == "Incomplete":
+        if data_key in data.keys():
             batch_index = data[data_key]['last_successful_batch']
         else:
             batch_index = 0
@@ -165,6 +165,8 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
         geocoded_address_batch_data_frame['census_tract'] = geocoded_address_batch_data_frame['state_code'] + \
                                                         geocoded_address_batch_data_frame['county_code'] + \
                                                         geocoded_address_batch_data_frame['tract_code']
+        non_matched_addresses = geocoded_address_batch_data_frame.index[(geocoded_address_batch_data_frame['match_indicator'] == 'No_Match') | (geocoded_address_batch_data_frame['match_indicator'] == 'Tie')]
+        geocoded_address_batch_data_frame.loc[non_matched_addresses, 'census_tract'] = constant.ADDRESS_NOT_GEOCODABLE
         if i == 0:
             geocoded_address_batch_data_frame.to_csv('./temp/geocoded_' + data_key + '.csv')
         else:
