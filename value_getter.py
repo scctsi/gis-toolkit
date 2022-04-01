@@ -111,7 +111,6 @@ def get_acs_batch(data_set, source_variables, geographies, test_mode=False):
         census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
 
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    print(api_url)
     return api.get_batch_values(api_url, test_mode)
 
 

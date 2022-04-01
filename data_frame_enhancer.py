@@ -58,27 +58,10 @@ class ACSDataSource:
                 data_sets.update({data_set_name: data_element.source_variable})
         return data_sets
 
-    def data_sources(self):
-        """
-        :return: {data element source variable: data element}
-        """
-        data_sources = map(lambda data_element: (data_element.source_variable, data_element), self.acs_elements)
-        return dict(data_sources)
-
-    def data_set_variables(self):
-        """
-        :return: {acs data set: [data element variable names]}
-        """
-        data_set_variables = {}
-        for data_element in self.acs_elements:
-            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-            if data_set_name in data_set_variables.keys():
-                data_set_variables[data_set_name].append(data_element.variable_name)
-            else:
-                data_set_variables.update({data_set_name: [data_element.variable_name]})
-        return data_set_variables
-
     def data_set_elements(self):
+        """
+        :return: {acs data set: list of corresponding data elements}
+        """
         data_set_elements = {}
         for data_element in self.acs_elements:
             data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
@@ -88,14 +71,17 @@ class ACSDataSource:
                 data_set_elements.update({data_set_name: [data_element]})
         return data_set_elements
 
-    def data_frames(self):
+    def data_frames(self, test_mode=False):
+        """
+        :return: {acs data set: data frame of data set data from all acs census tracts}
+        """
         data_sets = self.data_sets()
         geography = get_geography()
-        data_frames = map(lambda data_set: value_getter.get_acs_batch(data_set, data_sets[data_set], geography), data_sets)
-        return list(data_frames)
-
-    def retrieve(self):
-        return self.data_sets(), self.data_sources(), self.data_set_variables()
+        try:
+            data_frames = map(lambda data_set: (data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+            return dict(data_frames)
+        except requests.exceptions.RequestException as e:
+            SystemExit(e)
 
 
 class DataFrameEnhancer:
@@ -119,18 +105,15 @@ class DataFrameEnhancer:
                 non_acs_data_elements.append(data_element)
         return acs_data_elements, non_acs_data_elements
 
-    def save_enhancement_progress(self, index, status="Incomplete", error_message="", data_element_on_error=""):
+    def save_enhancement_progress(self, index, status="Incomplete"):
         check_save_file()
         with open('temp/enhancer_save_file.json', "r+") as save_file:
             data = json.load(save_file)
             if self.data_key not in data.keys():
-                data[self.data_key] = {'last_successful_line': index, "status": "Incomplete", "error_message": "",
-                                       "data_element_on_error": ""}
+                data[self.data_key] = {'last_successful_line': index, "status": "Incomplete"}
             else:
                 data[self.data_key]['last_successful_line'] = index
                 data[self.data_key]['status'] = status
-                data[self.data_key]['error_message'] = error_message
-                data[self.data_key]['data_element_on_error'] = data_element_on_error
             save_file.seek(0)
             json.dump(data, save_file, indent=4)
             save_file.truncate()
@@ -154,8 +137,7 @@ class DataFrameEnhancer:
             file_name, extension = data_key_to_file_name(self.data_key)
             print(file_name + "." + extension + " has already been enhanced.")
             print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print(
-                "If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
 
     def add_data_elements(self):
         for data_element in self.data_elements:
@@ -166,46 +148,39 @@ class DataFrameEnhancer:
         self.load_enhancement_status()
         enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
         self.geoenhanced_cache.load_cache(enhanced_file_path)
-        data_frames = self.acs_data_source.data_frames()
+        data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
-        # data_sets, data_sources, data_set_variables = self.acs_data_source.retrieve()
-        # calculation_sources = ','.join(list(filter(lambda x: ',' in x, list(data_sources.keys()))))
         for index, row in self.data_frame.iloc[progress:].iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
-            geo_id = arguments["fips_concatenated_code"]
+            state_code = arguments["fips_concatenated_code"][0:2]
+            county_code = arguments["fips_concatenated_code"][2:5]
+            tract_code = arguments["fips_concatenated_code"][5:11]
             if self.geoenhanced_cache.in_cache(arguments["fips_concatenated_code"]):
                 for data_element in self.data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
-                        self.geoenhanced_cache.get_value_from_cache(geo_id, data_element)
-            elif not geo_id == constant.ADDRESS_NOT_GEOCODABLE:
+                        self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
+            elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_frames:
+                    idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (data_frames[data_set]['county'] == county_code) & (data_frames[data_set]['tract'] == tract_code)].tolist()
                     for data_element in data_set_elements[data_set]:
-                        state_code = geo_id[0:2]
-                        county_code = geo_id[2:5]
-                        tract_code = geo_id[5:11]
-                        # TODO: Find index based on codes
-                        idx = 1
-                        # if source in calculation_sources:
-                        #     if source == 'S1701_C01_042E':
-                        #         self.data_frame.iloc[index]['percent_below_200_of_fed_poverty_level'] = \
-                        #             value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
-                        #                                              [values_dict[source],
-                        #                                               values_dict['S1701_C01_001E']], arguments,
-                        #                                              self.data_files)
-                        #     if source == 'S1701_C01_043E':
-                        #         self.data_frame.iloc[index]['percent_below_300_of_fed_poverty_level'] = \
-                        #             value_getter.get_acs_calculation('percent_below_200_of_fed_poverty_level',
-                        #                                              [values_dict[source],
-                        #                                               values_dict['S1701_C01_001E']], arguments,
-                        #                                              self.data_files)
-                        value = data_frames[data_set].iloc[idx][data_element.source_variable]
-                        if data_element.get_strategy == GetStrategy.CALCULATION:
-                            self.data_frame.iloc[index][data_element.variable_name] = \
-                                value_getter.get_acs_calculation(data_element.variable_name,
-                                                                 value, arguments, self.data_files)
+                        if len(idx) == 0:
+                            self.data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
+                        elif data_element.get_strategy == GetStrategy.CALCULATION:
+                            if "," in data_element.source_variable:
+                                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
+                                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
+                                self.data_frame.iloc[index][data_element.variable_name] = \
+                                    value_getter.get_acs_calculation(data_element.variable_name,
+                                                                     [data_frames[data_set].iloc[idx[0]][source_var],
+                                                                      data_frames[data_set].iloc[idx[0]][calc_var]], arguments, self.data_files)
+                            else:
+                                self.data_frame.iloc[index][data_element.variable_name] = \
+                                    value_getter.get_acs_calculation(data_element.variable_name,
+                                                             data_frames[data_set].iloc[idx[0]][data_element.source_variable], arguments, self.data_files)
                         else:
-                            self.data_frame.iloc[index][data_element.variable_name] = value
+                            self.data_frame.iloc[index][data_element.variable_name] = \
+                                data_frames[data_set].iloc[idx[0]][data_element.source_variable]
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)

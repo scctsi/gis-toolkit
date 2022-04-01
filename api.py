@@ -11,18 +11,15 @@ def construct_url(interpolation_string, arguments):
 def get_response(url, test_mode=False):
     # TODO: Assert 200
     if not test_mode:
-        response = requests.get(url, verify=False)
+        response = requests.get(url)
     else:
         response = requests.get(url, verify=False)
 
     try:
         return response.json()
     except Exception:
-        if response.status_code == 204:
-            return constant.NOT_AVAILABLE
-        else:
-            print(response)
-            quit(1)
+        print(response)
+        quit(1)
 
 
 
@@ -69,4 +66,6 @@ def get_batch_values(url, test_mode=False):
     if response == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     else:
-        return pd.DataFrame(data=response[1:], columns=response[0], dtype="str")
+        data_frame = pd.DataFrame(data=response[1:], columns=response[0], dtype="str")
+        data_frame = data_frame.loc[:,~data_frame.columns.duplicated()]
+        return data_frame
