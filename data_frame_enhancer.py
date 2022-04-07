@@ -18,14 +18,6 @@ def check_temp_dir():
     return None
 
 
-def check_save_file():
-    check_temp_dir()
-    if not os.path.exists('temp/enhancer_save_file.json'):
-        with open('temp/enhancer_save_file.json', "w") as save_file:
-            json.dump({}, save_file)
-    return None
-
-
 def data_key_to_file_name(data_key):
     index = data_key.rindex('_')
     file_name = data_key[:index]
@@ -108,40 +100,24 @@ class DataFrameEnhancer:
                 non_acs_data_elements.append(data_element)
         return acs_data_elements, non_acs_data_elements
 
-    def save_enhancement_progress(self, status="Incomplete"):
-        check_save_file()
-        with open('temp/enhancer_save_file.json', "r+") as save_file:
-            data = json.load(save_file)
-            if self.data_key not in data.keys():
-                data[self.data_key] = {"status": "Incomplete"}
-            else:
-                data[self.data_key]['status'] = status
-            save_file.seek(0)
-            json.dump(data, save_file, indent=4)
-            save_file.truncate()
-
-    def load_enhancement_completion(self):
-        check_save_file()
-        with open('temp/enhancer_save_file.json') as save_file:
-            data = json.load(save_file)
-        if self.data_key in data.keys() and data[self.data_key]['status'] == 'Complete':
-            file_name, extension = data_key_to_file_name(self.data_key)
-            print(file_name + "." + extension + " has already been enhanced.")
-            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
-
     def add_data_elements(self):
         for data_element in self.data_elements:
             self.data_frame[data_element.variable_name] = ""
 
-    def get_data_element_values(self):
-        if not os.path.exists('./temp/enhanced_' + self.data_key + '.csv'):
-            self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
-            progress = 0
-        else:
+    def load_enhancement_job(self):
+        check_temp_dir()
+        if os.path.exists('./temp/enhanced_' + self.data_key + '.csv'):
             self.data_frame = importer.import_file('./temp/enhanced_' + self.data_key + '.csv')
-            progress = len(self.data_frame)
-        for index, row in self.data_frame.iloc[progress:].iterrows():
+            file_name, extension = data_key_to_file_name(self.data_key)
+            print(file_name + "." + extension + " has already been enhanced.")
+            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
+            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+        else:
+            self.get_data_element_values()
+
+    def get_data_element_values(self):
+        self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
+        for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
             state_code = arguments["fips_concatenated_code"][0:2]
@@ -176,12 +152,11 @@ class DataFrameEnhancer:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
                 self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
-        self.save_enhancement_progress("Complete")
         self.data_frame.to_csv('./temp/enhanced_' + self.data_key + '.csv')
 
     def enhance(self):
         self.add_data_elements()
-        self.get_data_element_values()
+        self.load_enhancement_job()
         return self.data_frame
 
 
