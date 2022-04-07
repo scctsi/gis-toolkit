@@ -119,11 +119,11 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
     if source_value == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
     elif variable_name in ["percent_below_200_of_fed_poverty_level", "percent_below_300_of_fed_poverty_level"]:
-        return round(100 * float(source_value[0]) / float(source_value[1]), 2)
+        return str(round(100 * float(source_value[0]) / float(source_value[1]), 2))
     elif variable_name == 'housing_percent_occupied_units_lacking_plumbing':
-        return 100 - float(source_value)
+        return str(100 - float(source_value))
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
-        return 100 - float(source_value)
+        return str(100 - float(source_value))
     elif variable_name == 'population_density':
         aland = get_file_value("ALAND", arguments,
                                data_files[SedohDataSource.Gazetteer][0],
@@ -131,7 +131,7 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
-            return round(1000000 * (float(source_value) / int(aland)), 0)
+            return str(round(1000000 * (float(source_value) / int(aland)), 0))
     else:
         return None
 
@@ -164,8 +164,8 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':
-            return float(source_values['lapop1shar']) * 100
+            return str(float(source_values['lapop1shar']) * 100)
         else:
-            return source_values['lapop10sha']
+            return str(source_values['lapop10sha'])
 
     return None

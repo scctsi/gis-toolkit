@@ -1,3 +1,5 @@
+import timeit
+
 import pandas as pd
 from data_structure import GetStrategy
 import constant
@@ -13,14 +15,6 @@ import requests
 def check_temp_dir():
     if not os.path.isdir('./temp'):
         os.mkdir('./temp')
-    return None
-
-
-def check_save_file():
-    check_temp_dir()
-    if not os.path.exists('temp/enhancer_save_file.json'):
-        with open('temp/enhancer_save_file.json', "w") as save_file:
-            json.dump({}, save_file)
     return None
 
 
@@ -78,7 +72,8 @@ class ACSDataSource:
         data_sets = self.data_sets()
         geography = get_geography()
         try:
-            data_frames = map(lambda data_set: (data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+            data_frames = map(lambda data_set: (
+            data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
             return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
@@ -105,52 +100,27 @@ class DataFrameEnhancer:
                 non_acs_data_elements.append(data_element)
         return acs_data_elements, non_acs_data_elements
 
-    def save_enhancement_progress(self, index, status="Incomplete"):
-        check_save_file()
-        with open('temp/enhancer_save_file.json', "r+") as save_file:
-            data = json.load(save_file)
-            if self.data_key not in data.keys():
-                data[self.data_key] = {'last_successful_line': index, "status": "Incomplete"}
-            else:
-                data[self.data_key]['last_successful_line'] = index
-                data[self.data_key]['status'] = status
-            save_file.seek(0)
-            json.dump(data, save_file, indent=4)
-            save_file.truncate()
-
-    def load_enhancement_progress(self):
-        check_save_file()
-        with open('temp/enhancer_save_file.json') as save_file:
-            data = json.load(save_file)
-            if self.data_key in data.keys():
-                index = data[self.data_key]['last_successful_line']
-            else:
-                index = 0
-                self.save_enhancement_progress(index)
-        return index
-
-    def load_enhancement_status(self):
-        check_save_file()
-        with open('temp/enhancer_save_file.json') as save_file:
-            data = json.load(save_file)
-        if self.data_key in data.keys() and data[self.data_key]['status'] == 'Complete':
-            file_name, extension = data_key_to_file_name(self.data_key)
-            print(file_name + "." + extension + " has already been enhanced.")
-            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
-
     def add_data_elements(self):
         for data_element in self.data_elements:
             self.data_frame[data_element.variable_name] = ""
 
+    def load_enhancement_job(self):
+        check_temp_dir()
+        if os.path.exists('./temp/enhanced_' + self.data_key + '.csv'):
+            self.data_frame = importer.import_file('./temp/enhanced_' + self.data_key + '.csv')
+            file_name, extension = data_key_to_file_name(self.data_key)
+            print(file_name + "." + extension + " has already been enhanced.")
+            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
+            print(
+                "If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+        else:
+            self.get_data_element_values()
+
     def get_data_element_values(self):
-        progress = self.load_enhancement_progress()
-        self.load_enhancement_status()
-        enhanced_file_path = './temp/enhanced_' + self.data_key + '.csv'
-        self.geoenhanced_cache.load_cache(enhanced_file_path)
+        self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
         data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
-        for index, row in self.data_frame.iloc[progress:].iterrows():
+        for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
             state_code = arguments["fips_concatenated_code"][0:2]
@@ -162,7 +132,9 @@ class DataFrameEnhancer:
                         self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
             elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_frames:
-                    idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (data_frames[data_set]['county'] == county_code) & (data_frames[data_set]['tract'] == tract_code)].tolist()
+                    idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (
+                                data_frames[data_set]['county'] == county_code) & (data_frames[data_set][
+                                                                                       'tract'] == tract_code)].tolist()
                     for data_element in data_set_elements[data_set]:
                         if len(idx) == 0:
                             self.data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
@@ -173,11 +145,13 @@ class DataFrameEnhancer:
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
                                                                      [data_frames[data_set].iloc[idx[0]][source_var],
-                                                                      data_frames[data_set].iloc[idx[0]][calc_var]], arguments, self.data_files)
+                                                                      data_frames[data_set].iloc[idx[0]][calc_var]],
+                                                                     arguments, self.data_files)
                             else:
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
-                                                             data_frames[data_set].iloc[idx[0]][data_element.source_variable], arguments, self.data_files)
+                                                                     data_frames[data_set].iloc[idx[0]][
+                                                                         data_element.source_variable], arguments, self.data_files)
                         else:
                             self.data_frame.iloc[index][data_element.variable_name] = \
                                 data_frames[data_set].iloc[idx[0]][data_element.source_variable]
@@ -185,17 +159,11 @@ class DataFrameEnhancer:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
                 self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
-            if index == 0:
-                self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False)
-            else:
-                self.data_frame.iloc[[index]].to_csv(enhanced_file_path, index=False, header=False, mode='a')
-            self.save_enhancement_progress(index + 1)
-        self.save_enhancement_progress(self.load_enhancement_progress(), "Complete")
-        self.data_frame = importer.import_file(enhanced_file_path)
+        self.data_frame.to_csv('./temp/enhanced_' + self.data_key + '.csv')
 
     def enhance(self):
         self.add_data_elements()
-        self.get_data_element_values()
+        self.load_enhancement_job()
         return self.data_frame
 
 
