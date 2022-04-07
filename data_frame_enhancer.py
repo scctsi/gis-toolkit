@@ -1,5 +1,6 @@
 import timeit
-
+from datetime import date
+from datetime import datetime
 import pandas as pd
 from data_structure import GetStrategy
 import constant
@@ -15,6 +16,12 @@ import requests
 def check_temp_dir():
     if not os.path.isdir('./temp'):
         os.mkdir('./temp')
+    return None
+
+
+def check_cache_dir():
+    if not os.path.isdir('./cache'):
+        os.mkdir('./cache')
     return None
 
 
@@ -86,7 +93,7 @@ class DataFrameEnhancer:
         self.data_files = data_files
         self.data_key = data_key
         self.test_mode = test_mode
-        self.geoenhanced_cache = GeoenhancedCache()
+        self.global_cache = GlobalCache()
         self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
 
@@ -117,19 +124,21 @@ class DataFrameEnhancer:
             self.get_data_element_values()
 
     def get_data_element_values(self):
-        self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
+        # start_time = timeit.default_timer()
+        self.global_cache.load_cache()
         data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
+        start_time = timeit.default_timer()
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
             state_code = arguments["fips_concatenated_code"][0:2]
             county_code = arguments["fips_concatenated_code"][2:5]
             tract_code = arguments["fips_concatenated_code"][5:11]
-            if self.geoenhanced_cache.in_cache(arguments["fips_concatenated_code"]):
+            if self.global_cache.in_cache(arguments["fips_concatenated_code"]):
+                cache_row = self.global_cache.get_cache_row(arguments["fips_concatenated_code"])
                 for data_element in self.data_elements:
-                    self.data_frame.iloc[index][data_element.variable_name] = \
-                        self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
+                    self.data_frame.iloc[index][data_element.variable_name] = cache_row.iloc[0][data_element.variable_name]
             elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_frames:
                     idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (
@@ -158,8 +167,10 @@ class DataFrameEnhancer:
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
-                self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
+                self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
+        self.global_cache.write_to_cache()
         self.data_frame.to_csv('./temp/enhanced_' + self.data_key + '.csv')
+        print((timeit.default_timer() - start_time) / len(self.data_frame))
 
     def enhance(self):
         self.add_data_elements()
@@ -167,14 +178,19 @@ class DataFrameEnhancer:
         return self.data_frame
 
 
-class GeoenhancedCache:
+class GlobalCache:
     def __init__(self):
-        self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME])
+        self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME, constant.DATE_COLUMN])
+        self.timeframe = 0  # days
 
-    def load_cache(self, file_path):
-        if os.path.exists(file_path):
-            self.data_frame = importer.import_file(file_path)
-            self.data_frame.drop_duplicates(subset=[constant.GEO_ID_NAME], inplace=True, ignore_index=True)
+    def load_cache(self):
+        check_cache_dir()
+        if os.path.exists('./cache/global_cache.csv'):
+            today = datetime.today()
+            self.data_frame = pd.read_csv('./cache/global_cache.csv')
+            # self.data_frame.drop_duplicates(subset=[constant.GEO_ID_NAME], inplace=True, ignore_index=True)
+            self.data_frame.drop(self.data_frame.index[(datetime.strptime(self.data_frame[constant.DATE_COLUMN], "%m/%d/%Y") - today).days >= self.timeframe], inplace=True)
+            print(self.data_frame)
 
     def in_cache(self, geo_id):
         if geo_id in self.data_frame[constant.GEO_ID_NAME].values:
@@ -184,8 +200,13 @@ class GeoenhancedCache:
 
     def set_cache(self, geo_id, input_row):
         if not self.in_cache(geo_id):
+            date_string = datetime.today().strftime("%m/%d/%Y")
+            input_row[constant.DATE_COLUMN] = [date_string]
             self.data_frame = pd.concat([self.data_frame, input_row], ignore_index=True)
 
-    def get_value_from_cache(self, geo_id, data_element):
+    def get_cache_row(self, geo_id):
         index = self.data_frame.index[self.data_frame[constant.GEO_ID_NAME] == geo_id][0]
-        return self.data_frame.iloc[index][data_element.variable_name]
+        return self.data_frame.iloc[[index]]
+
+    def write_to_cache(self):
+        self.data_frame.to_csv('./cache/global_cache.csv')
