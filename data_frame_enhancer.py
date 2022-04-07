@@ -72,7 +72,8 @@ class ACSDataSource:
         data_sets = self.data_sets()
         geography = get_geography()
         try:
-            data_frames = map(lambda data_set: (data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+            data_frames = map(lambda data_set: (
+            data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
             return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
@@ -84,11 +85,10 @@ class DataFrameEnhancer:
         self.data_elements = data_elements
         self.data_files = data_files
         self.data_key = data_key
+        self.test_mode = test_mode
         self.geoenhanced_cache = GeoenhancedCache()
         self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
-        self.data_frames = self.acs_data_source.data_frames(test_mode)
-        self.data_set_elements = self.acs_data_source.data_set_elements()
 
     def group_data_elements(self):
         acs_data_elements = []
@@ -111,12 +111,15 @@ class DataFrameEnhancer:
             file_name, extension = data_key_to_file_name(self.data_key)
             print(file_name + "." + extension + " has already been enhanced.")
             print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print("If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+            print(
+                "If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
         else:
             self.get_data_element_values()
 
     def get_data_element_values(self):
         self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
+        data_frames = self.acs_data_source.data_frames(self.test_mode)
+        data_set_elements = self.acs_data_source.data_set_elements()
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
@@ -128,9 +131,11 @@ class DataFrameEnhancer:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         self.geoenhanced_cache.get_value_from_cache(arguments["fips_concatenated_code"], data_element)
             elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                for data_set in self.data_frames:
-                    idx = self.data_frames[data_set].index[(self.data_frames[data_set]['state'] == state_code) & (self.data_frames[data_set]['county'] == county_code) & (self.data_frames[data_set]['tract'] == tract_code)].tolist()
-                    for data_element in self.data_set_elements[data_set]:
+                for data_set in data_frames:
+                    idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (
+                                data_frames[data_set]['county'] == county_code) & (data_frames[data_set][
+                                                                                       'tract'] == tract_code)].tolist()
+                    for data_element in data_set_elements[data_set]:
                         if len(idx) == 0:
                             self.data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
                         elif data_element.get_strategy == GetStrategy.CALCULATION:
@@ -139,15 +144,17 @@ class DataFrameEnhancer:
                                 calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     [self.data_frames[data_set].iloc[idx[0]][source_var],
-                                                                      self.data_frames[data_set].iloc[idx[0]][calc_var]], arguments, self.data_files)
+                                                                     [data_frames[data_set].iloc[idx[0]][source_var],
+                                                                      data_frames[data_set].iloc[idx[0]][calc_var]],
+                                                                     arguments, self.data_files)
                             else:
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
-                                                             self.data_frames[data_set].iloc[idx[0]][data_element.source_variable], arguments, self.data_files)
+                                                                     data_frames[data_set].iloc[idx[0]][
+                                                                         data_element.source_variable], arguments, self.data_files)
                         else:
                             self.data_frame.iloc[index][data_element.variable_name] = \
-                                self.data_frames[data_set].iloc[idx[0]][data_element.source_variable]
+                                data_frames[data_set].iloc[idx[0]][data_element.source_variable]
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
