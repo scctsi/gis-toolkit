@@ -164,8 +164,8 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':
-            return float(source_values['lapop1shar']) * 100
+            return str(float(source_values['lapop1shar']) * 100)
         else:
-            return source_values['lapop10sha']
+            return str(source_values['lapop10sha'])
 
     return None
