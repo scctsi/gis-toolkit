@@ -181,16 +181,13 @@ class DataFrameEnhancer:
 class GlobalCache:
     def __init__(self):
         self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME, constant.DATE_COLUMN])
-        self.timeframe = 0  # days
+        self.timeframe = 7  # days
 
     def load_cache(self):
         check_cache_dir()
         if os.path.exists('./cache/global_cache.csv'):
-            today = datetime.today()
-            self.data_frame = pd.read_csv('./cache/global_cache.csv')
-            # self.data_frame.drop_duplicates(subset=[constant.GEO_ID_NAME], inplace=True, ignore_index=True)
-            self.data_frame.drop(self.data_frame.index[(datetime.strptime(self.data_frame[constant.DATE_COLUMN], "%m/%d/%Y") - today).days >= self.timeframe], inplace=True)
-            print(self.data_frame)
+            self.data_frame = pd.read_csv('./cache/global_cache.csv', parse_dates=[constant.DATE_COLUMN], infer_datetime_format=True)
+            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[constant.DATE_COLUMN]).dt.days > self.timeframe], inplace=True)
 
     def in_cache(self, geo_id):
         if geo_id in self.data_frame[constant.GEO_ID_NAME].values:
