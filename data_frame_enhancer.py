@@ -1,5 +1,3 @@
-import timeit
-
 import pandas as pd
 from data_structure import GetStrategy
 import constant
@@ -7,7 +5,6 @@ import sedoh_data_structure as sds
 import value_getter
 import progress_bar
 import os
-import json
 import importer
 import requests
 
