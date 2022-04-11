@@ -1,5 +1,3 @@
-import timeit
-from datetime import date
 from datetime import datetime
 import pandas as pd
 from data_structure import GetStrategy
@@ -8,7 +6,6 @@ import sedoh_data_structure as sds
 import value_getter
 import progress_bar
 import os
-import json
 import importer
 import requests
 
@@ -124,11 +121,9 @@ class DataFrameEnhancer:
             self.get_data_element_values()
 
     def get_data_element_values(self):
-        # start_time = timeit.default_timer()
         self.global_cache.load_cache()
         data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
-        start_time = timeit.default_timer()
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
@@ -170,7 +165,6 @@ class DataFrameEnhancer:
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
         self.data_frame.to_csv('./temp/enhanced_' + self.data_key + '.csv')
-        print((timeit.default_timer() - start_time) / len(self.data_frame))
 
     def enhance(self):
         self.add_data_elements()
@@ -180,14 +174,14 @@ class DataFrameEnhancer:
 
 class GlobalCache:
     def __init__(self):
-        self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME, constant.DATE_COLUMN])
+        self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME])
         self.timeframe = 7  # days
 
     def load_cache(self):
         check_cache_dir()
         if os.path.exists('./cache/global_cache.csv'):
             self.data_frame = pd.read_csv('./cache/global_cache.csv', parse_dates=[constant.DATE_COLUMN], infer_datetime_format=True)
-            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[constant.DATE_COLUMN]).dt.days > self.timeframe], inplace=True)
+            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[constant.DATE_COLUMN]).dt.days >= self.timeframe], inplace=True)
 
     def in_cache(self, geo_id):
         if geo_id in self.data_frame[constant.GEO_ID_NAME].values:
@@ -197,8 +191,7 @@ class GlobalCache:
 
     def set_cache(self, geo_id, input_row):
         if not self.in_cache(geo_id):
-            date_string = datetime.today().strftime("%m/%d/%Y")
-            input_row[constant.DATE_COLUMN] = [date_string]
+            input_row.insert(len(input_row.columns), constant.DATE_COLUMN, [datetime.today()])
             self.data_frame = pd.concat([self.data_frame, input_row], ignore_index=True)
 
     def get_cache_row(self, geo_id):
