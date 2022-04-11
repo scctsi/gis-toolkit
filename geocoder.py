@@ -61,7 +61,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key):
         addresses.append(Address(row.street, row.city, row.state, row.zip))
     try:
         geocode_addresses_to_census_tract(addresses, data_key)
-        data_frame[constant.GEO_ID_NAME] = importer.import_file('./temp/geocoded_' + data_key + '.csv')['census_tract']
+        data_frame[constant.GEO_ID_NAME] = importer.import_file(f"./temp/geocoded_{data_key}.csv")['census_tract']
     except Exception as e:
         raise Exception(e)
     return data_frame
@@ -168,9 +168,9 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
         non_matched_addresses = geocoded_address_batch_data_frame.index[(geocoded_address_batch_data_frame['match_indicator'] == 'No_Match') | (geocoded_address_batch_data_frame['match_indicator'] == 'Tie')]
         geocoded_address_batch_data_frame.loc[non_matched_addresses, 'census_tract'] = constant.ADDRESS_NOT_GEOCODABLE
         if i == 0:
-            geocoded_address_batch_data_frame.to_csv('./temp/geocoded_' + data_key + '.csv')
+            geocoded_address_batch_data_frame.to_csv(f"./temp/geocoded_{data_key}.csv")
         else:
-            geocoded_address_batch_data_frame.to_csv('./temp/geocoded_' + data_key + '.csv', header=False, mode='a')
+            geocoded_address_batch_data_frame.to_csv(f"./temp/geocoded_{data_key}.csv", header=False, mode='a')
         # The index of the next batch to be geocoded is saved and once the loop ends, the completion status is saved
         new_batch_index = i + 1
         save_geocode_progress(data_key, new_batch_index)

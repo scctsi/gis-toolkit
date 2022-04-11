@@ -29,10 +29,10 @@ def get_geography():
     state_codes = ""
     for i in range(1, 57):
         if i < 10:
-            state_codes += "0" + str(i) + ","
+            state_codes += f"0{str(i)},"
         else:
-            state_codes += str(i) + ","
-    return "for=tract:*&in=county:*&in=state:" + state_codes[:-1:]
+            state_codes += f"{str(i)},"
+    return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
 
 
 class ACSDataSource:
@@ -106,18 +106,17 @@ class DataFrameEnhancer:
 
     def load_enhancement_job(self):
         check_temp_dir()
-        if os.path.exists('./temp/enhanced_' + self.data_key + '.csv'):
-            self.data_frame = importer.import_file('./temp/enhanced_' + self.data_key + '.csv')
+        if os.path.exists(f"./temp/enhanced_{self.data_key}.csv"):
+            self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
             file_name, extension = data_key_to_file_name(self.data_key)
-            print(file_name + "." + extension + " has already been enhanced.")
-            print("Please look at output/" + file_name + "_enhanced." + extension + " for enhanced data.")
-            print(
-                "If you would like to enhance a new data set, please make sure to use a new and unique file name (different from " + file_name + "." + extension + ")")
+            print(f"{file_name}.{extension} has already been enhanced.")
+            print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
+            print(f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
         else:
             self.get_data_element_values()
 
     def get_data_element_values(self):
-        self.geoenhanced_cache.load_cache('./temp/enhanced_' + self.data_key + '.csv')
+        self.geoenhanced_cache.load_cache(f"./temp/enhanced_{self.data_key}.csv")
         data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
         for index, row in self.data_frame.iterrows():
@@ -159,7 +158,7 @@ class DataFrameEnhancer:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
                 self.geoenhanced_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
-        self.data_frame.to_csv('./temp/enhanced_' + self.data_key + '.csv')
+        self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def enhance(self):
         self.add_data_elements()
