@@ -73,7 +73,7 @@ class ACSDataSource:
         geography = get_geography()
         try:
             data_frames = map(lambda data_set: (
-            data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+                data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
             return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
