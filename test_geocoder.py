@@ -158,7 +158,7 @@ def parse_json_dict(address_dict):
     for state in address_dict:
         parsed_addresses = []
         for address in address_dict[state]:
-            street = f"{address['properties']['number']} {address['properties']['street']}"
+            street = address['properties']['number'] + " " + address['properties']['street']
             city = address['properties']['city']
             region = state
             postcode = address['properties']['postcode']
@@ -207,7 +207,7 @@ def geocode_dict(address_dict):
     """
     results_list = []
     for state in address_dict:
-        print(f"STATE: {state}")
+        print("STATE: " + state)
         den = len(address_dict[state])
         num = 0
         for i, address in enumerate(address_dict[state]):
@@ -221,7 +221,7 @@ def geocode_dict(address_dict):
             geocodability = round(100 * (num / den), 2)
         else:
             geocodability = -1
-        print(f"STATE: {state}  GEOCODABILITY: {str(geocodability)}")
+        print("STATE: " + state, "GEOCODABILITY: " + str(geocodability))
         results_list.append([state, geocodability])
     return results_list
 

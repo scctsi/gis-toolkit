@@ -66,8 +66,8 @@ def main():
 
     # # Step 3: Export the enhanced data. Currently supports .csv, .xls, .xlsx
     # # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    exporter.export_file(enhanced_data_frame, f"./output/{file_name}_enhanced.{extension}")
-    print(f"Exported enhanced file to ./output/{file_name}_enhanced.{extension}")
+    exporter.export_file(enhanced_data_frame, "./output/" + file_name + "_enhanced." + extension)
+    print("Exported enhanced file to ./output/" + file_name + "_enhanced." + extension)
 
     # test_data_element = DataElement(sedoh_data_structure.SedohDataSource.ACS, "Gini Inequality Coefficient",
     #                                 "gini_inequality_coefficient", "B19083_001E", GetStrategy.PUBLIC_API)
