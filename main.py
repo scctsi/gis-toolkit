@@ -5,6 +5,7 @@ import sedoh_data_structure as sds
 import value_getter
 import importer
 import exporter
+from optparse import OptionParser
 
 sedoh_data_elements = sds.SedohDataElements()
 
@@ -38,7 +39,12 @@ def data_key_to_file_name(data_key):
     return file_name, extension
 
 
-def main():
+def main(options):
+    if options.filename:
+        input_file_path = f'./input/{options.filename}'
+    else:
+        input_file_path = './input/addresses.xlsx'
+
     data_elements = sds.SedohDataElements().data_elements
 
     # elements = sds.SedohDataElements().data_elements
@@ -48,11 +54,10 @@ def main():
 
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
-    test_file_path = './input/addresses.xlsx'
-    data_key = get_data_key(test_file_path)
+    data_key = get_data_key(input_file_path)
     file_name, extension = data_key_to_file_name(data_key)
-    print(f"Importing input file located at {test_file_path}")
-    input_data_frame = importer.import_file(test_file_path)
+    print(f"Importing input file located at {input_file_path}")
+    input_data_frame = importer.import_file(input_file_path)
 
     # Optional Step: Geocode addresses
     if geocoder.geocodable(input_data_frame):
@@ -76,4 +81,7 @@ def main():
 
 
 if __name__ == "__main__""":
-    main()
+    parser = OptionParser()
+    parser.add_option('-f', '--file', dest='filename', help='name of input file')
+    (options, args) = parser.parse_args()
+    main(options)
