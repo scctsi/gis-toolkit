@@ -49,3 +49,16 @@ def test_enhancement_validity():
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
             control_data_frame.iloc[0][data_element.variable_name]
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+
+
+def test_input_file_validation():
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv')
+    try:
+        main.input_file_validation(input_data_frame_v1, 1)
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 1")
+    try:
+        main.input_file_validation(input_data_frame_v2, 2)
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 2")
