@@ -53,12 +53,17 @@ def input_file_validation(data_frame, version):
                 raise Exception("Input file is missing either 'address_start_date' or 'address_end_date' column.")
             address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
             address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
-            print(f"{len(address_start_date_missing)} rows are missing an address start date at these indexes: {address_start_date_missing}")
-            print(f"{len(address_end_date_missing)} rows are missing an address end date at these indexes: {address_end_date_missing}")
-        city_missing = data_frame.index[data_frame['city'] == ''].tolist()
-        zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
-        print(f"{len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
-        print(f"{len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
+            if len(address_start_date_missing) > 0:
+                print(f"{len(address_start_date_missing)} rows are missing an address start date at these indexes: {address_start_date_missing}")
+            if len(address_end_date_missing) > 0:
+                print(f"{len(address_end_date_missing)} rows are missing an address end date at these indexes: {address_end_date_missing}")
+        if constant.GEO_ID_NAME not in data_frame.columns:
+            city_missing = data_frame.index[data_frame['city'] == ''].tolist()
+            zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
+            if len(city_missing) > 0:
+                print(f"{len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
+            if len(zip_missing) > 0:
+                print(f"{len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
     else:
         raise Exception("Invalid version number. Version can be 1 or 2 (default is 1).")
 
