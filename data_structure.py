@@ -1,5 +1,5 @@
 from enum import Enum
-
+import importer
 
 class GetStrategy(Enum):
     PUBLIC_API = 1
@@ -16,6 +16,14 @@ class DataElement:
         self.variable_name = variable_name     # A variable name that can be used by most statistical software
         self.source_variable = source_variable # The name of the variable at the data source
         self.get_strategy = get_strategy       # How do we acquire the value of this variable?
+
+
+class DataSource:
+    def __init__(self, file_name, tract_column, start_date, end_date):
+        self.data_frame = importer.import_file(f'./data_files/{file_name}')
+        self.tract_column = tract_column
+        self.start_date = start_date
+        self.end_date = end_date
 
 
 # Currently not used

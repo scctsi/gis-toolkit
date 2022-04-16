@@ -13,8 +13,8 @@ sedoh_data_elements = sds.SedohDataElements()
 
 def load_data_files():
     data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc.csv"), "FIPS"),
+        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces_3.0.xlsx"), "Census Tract"),
+        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc_2018.csv"), "FIPS"),
         sds.SedohDataSource.Gazetteer: (importer.import_file("./data_files/gazetteer.txt"), "GEOID"),
         sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
     }
@@ -88,7 +88,10 @@ def main(options):
     # elements = sds.SedohDataElements().data_elements
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
-    data_files = load_data_files()
+    if options.version == 2:
+        data_files = sds.DataFiles().data_files
+    else:
+        data_files = load_data_files()
 
 
     # Optional Step: Geocode addresses
@@ -97,7 +100,7 @@ def main(options):
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, 2)
     enhanced_data_frame = sedoh_enhancer.enhance()
     print("Finished enhancement with SEDoH data")
 

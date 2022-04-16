@@ -8,7 +8,7 @@ import progress_bar
 import os
 import importer
 import requests
-
+from openpyxl import load_workbook
 
 def check_temp_dir():
     if not os.path.isdir('./temp'):
@@ -84,11 +84,12 @@ class ACSDataSource:
 
 
 class DataFrameEnhancer:
-    def __init__(self, data_frame, data_elements, data_files, data_key, test_mode=False):
+    def __init__(self, data_frame, data_elements, data_files, data_key, version, test_mode=False):
         self.data_frame = data_frame
         self.data_elements = data_elements
         self.data_files = data_files
         self.data_key = data_key
+        self.version = version
         self.test_mode = test_mode
         self.global_cache = GlobalCache()
         self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
@@ -126,20 +127,20 @@ class DataFrameEnhancer:
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.iloc[index][constant.GEO_ID_NAME]}
-            state_code = arguments["fips_concatenated_code"][0:2]
-            county_code = arguments["fips_concatenated_code"][2:5]
-            tract_code = arguments["fips_concatenated_code"][5:11]
+            # state_code = arguments["fips_concatenated_code"][0:2]
+            # county_code = arguments["fips_concatenated_code"][2:5]
+            # tract_code = arguments["fips_concatenated_code"][5:11]
             if self.global_cache.in_cache(arguments["fips_concatenated_code"]):
                 cache_row = self.global_cache.get_cache_row(arguments["fips_concatenated_code"])
                 for data_element in self.data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = cache_row.iloc[0][data_element.variable_name]
             elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                 for data_set in data_frames:
-                    idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (
-                                data_frames[data_set]['county'] == county_code) & (data_frames[data_set][
-                                                                                       'tract'] == tract_code)].tolist()
+                    # idx = data_frames[data_set].index[(data_frames[data_set]['state'] == state_code) & (
+                    #             data_frames[data_set]['county'] == county_code) & (data_frames[data_set][
+                    #                                                                    'tract'] == tract_code)].tolist()
                     for data_element in data_set_elements[data_set]:
-                        if len(idx) == 0:
+                        if arguments["fips_concatenated_code"] not in data_frames[data_set].index:
                             self.data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
                         elif data_element.get_strategy == GetStrategy.CALCULATION:
                             if "," in data_element.source_variable:
@@ -147,17 +148,17 @@ class DataFrameEnhancer:
                                 calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     [data_frames[data_set].iloc[idx[0]][source_var],
-                                                                      data_frames[data_set].iloc[idx[0]][calc_var]],
+                                                                     [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
+                                                                      data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
                                                                      arguments, self.data_files)
                             else:
                                 self.data_frame.iloc[index][data_element.variable_name] = \
                                     value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     data_frames[data_set].iloc[idx[0]][
+                                                                     data_frames[data_set].loc[arguments["fips_concatenated_code"],
                                                                          data_element.source_variable], arguments, self.data_files)
                         else:
                             self.data_frame.iloc[index][data_element.variable_name] = \
-                                data_frames[data_set].iloc[idx[0]][data_element.source_variable]
+                                data_frames[data_set].loc[arguments["fips_concatenated_code"], data_element.source_variable]
                 for data_element in self.non_acs_data_elements:
                     self.data_frame.iloc[index][data_element.variable_name] = \
                         value_getter.get_value(data_element, arguments, self.data_files)
@@ -165,10 +166,60 @@ class DataFrameEnhancer:
         self.global_cache.write_to_cache()
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
+    def load_comprehensive_data_element_values(self):
+        data_frames = self.acs_data_source.data_frames(self.test_mode)
+        data_set_elements = self.acs_data_source.data_set_elements()
+        excel_path = f'./temp/comprehensive_enhanced_{self.data_key}.xlsx'
+        for data_set in data_frames:
+            for data_element in data_set_elements[data_set]:
+                element_data_frame = self.data_frame
+                element_data_frame['-inf to inf'] = ''
+                for index, row in element_data_frame.iterrows():
+                    arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
+                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
+                        if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
+                            element_data_frame.iloc[index]['-inf to inf'] = constant.NOT_AVAILABLE
+                        elif data_element.get_strategy == GetStrategy.CALCULATION:
+                            if "," in data_element.source_variable:
+                                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
+                                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
+                                element_data_frame.iloc[index]['-inf to inf'] = \
+                                    value_getter.get_acs_calculation(data_element.variable_name,
+                                                                     [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
+                                                                      data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
+                                                                     arguments, self.data_files)
+                            else:
+                                element_data_frame.iloc[index]['-inf to inf'] = \
+                                    value_getter.get_acs_calculation(data_element.variable_name,
+                                                                     data_frames[data_set].loc[arguments["fips_concatenated_code"],
+                                                                         data_element.source_variable], arguments, self.data_files)
+                        else:
+                            element_data_frame.iloc[index][data_element.variable_name] = \
+                                data_frames[data_set].loc[
+                                    arguments["fips_concatenated_code"], data_element.source_variable]
+                if os.path.exists(excel_path):
+                    book = load_workbook(excel_path)
+                    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+                    writer.book = book
+                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                    writer.save()
+                    writer.close()
+                else:
+                    writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
+                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                    writer.save()
+                    writer.close()
+        for data_element in self.non_acs_data_elements:
+            element_data_frame = self.data_frame
+
+
     def enhance(self):
-        self.add_data_elements()
-        self.load_enhancement_job()
-        return self.data_frame
+        if self.version == 2:
+            self.load_comprehensive_data_element_values()
+        else:
+            self.add_data_elements()
+            self.load_enhancement_job()
+            return self.data_frame
 
 
 class GlobalCache:
