@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 import pandas as pd
 from data_structure import GetStrategy
 import constant
@@ -9,6 +10,7 @@ import os
 import importer
 import requests
 from openpyxl import load_workbook
+
 
 def check_temp_dir():
     if not os.path.isdir('./temp'):
@@ -37,6 +39,13 @@ def get_geography():
         else:
             state_codes += f"{str(i)},"
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
+
+
+def source_intersection(source, row):
+    if source.start_date <= row.iloc[0]['address_start_date'] <= source.end_date:
+        return True
+    else:
+        return False
 
 
 class ACSDataSource:
@@ -170,48 +179,68 @@ class DataFrameEnhancer:
         data_frames = self.acs_data_source.data_frames(self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
         excel_path = f'./temp/comprehensive_enhanced_{self.data_key}.xlsx'
-        for data_set in data_frames:
-            for data_element in data_set_elements[data_set]:
-                element_data_frame = self.data_frame
-                element_data_frame['-inf to inf'] = ''
+        # for data_set in data_frames:
+        #     for data_element in data_set_elements[data_set]:
+        #         element_data_frame = self.data_frame.copy()
+        #         element_data_frame['-inf to inf'] = ''
+        #         for index, row in element_data_frame.iterrows():
+        #             arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
+        #             if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
+        #                 if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
+        #                     element_data_frame.iloc[index]['-inf to inf'] = constant.NOT_AVAILABLE
+        #                 elif data_element.get_strategy == GetStrategy.CALCULATION:
+        #                     if "," in data_element.source_variable:
+        #                         source_var = data_element.source_variable[:data_element.source_variable.index(',')]
+        #                         calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
+        #                         element_data_frame.iloc[index]['-inf to inf'] = \
+        #                             value_getter.get_acs_calculation(data_element.variable_name,
+        #                                                              [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
+        #                                                               data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
+        #                                                              arguments, self.data_files, 2)
+        #                     else:
+        #                         element_data_frame.iloc[index]['-inf to inf'] = \
+        #                             value_getter.get_acs_calculation(data_element.variable_name,
+        #                                                              data_frames[data_set].loc[arguments["fips_concatenated_code"],
+        #                                                                  data_element.source_variable], arguments, self.data_files, 2)
+        #                 else:
+        #                     element_data_frame.iloc[index][data_element.variable_name] = \
+        #                         data_frames[data_set].loc[arguments["fips_concatenated_code"], data_element.source_variable]
+        #         if os.path.exists(excel_path):
+        #             book = load_workbook(excel_path)
+        #             writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+        #             writer.book = book
+        #             element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+        #             writer.save()
+        #             writer.close()
+        #         else:
+        #             writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+        #             element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+        #             writer.save()
+        #             writer.close()
+        for data_element in self.non_acs_data_elements:
+            element_data_frame = self.data_frame.copy()
+            element_data_frame[data_element.variable_name] = ''
+            for data_source in self.data_files[data_element.data_source]:
                 for index, row in element_data_frame.iterrows():
                     arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
-                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                        if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
-                            element_data_frame.iloc[index]['-inf to inf'] = constant.NOT_AVAILABLE
-                        elif data_element.get_strategy == GetStrategy.CALCULATION:
-                            if "," in data_element.source_variable:
-                                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
-                                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
-                                element_data_frame.iloc[index]['-inf to inf'] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
-                                                                      data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
-                                                                     arguments, self.data_files)
-                            else:
-                                element_data_frame.iloc[index]['-inf to inf'] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     data_frames[data_set].loc[arguments["fips_concatenated_code"],
-                                                                         data_element.source_variable], arguments, self.data_files)
-                        else:
-                            element_data_frame.iloc[index][data_element.variable_name] = \
-                                data_frames[data_set].loc[
-                                    arguments["fips_concatenated_code"], data_element.source_variable]
-                if os.path.exists(excel_path):
-                    book = load_workbook(excel_path)
-                    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                    writer.book = book
-                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
-                    writer.save()
-                    writer.close()
-                else:
-                    writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
-                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
-                    writer.save()
-                    writer.close()
-        for data_element in self.non_acs_data_elements:
-            element_data_frame = self.data_frame
-
+                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE and data_source.start_date <= element_data_frame.iloc[index]['address_start_date'] <= data_source.end_date:
+                        element_data_frame.iloc[index][data_element.variable_name] = value_getter.get_value(data_element, arguments, data_source, 2)
+                        if element_data_frame.iloc[index]['address_end_date'] > data_source.end_date:
+                            new_row = element_data_frame.iloc[[index]].copy()
+                            new_row.iloc[index]['address_start_date'] = data_source.end_date + timedelta(days=2)
+                            element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
+            if os.path.exists(excel_path):
+                book = load_workbook(excel_path)
+                writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+                writer.book = book
+                element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                writer.save()
+                writer.close()
+            else:
+                writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+                element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                writer.save()
+                writer.close()
 
     def enhance(self):
         if self.version == 2:

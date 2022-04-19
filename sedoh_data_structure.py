@@ -17,17 +17,19 @@ class DataFiles:
             SedohDataSource.CalEPA_CES: [
                 DataSource("calepa_ces_3.0.xlsx",
                            "Census Tract",
-                           datetime(2018, 6, 1),
+                           datetime(0, 1, 1),
+                           # datetime(2018, 6, 1),
                            datetime(2021, 10, 12)),
                 DataSource("calepa_ces_4.0.xlsx",
                            "Census Tract",
                            datetime(2021, 10, 13),
-                           None)
+                           datetime(9999, 1, 1))
             ],
             SedohDataSource.CDC: [
                 DataSource("cdc_2000.csv",
                            "FIPS",
-                           datetime(2000, 1, 1),
+                           datetime(0, 1, 1),
+                           # datetime(2000, 1, 1),
                            datetime(2009, 12, 31)),
                 DataSource("cdc_2010.csv",
                            "FIPS",
@@ -44,18 +46,19 @@ class DataFiles:
                 DataSource("cdc_2018.csv",
                            "FIPS",
                            datetime(2018, 1, 1),
-                           None)
+                           datetime(9999, 1, 1))
             ],
             SedohDataSource.Gazetteer: [
                 DataSource("gazetteer.txt",
-                           "GEO_ID",
-                           None,
-                           None)
+                           "GEOID",
+                           datetime(0, 1, 1),
+                           datetime(9999, 1, 1))
             ],
             SedohDataSource.USDA: [
                 DataSource("usda_2010.xlsx",
                            "CensusTract",
-                           datetime(2010, 1, 1),
+                           datetime(0, 1, 1),
+                           # datetime(2010, 1, 1),
                            datetime(2014, 12, 31)),
                 DataSource("usda_2015.xlsx",
                            "CensusTract",
@@ -64,7 +67,7 @@ class DataFiles:
                 DataSource("usda_2019.xlsx",
                            "CensusTract",
                            datetime(2019, 1, 1),
-                           None)
+                           datetime(9999, 1, 1))
             ]
         }
 
@@ -280,7 +283,7 @@ class SedohDataElements:
             DataElement(SedohDataSource.USDA,
                         "Food - Fraction of Population with Low Access",
                         "food_fraction_of_population_with_low_access",
-                        ["Urban", "lapop1shar", "lapop10sha"],
+                        ["Urban", "lapop1share", "lapop10share"],
                         GetStrategy.FILE_AND_CALCULATION),
             DataElement(SedohDataSource.USDA,
                         "Food - Low-Access Tract",

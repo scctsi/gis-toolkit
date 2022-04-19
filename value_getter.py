@@ -12,21 +12,28 @@ load_dotenv()
 #                        options = optional arguments which allow yoy to customize the function
 
 
-def get_value(data_element, arguments, data_files):
-    if data_element.get_strategy == GetStrategy.FILE:
-        # if type(data_element.source_variable) == list:
-        #     else:
-        #
-        return get_file_value(data_element.source_variable,
-                              arguments,
-                              data_files[data_element.data_source][0],
-                              data_files[data_element.data_source][1])
-    elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
-        return get_calculated_file_value(data_element.source_variable,
-                                         arguments,
-                                         data_files[data_element.data_source][0],
-                                         data_files[data_element.data_source][1],
-                                         data_element.variable_name)
+def get_value(data_element, arguments, data_files, version=1):
+    if version == 1:
+        if data_element.get_strategy == GetStrategy.FILE:
+            # if type(data_element.source_variable) == list:
+            #     else:
+            #
+            return get_file_value(data_element.source_variable,
+                                  arguments,
+                                  data_files[data_element.data_source][0],
+                                  data_files[data_element.data_source][1])
+        elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+            return get_calculated_file_value(data_element.source_variable,
+                                             arguments,
+                                             data_files[data_element.data_source][0],
+                                             data_files[data_element.data_source][1],
+                                             data_element.variable_name)
+    elif version == 2:
+        if data_element.get_strategy == GetStrategy.FILE:
+            return get_file_value(data_element.source_variable, arguments, data_files.data_frame, data_files.tract_column)
+        elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+            return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
+                                             data_files.tract_column, data_element.variable_name)
 
 # ACS specific methods
 def construct_geography_argument(arguments):
@@ -114,7 +121,7 @@ def get_acs_batch(data_set, source_variables, geographies, test_mode=False):
     return api.get_batch_values(api_url, test_mode)
 
 
-def get_acs_calculation(variable_name, source_value, arguments, data_files):
+def get_acs_calculation(variable_name, source_value, arguments, data_files, version=1):
     # TODO: Change from using hardcoded variable_name checks
     if source_value == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
@@ -125,9 +132,14 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
-        aland = get_file_value("ALAND", arguments,
-                               data_files[SedohDataSource.Gazetteer][0],
-                               data_files[SedohDataSource.Gazetteer][1])
+        if version == 1:
+            aland = get_file_value("ALAND", arguments,
+                                   data_files[SedohDataSource.Gazetteer][0],
+                                   data_files[SedohDataSource.Gazetteer][1])
+        else:
+            aland = get_file_value("ALAND", arguments,
+                                   data_files[SedohDataSource.Gazetteer][0].data_frame,
+                                   data_files[SedohDataSource.Gazetteer][0].tract_column)
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
@@ -164,8 +176,8 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
     # TODO: Refactor these condition based calculations
     if variable_name == 'food_fraction_of_population_with_low_access':
         if source_values['Urban'] == '1':
-            return str(float(source_values['lapop1shar']) * 100)
+            return str(float(source_values['lapop1share']) * 100)
         else:
-            return str(source_values['lapop10sha'])
+            return str(source_values['lapop10share'])
 
     return None
