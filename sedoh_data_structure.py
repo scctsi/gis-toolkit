@@ -17,19 +17,17 @@ class DataFiles:
             SedohDataSource.CalEPA_CES: [
                 DataSource("calepa_ces_3.0.xlsx",
                            "Census Tract",
-                           datetime(0, 1, 1),
-                           # datetime(2018, 6, 1),
+                           datetime(2018, 6, 1),
                            datetime(2021, 10, 12)),
                 DataSource("calepa_ces_4.0.xlsx",
                            "Census Tract",
                            datetime(2021, 10, 13),
-                           datetime(9999, 1, 1))
+                           datetime(2024, 12, 31))
             ],
             SedohDataSource.CDC: [
                 DataSource("cdc_2000.csv",
                            "FIPS",
-                           datetime(0, 1, 1),
-                           # datetime(2000, 1, 1),
+                           datetime(2000, 1, 1),
                            datetime(2009, 12, 31)),
                 DataSource("cdc_2010.csv",
                            "FIPS",
@@ -38,7 +36,7 @@ class DataFiles:
                 DataSource("cdc_2014.csv",
                            "FIPS",
                            datetime(2014, 1, 1),
-                           datetime(2005, 12, 31)),
+                           datetime(2015, 12, 31)),
                 DataSource("cdc_2016.csv",
                            "FIPS",
                            datetime(2016, 1, 1),
@@ -46,19 +44,18 @@ class DataFiles:
                 DataSource("cdc_2018.csv",
                            "FIPS",
                            datetime(2018, 1, 1),
-                           datetime(9999, 1, 1))
+                           datetime(2019, 12, 31))
             ],
             SedohDataSource.Gazetteer: [
                 DataSource("gazetteer.txt",
                            "GEOID",
-                           datetime(0, 1, 1),
-                           datetime(9999, 1, 1))
+                           None,
+                           None)
             ],
             SedohDataSource.USDA: [
                 DataSource("usda_2010.xlsx",
                            "CensusTract",
-                           datetime(0, 1, 1),
-                           # datetime(2010, 1, 1),
+                           datetime(2010, 1, 1),
                            datetime(2014, 12, 31)),
                 DataSource("usda_2015.xlsx",
                            "CensusTract",
@@ -67,7 +64,7 @@ class DataFiles:
                 DataSource("usda_2019.xlsx",
                            "CensusTract",
                            datetime(2019, 1, 1),
-                           datetime(9999, 1, 1))
+                           datetime(2024, 12, 31))
             ]
         }
 

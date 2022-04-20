@@ -176,8 +176,9 @@ class DataFrameEnhancer:
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def load_comprehensive_data_element_values(self):
-        data_frames = self.acs_data_source.data_frames(self.test_mode)
-        data_set_elements = self.acs_data_source.data_set_elements()
+        check_temp_dir()
+        # data_frames = self.acs_data_source.data_frames(self.test_mode)
+        # data_set_elements = self.acs_data_source.data_set_elements()
         excel_path = f'./temp/comprehensive_enhanced_{self.data_key}.xlsx'
         # for data_set in data_frames:
         #     for data_element in data_set_elements[data_set]:
@@ -220,15 +221,25 @@ class DataFrameEnhancer:
         for data_element in self.non_acs_data_elements:
             element_data_frame = self.data_frame.copy()
             element_data_frame[data_element.variable_name] = ''
-            for data_source in self.data_files[data_element.data_source]:
+            element_data_frame.drop(element_data_frame.index[element_data_frame['address_start_date'] > self.data_files[data_element.data_source][-1].end_date], inplace=True)
+            element_data_frame.drop(element_data_frame.index[element_data_frame['address_end_date'] <= self.data_files[data_element.data_source][0].start_date], inplace=True)
+            element_data_frame.reset_index(drop=True, inplace=True)
+            for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
                     arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
-                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE and data_source.start_date <= element_data_frame.iloc[index]['address_start_date'] <= data_source.end_date:
-                        element_data_frame.iloc[index][data_element.variable_name] = value_getter.get_value(data_element, arguments, data_source, 2)
-                        if element_data_frame.iloc[index]['address_end_date'] > data_source.end_date:
-                            new_row = element_data_frame.iloc[[index]].copy()
-                            new_row.iloc[index]['address_start_date'] = data_source.end_date + timedelta(days=2)
-                            element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
+                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
+                        if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
+                            element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
+                        if data_source.start_date <= element_data_frame.loc[index, 'address_start_date'] <= data_source.end_date:
+                            element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(data_element, arguments, data_source, 2)
+                            if element_data_frame.loc[index, 'address_end_date'] > data_source.end_date:
+                                if i + 1 == len(self.data_files[data_element.data_source]):
+                                    element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                                else:
+                                    new_row = element_data_frame.iloc[[index]].copy()
+                                    new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
+                                    element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                                    element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
             if os.path.exists(excel_path):
                 book = load_workbook(excel_path)
                 writer = pd.ExcelWriter(excel_path, engine='openpyxl')
