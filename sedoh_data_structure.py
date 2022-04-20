@@ -15,6 +15,10 @@ class DataFiles:
     def __init__(self):
         self.data_files = {
             SedohDataSource.CalEPA_CES: [
+                DataSource("calepa_ces_2.0.xlsx",
+                           "Census Tract",
+                           datetime(2014, 10, 1),
+                           datetime(2018, 5, 31)),
                 DataSource("calepa_ces_3.0.xlsx",
                            "Census Tract",
                            datetime(2018, 6, 1),
@@ -67,6 +71,9 @@ class DataFiles:
                            datetime(2024, 12, 31))
             ]
         }
+        for data_source in self.data_files[SedohDataSource.CalEPA_CES]:
+            data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
+
 
 
 class SedohDataElements:
