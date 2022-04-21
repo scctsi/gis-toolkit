@@ -215,16 +215,17 @@ class DataFrameEnhancer:
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 data_frames[data_set].loc[arguments["fips_concatenated_code"], data_element.source_variable]
+                element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
                 if os.path.exists(excel_path):
                     book = load_workbook(excel_path)
                     writer = pd.ExcelWriter(excel_path, engine='openpyxl')
                     writer.book = book
-                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                    element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
                     writer.save()
                     writer.close()
                 else:
                     writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                    element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                    element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
                     writer.save()
                     writer.close()
         for data_element in self.non_acs_data_elements:
@@ -249,16 +250,17 @@ class DataFrameEnhancer:
                                     new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
                                     element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
                                     element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
+            element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
             if os.path.exists(excel_path):
                 book = load_workbook(excel_path)
                 writer = pd.ExcelWriter(excel_path, engine='openpyxl')
                 writer.book = book
-                element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
                 writer.save()
                 writer.close()
             else:
                 writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                element_data_frame.to_excel(writer, sheet_name=data_element.variable_name)
+                element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
                 writer.save()
                 writer.close()
 

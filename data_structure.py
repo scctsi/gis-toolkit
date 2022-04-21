@@ -10,13 +10,13 @@ class GetStrategy(Enum):
 
 
 class DataElement:
-    def __init__(self, data_source, friendly_name, variable_name, source_variable, get_strategy):
+    def __init__(self, data_source, friendly_name, variable_name, source_variable, get_strategy, sheet_name):
         self.data_source = data_source         # External data source
         self.friendly_name = friendly_name     # A friendly name for the data element
         self.variable_name = variable_name     # A variable name that can be used by most statistical software
         self.source_variable = source_variable # The name of the variable at the data source
         self.get_strategy = get_strategy       # How do we acquire the value of this variable?
-
+        self.sheet_name = sheet_name           # Title of Excel sheet used in v2.0
 
 class DataSource:
     def __init__(self, file_name, tract_column, start_date, end_date):
