@@ -48,7 +48,18 @@ def geocode_data_frame(data_frame):
     return data_frame
 
 
-def geocode_addresses_in_data_frame(data_frame, data_key):
+def parse_lat_long(data_frame, geocoded_data_frame):
+    data_frame['latitude'] = ''
+    data_frame['longitude'] = ''
+    for index, row in geocoded_data_frame.iterrows():
+        if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
+            comma = row['latitude_longitude'].index(',')
+            data_frame.loc[index, 'longitude'] = row['latitude_longitude'][0: comma]
+            data_frame.loc[index, 'latitude'] = row['latitude_longitude'][comma + 1:]
+    return data_frame
+
+
+def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     """
     :param data_key: Key of save file, associated with a file's geocoding process
     :param data_frame: Data frame of addresses, to be geocoded
@@ -61,7 +72,10 @@ def geocode_addresses_in_data_frame(data_frame, data_key):
         addresses.append(Address(row.street, row.city, row.state, row.zip))
     try:
         geocode_addresses_to_census_tract(addresses, data_key)
-        data_frame[constant.GEO_ID_NAME] = importer.import_file(f"./temp/geocoded_{data_key}.csv")['census_tract']
+        geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
+        data_frame[constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
+        if version == 2:
+            data_frame = parse_lat_long(data_frame, geocoded_data_frame)
     except Exception as e:
         raise Exception(e)
     return data_frame
@@ -132,7 +146,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
     """
     check_temp_dir()
     batch_calls = int(len(addresses) / batch_limit)
-    # If there is a remainder, another batch is added to accomodate those addresses
+    # If there is a remainder, another batch is added to accommodate those addresses
     if len(addresses) % batch_limit != 0:
         batch_calls += 1
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
@@ -152,11 +166,11 @@ def geocode_addresses_to_census_tract(addresses, data_key, batch_limit=10000):
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
              save_geocode_progress(data_key, i, "Incomplete", str(e))
              raise SystemExit(e)
-        # Geocoded address can be returned in a different order, the following lines correct their indicies and sort them
+        # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
         geocoded_address_batch_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names, dtype='str')
         geocoded_address_batch_data_frame.index = geocoded_address_batch_data_frame['address_id'].astype(int).add(i * batch_limit)
         geocoded_address_batch_data_frame['address_id'] = geocoded_address_batch_data_frame.index

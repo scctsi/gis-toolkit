@@ -1,6 +1,7 @@
 import os
 import pathlib
 import pandas as pd
+import rasterio
 
 
 def import_file(full_file_path, version=1):
@@ -26,6 +27,8 @@ def import_file(full_file_path, version=1):
                   f"Please close Excel and try again.")
     elif file_extension == '.txt': # NOTE: Support is included only for tab delimited text files
         input_data_frame = pd.read_csv(full_file_path, sep='\t', lineterminator='\r', dtype=str)
+    elif file_extension == '.tif':
+        input_data_frame = rasterio.open(full_file_path)
     else:
         raise FileNotFoundError(f"{file_extension} files are not currently supported. "
                                 f"Please convert to CSV or Microsoft Excel")

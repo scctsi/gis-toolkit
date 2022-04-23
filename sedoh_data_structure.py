@@ -9,7 +9,7 @@ class SedohDataSource(Enum):
     CalEPA_CES = 3
     CDC = 4
     USDA = 5
-
+    SCEHSC = 6
 
 class DataFiles:
     def __init__(self):
@@ -73,7 +73,26 @@ class DataFiles:
         }
         for data_source in self.data_files[SedohDataSource.CalEPA_CES]:
             data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
-
+        self.raster_files = {
+            SedohDataSource.SCEHSC: [
+                # DataSource("NO2_2009_ANN.tif",
+                #            None,
+                #            datetime(2009, 1, 1),
+                #            datetime(2009, 12, 31)),
+                DataSource("03_2009_ANN.tif",
+                           None,
+                           datetime(2009, 1, 1),
+                           datetime(2009, 12, 31)),
+                # DataSource("PM10_2009_ANN.tif",
+                #            None,
+                #            datetime(2009, 1, 1),
+                #            datetime(2009, 12, 31)),
+                DataSource("PM25_2009_ANN.tif",
+                           None,
+                           datetime(2009, 1, 1),
+                           datetime(2009, 12, 31))
+            ]
+        }
 
 
 class SedohDataElements:
