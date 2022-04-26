@@ -18,6 +18,10 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
+def clean_up_temp():
+    shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+
+
 def load_data_files():
     data_files = {
         sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces.xlsx"), "Census Tract"),
@@ -50,7 +54,7 @@ def test_enhancement_validity():
         # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
             control_data_frame.iloc[0][data_element.variable_name]
-    shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    clean_up_temp()
 
 
 def test_geocodable_address():
@@ -61,7 +65,8 @@ def test_geocodable_address():
     input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
-    shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    clean_up_temp()
+
 
 def test_non_geocodable_address():
     file_path = 'validation/addresses-us-all.csv'
@@ -71,4 +76,4 @@ def test_non_geocodable_address():
     input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
-    shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    clean_up_temp()
