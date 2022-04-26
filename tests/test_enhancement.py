@@ -5,6 +5,7 @@ import main
 import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
+from data_structure import GetStrategy
 
 
 def handle_remove_readonly(func, path, exc):
@@ -46,8 +47,9 @@ def test_enhancement_validity():
         print(data_element.variable_name)
         # print("newly enhanced:  ", enhanced_data_frame.iloc[0][data_element.variable_name])
         # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
-        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
-            control_data_frame.iloc[0][data_element.variable_name]
+        if data_element.get_strategy != GetStrategy.RASTER_FILE:
+            assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+                control_data_frame.iloc[0][data_element.variable_name]
     # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
 
 
