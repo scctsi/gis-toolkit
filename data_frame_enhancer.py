@@ -197,7 +197,7 @@ class DataFrameEnhancer:
                     arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
                     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                         if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
-                            element_data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
+                            element_data_frame.loc[index, data_element.variable_name] = constant.NOT_AVAILABLE
                         elif data_element.get_strategy == GetStrategy.CALCULATION:
                             if "," in data_element.source_variable:
                                 source_var = data_element.source_variable[:data_element.source_variable.index(',')]
@@ -236,7 +236,9 @@ class DataFrameEnhancer:
             element_data_frame.reset_index(drop=True, inplace=True)
             for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
-                    arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
+                    arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
+                                 "latitude": element_data_frame.loc[index, "latitude"],
+                                 "longitude": element_data_frame.loc[index, "longitude"]}
                     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                         if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
                             element_data_frame.loc[index, 'address_start_date'] = data_source.start_date

@@ -1,5 +1,6 @@
 from enum import Enum
 import importer
+import rasterio
 
 class GetStrategy(Enum):
     PUBLIC_API = 1
@@ -7,6 +8,7 @@ class GetStrategy(Enum):
     CALCULATION = 3
     FILE = 4
     FILE_AND_CALCULATION = 5
+    RASTER_FILE = 6
 
 
 class DataElement:
@@ -18,6 +20,7 @@ class DataElement:
         self.get_strategy = get_strategy       # How do we acquire the value of this variable?
         self.sheet_name = sheet_name           # Title of Excel sheet used in v2.0
 
+
 class DataSource:
     def __init__(self, file_name, tract_column, start_date, end_date):
         self.data_frame = importer.import_file(f'./data_files/{file_name}')
@@ -25,6 +28,20 @@ class DataSource:
         self.start_date = start_date
         self.end_date = end_date
 
+
+class RasterSource:
+    def __init__(self, file_name, latitude_range, longitude_range, precision,start_date, end_date):
+        raster_data = importer.import_file(f'./data_files/{file_name}')
+        raster_bounds = raster_data.bounds
+        self.array = raster_data.read(1)
+        raster_data.close()
+        self.latitude_range = latitude_range
+        self.longitude_range = longitude_range
+        self.precision = precision
+        self.step = round((raster_bounds.top - raster_bounds.bottom) / self.array.shape[0], self.precision)
+        self.latitude_transform = self.array.shape[0] - 1
+        self.start_date = start_date
+        self.end_date = end_date
 
 # Currently not used
 # class DataStructure:
