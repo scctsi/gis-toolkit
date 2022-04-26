@@ -77,7 +77,7 @@ def main(options):
     data_key = get_data_key(input_file_path)
     file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {input_file_path}")
-    input_data_frame = importer.import_file(input_file_path, options.verison)
+    input_data_frame = importer.import_file(input_file_path, options.version)
     input_file_validation(input_data_frame, options.version)
 
     data_elements = sds.SedohDataElements().data_elements
