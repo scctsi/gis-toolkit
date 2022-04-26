@@ -268,7 +268,7 @@ class DataFrameEnhancer:
 
     def enhance(self):
         self.load_enhancement_job()
-        if self.version == 1:
+        if self.version == None or self.version == 1:
             return self.data_frame
 
 
