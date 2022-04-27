@@ -119,6 +119,7 @@ def save_geocode_progress(data_key, batch_index, status="Incomplete", error_mess
         save_file.truncate()
     return None
 
+
 def load_geocode_progress(data_key):
     """
     :param data_key: Key of save file, associated with a file's geocoding process

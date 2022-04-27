@@ -109,7 +109,7 @@ def main(options):
 
 if __name__ == "__main__""":
     parser = OptionParser()
-    parser.add_option('-f', '--file', dest='filename', help='name of input file')
-    parser.add_option('-v', '--version', dest='version', help='version of gis-toolkit')
+    parser.add_option('-f', '--file', type='string', dest='filename', help='name of input file: string')
+    parser.add_option('-v', '--version', type='int', dest='version', help='version of gis-toolkit: int')
     (options, args) = parser.parse_args()
     main(options)

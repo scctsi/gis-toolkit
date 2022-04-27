@@ -120,7 +120,7 @@ class DataFrameEnhancer:
 
     def load_enhancement_job(self):
         check_temp_dir()
-        if self.version == 1:
+        if self.version is None or self.version == 1:
             if os.path.exists(f"./temp/enhanced_{self.data_key}.csv"):
                 self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
                 self.print_previous_enhancement()
@@ -137,7 +137,7 @@ class DataFrameEnhancer:
     def print_previous_enhancement(self):
         file_name, extension = data_key_to_file_name(self.data_key)
         print(f"{file_name}.{extension} has already been enhanced with version {self.version}.")
-        if self.version == 1:
+        if self.version is None or self.version == 1:
             print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
         if self.version == 2:
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
@@ -268,7 +268,7 @@ class DataFrameEnhancer:
 
     def enhance(self):
         self.load_enhancement_job()
-        if self.version == None or self.version == 1:
+        if self.version is None or self.version == 1:
             return self.data_frame
 
 
