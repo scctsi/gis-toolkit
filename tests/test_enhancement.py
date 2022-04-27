@@ -19,10 +19,10 @@ def handle_remove_readonly(func, path, exc):
 
 def load_data_files():
     data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces_3.0.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc_2018.csv"), "FIPS"),
+        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces/calepa_ces_3.0.xlsx"), "Census Tract"),
+        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc/cdc_2018.csv"), "FIPS"),
         sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer.csv"), "GEOID"),
-        sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
+        sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda/usda.xls'), "CensusTrac")
     }
 
     # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.

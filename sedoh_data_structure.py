@@ -16,63 +16,63 @@ class DataFiles:
     def __init__(self):
         self.data_files = {
             SedohDataSource.CalEPA_CES: [
-                DataSource("calepa_ces_2.0.xlsx",
+                DataSource("calepa_ces/calepa_ces_2.0.xlsx",
                            "Census Tract",
                            datetime(2014, 10, 1),
                            datetime(2018, 5, 31)),
-                DataSource("calepa_ces_3.0.xlsx",
+                DataSource("calepa_ces/calepa_ces_3.0.xlsx",
                            "Census Tract",
                            datetime(2018, 6, 1),
                            datetime(2021, 10, 12)),
-                DataSource("calepa_ces_4.0.xlsx",
+                DataSource("calepa_ces/calepa_ces_4.0.xlsx",
                            "Census Tract",
                            datetime(2021, 10, 13),
                            datetime(2024, 12, 31))
             ],
             SedohDataSource.CDC: [
-                DataSource("cdc_2000.csv",
+                DataSource("cdc/cdc_2000.csv",
                            "FIPS",
                            datetime(2000, 1, 1),
                            datetime(2009, 12, 31)),
-                DataSource("cdc_2010.csv",
+                DataSource("cdc/cdc_2010.csv",
                            "FIPS",
                            datetime(2010, 1, 1),
                            datetime(2013, 12, 31)),
-                DataSource("cdc_2014.csv",
+                DataSource("cdc/cdc_2014.csv",
                            "FIPS",
                            datetime(2014, 1, 1),
                            datetime(2015, 12, 31)),
-                DataSource("cdc_2016.csv",
+                DataSource("cdc/cdc_2016.csv",
                            "FIPS",
                            datetime(2016, 1, 1),
                            datetime(2017, 12, 31)),
-                DataSource("cdc_2018.csv",
+                DataSource("cdc/cdc_2018.csv",
                            "FIPS",
                            datetime(2018, 1, 1),
                            datetime(2019, 12, 31))
             ],
             SedohDataSource.Gazetteer: [
-                DataSource("gazetteer.txt",
+                DataSource("gazetteer/gazetteer.txt",
                            "GEOID",
                            None,
                            None)
             ],
             SedohDataSource.USDA: [
-                DataSource("usda_2010.xlsx",
+                DataSource("usda/usda_2010.xlsx",
                            "CensusTract",
                            datetime(2010, 1, 1),
                            datetime(2014, 12, 31)),
-                DataSource("usda_2015.xlsx",
+                DataSource("usda/usda_2015.xlsx",
                            "CensusTract",
                            datetime(2015, 1, 1),
                            datetime(2018, 12, 31)),
-                DataSource("usda_2019.xlsx",
+                DataSource("usda/usda_2019.xlsx",
                            "CensusTract",
                            datetime(2019, 1, 1),
                            datetime(2024, 12, 31))
             ],
             (SedohDataSource.SCEHSC, "O3"): [
-                RasterSource("O3_2009_ANN.tif",
+                RasterSource("scehsc/O3_2009_ANN.tif",
                              (32.5, 35.5),
                              (-121.05, -114.1),
                              2,
@@ -80,7 +80,7 @@ class DataFiles:
                              datetime(2009, 12, 31))
             ],
             (SedohDataSource.SCEHSC, "NO2"): [
-                RasterSource("NO2_2009_ANN.tif",
+                RasterSource("scehsc/NO2_2009_ANN.tif",
                              (32.5, 35.5),
                              (-121.05, -114.1),
                              2,
@@ -88,7 +88,7 @@ class DataFiles:
                              datetime(2009, 12, 31))
             ],
             (SedohDataSource.SCEHSC, "PM10"): [
-                RasterSource("PM10_2009_ANN.tif",
+                RasterSource("scehsc/PM10_2009_ANN.tif",
                              (32.5, 35.5),
                              (-121.05, -114.1),
                              2,
@@ -96,7 +96,7 @@ class DataFiles:
                              datetime(2009, 12, 31))
             ],
             (SedohDataSource.SCEHSC, "PM25"): [
-                RasterSource("PM25_2009_ANN.tif",
+                RasterSource("scehsc/PM25_2009_ANN.tif",
                              (32.5, 35.5),
                              (-121.05, -114.1),
                              2,
