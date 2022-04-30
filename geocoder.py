@@ -1,4 +1,6 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
+from datetime import datetime
+
 import requests
 
 import api
@@ -79,6 +81,23 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     except Exception as e:
         raise Exception(e)
     return data_frame
+
+
+def separate_data_frame_by_decade(data_frame):
+    data_frames = []
+    decades = [datetime(2000, 1, 1), datetime(2010, 1, 1), datetime(2020, 1, 1), datetime(2030, 1, 1)]
+    data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
+    before_first_decade = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < decades[0]]
+    data_frame.loc[before_first_decade, constant.ADDRESS_START_DATE] = decades[0]
+    for i in range(len(decades) - 1):
+        decade = data_frame.index[decades[i] <= data_frame[constant.ADDRESS_START_DATE] < decades[i + 1]]
+        decade_data_frame = data_frame.loc[decade].copy()
+        decade_remainder = decade_data_frame.index[decade_data_frame[constant.ADDRESS_END_DATE] > decades[i + 1]]
+        data_frame.loc[decade_remainder, constant.ADDRESS_START_DATE] = decades[i + 1]
+        decade_data_frame.loc[decade_remainder, constant.ADDRESS_END_DATE] = decades[i + 1]
+        decade_data_frame.reset_index(drop=True, inplace=True)
+        data_frames.append(decade_data_frame)
+    return data_frames
 
 
 def check_temp_dir():
