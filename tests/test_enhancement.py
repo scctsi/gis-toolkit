@@ -1,5 +1,4 @@
 import pytest
-
 import constant
 import geocoder
 import importer
@@ -27,8 +26,8 @@ def run_around_tests():
 
 def load_data_files():
     data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc.csv"), "FIPS"),
+        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces_3.0.xlsx"), "Census Tract"),
+        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc_2018.csv"), "FIPS"),
         sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer.csv"), "GEOID"),
         sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
     }
@@ -48,7 +47,7 @@ def test_enhancement_validity():
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame[:3]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, True)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, 1,True)
     enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
@@ -57,6 +56,19 @@ def test_enhancement_validity():
         # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
             control_data_frame.iloc[0][data_element.variable_name]
+
+
+def test_input_file_validation():
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv')
+    try:
+        main.input_file_validation(input_data_frame_v1, 1)
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 1")
+    try:
+        main.input_file_validation(input_data_frame_v2, 2)
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 2")
 
 
 def test_geocodable_address():

@@ -3,11 +3,11 @@ import pathlib
 import pandas as pd
 
 
-def import_file(full_file_path):
+def import_file(full_file_path, version=1):
     input_data_frame = None
 
     if not (os.path.isfile(full_file_path)):
-        raise FileNotFoundError(f"File {full_file_path} does not exist. Please check if file exists "
+        raise FileNotFoundError(f"File {full_file_path} does not exist. Please check if file exists in input folder "
                                 f"and ensure that filename case matches exactly.")
 
     file_extension = pathlib.Path(full_file_path).suffix.lower()
@@ -29,5 +29,12 @@ def import_file(full_file_path):
     else:
         raise FileNotFoundError(f"{file_extension} files are not currently supported. "
                                 f"Please convert to CSV or Microsoft Excel")
-
+    if version == 2:
+        try:
+            input_data_frame['address_start_date'] = pd.to_datetime(input_data_frame['address_start_date'],
+                                                                    infer_datetime_format=True)
+            input_data_frame['address_end_date'] = pd.to_datetime(input_data_frame['address_end_date'],
+                                                                  infer_datetime_format=True)
+        except ValueError:
+            raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
     return input_data_frame
