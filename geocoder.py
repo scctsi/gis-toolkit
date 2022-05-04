@@ -86,7 +86,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     """
     :param data_frame: Data frame of addresses, to be geocoded
     :param data_key: Key of save file, associated with a file's geocoding process
-    :param version
+    :param version: Toggles geocoding in one time frame or multiple (decades)
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
     if version is None or version == 1:
