@@ -1,4 +1,5 @@
 import pytest
+import constant
 import geocoder
 import importer
 import main
@@ -15,6 +16,13 @@ def handle_remove_readonly(func, path, exc):
         func(path)
     else:
         raise
+
+
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
 
 
 def load_data_files():
@@ -50,7 +58,6 @@ def test_enhancement_validity():
         if data_element.get_strategy != GetStrategy.RASTER_FILE:
             assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
-    # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
 
 
 def test_input_file_validation():
@@ -64,3 +71,23 @@ def test_input_file_validation():
         main.input_file_validation(input_data_frame_v2, 2)
     except Exception:
         pytest.fail("input_file_validation() failed with version 2")
+
+
+def test_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
+
+
+def test_non_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
