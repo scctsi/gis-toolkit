@@ -22,21 +22,23 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = 0
-    Ten = 1
-    Twenty = 2
+    Zero = 0  # 2000-2010
+    Ten = 1  # 2010-2020
+    Twenty = 2  # 2020-2030
 
+
+# Decade 'Twenty' extends from 2020-present, so the vintage value needs to be updated yearly
 
 decade_dict = {
     Decade.Zero: {
-        "Benchmark": "",
-        "Vintage": ""},
+        "Benchmark": "Public_AR_Current",
+        "Vintage": "Census2010_Current"},
     Decade.Ten: {
-        "Benchmark": "",
-        "Vintage": ""},
+        "Benchmark": "Public_AR_Current",
+        "Vintage": "Census2020_Current"},
     Decade.Twenty: {
-        "Benchmark": "",
-        "Vintage": ""}
+        "Benchmark": "Public_AR_Current",
+        "Vintage": "ACS2021_Current"}
 }
 
 
@@ -80,10 +82,11 @@ def parse_lat_long(data_frame, geocoded_data_frame):
     return data_frame
 
 
-def geocode_addresses_in_data_frame(data_frame, data_key, version):
+def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     """
-    :param data_key: Key of save file, associated with a file's geocoding process
     :param data_frame: Data frame of addresses, to be geocoded
+    :param data_key: Key of save file, associated with a file's geocoding process
+    :param version
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
     if version is None or version == 1:
@@ -95,21 +98,28 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
             data_frames[decade.name][constant.GEO_ID_NAME] = ''
-            addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade.name])
+            addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
             geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
             data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
             data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
+        data_frame.drop(columns=['Unnamed: 0'], inplace=True)
     return data_frame
 
 
 def addresses_to_geocoder(data_frame, data_key, decade):
+    """
+    :param data_frame: Data frame of addresses, to be geocoded
+    :param data_key: Key of save file, associated with a file's geocoding process
+    :param decade: Sets vintage and benchmark values of geocoder
+    :return:
+    """
     data_frame[constant.GEO_ID_NAME] = ''
     addresses = []
     for row in data_frame.itertuples():
         addresses.append(Address(row.street, row.city, row.state, row.zip))
     try:
-        geocode_addresses_to_census_tract(addresses, data_key)
+        geocode_addresses_to_census_tract(addresses, data_key, decade)
     except Exception as e:
         raise Exception(e)
 
@@ -120,14 +130,15 @@ def separate_data_frame_by_decade(data_frame):
     data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
     before_first_decade = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < decades[0]]
     data_frame.loc[before_first_decade, constant.ADDRESS_START_DATE] = decades[0]
-    for i in range(2):
-        decade = data_frame.index[decades[i] <= data_frame[constant.ADDRESS_START_DATE] < decades[i + 1]]
+    for i in range(3):
+        decade = data_frame.index[(decades[i] <= data_frame[constant.ADDRESS_START_DATE]) & (
+                    data_frame[constant.ADDRESS_START_DATE] < decades[i + 1])]
         decade_data_frame = data_frame.loc[decade].copy()
         decade_remainder = decade_data_frame.index[decade_data_frame[constant.ADDRESS_END_DATE] >= decades[i + 1]]
         data_frame.loc[decade_remainder, constant.ADDRESS_START_DATE] = decades[i + 1]
         decade_data_frame.loc[decade_remainder, constant.ADDRESS_END_DATE] = decades[i + 1]
         decade_data_frame.reset_index(drop=True, inplace=True)
-        data_frames.update({Decade(i + 1).name: decade_data_frame})
+        data_frames.update({Decade(i).name: decade_data_frame})
     return data_frames
 
 
@@ -186,12 +197,13 @@ def load_geocode_progress(data_key):
     return batch_index
 
 
-def geocode_addresses_to_census_tract(addresses, data_key, decade=decade_dict[Decade.Ten], batch_limit=10000):
+def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=10000):
     """
     Batch geocodes more than 10,000 addresses
 
     :param addresses: List of addresses of type Address
     :param data_key: Key of save file, associated with a file's geocoding process
+    :param decade: Sets vintage and benchmark values of geocoder
     :param batch_limit: Default is census geocoder's maximum batch size
     :return: None
     """
@@ -201,7 +213,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade=decade_dict[De
     if len(addresses) % batch_limit != 0:
         batch_calls += 1
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
-    payload = {'benchmark': decade['benchmark'], 'vintage': decade['vintage']}
+    payload = {'benchmark': decade['Benchmark'], 'vintage': decade['Vintage']}
     column_names = ["address_id", "input_address", "match_indicator", "match_type", "output_address",
                     "latitude_longitude", "line_id", "line_id_side",
                     "state_code", "county_code", "tract_code", "block_code"]
@@ -234,7 +246,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade=decade_dict[De
                                                             geocoded_address_batch_data_frame['tract_code']
         non_matched_addresses = geocoded_address_batch_data_frame.index[
             (geocoded_address_batch_data_frame['match_indicator'] == 'No_Match') | (
-                        geocoded_address_batch_data_frame['match_indicator'] == 'Tie')]
+                    geocoded_address_batch_data_frame['match_indicator'] == 'Tie')]
         geocoded_address_batch_data_frame.loc[non_matched_addresses, 'census_tract'] = constant.ADDRESS_NOT_GEOCODABLE
         if i == 0:
             geocoded_address_batch_data_frame.to_csv(f"./temp/geocoded_{data_key}.csv")
