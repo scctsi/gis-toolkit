@@ -61,8 +61,8 @@ def test_enhancement_validity():
 
 
 def test_input_file_validation():
-    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
-    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv')
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version=1)
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version=2)
     try:
         main.input_file_validation(input_data_frame_v1, 1)
     except Exception:
