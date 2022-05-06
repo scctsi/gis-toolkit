@@ -104,10 +104,10 @@ def get_acs_values(data_set, source_variables, arguments, test_mode=False):
     return api.get_values(api_url, test_mode)
 
 
-def get_acs_batch(data_set, source_variables, geographies, test_mode=False):
+def get_acs_batch(data_set, source_variables, geographies, data_year="2018", test_mode=False):
     arguments = {
         "host_name": "https://api.census.gov/data",
-        "data_year": "2018",
+        "data_year": data_year,
         "dataset_name": data_set,
         "variables": source_variables,
         "geographies": geographies,

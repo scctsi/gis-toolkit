@@ -1,7 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
-from data_structure import GetStrategy
+from data_structure import GetStrategy, ACSSource
 import constant
 import sedoh_data_structure as sds
 import value_getter
@@ -51,6 +51,34 @@ def source_intersection(source, row):
 class ACSDataSource:
     def __init__(self, acs_elements):
         self.acs_elements = acs_elements
+        self.acs_sources = [ACSSource("2012",
+                                      datetime(2010, 1, 1),
+                                      datetime(2010, 12, 31)),
+                            ACSSource("2013",
+                                      datetime(2011, 1, 1),
+                                      datetime(2011, 12, 31)),
+                            ACSSource("2014",
+                                      datetime(2012, 1, 1),
+                                      datetime(2012, 12, 31)),
+                            ACSSource("2015",
+                                      datetime(2013, 1, 1),
+                                      datetime(2013, 12, 31)),
+                            ACSSource("2016",
+                                      datetime(2014, 1, 1),
+                                      datetime(2014, 12, 31)),
+                            ACSSource("2017",
+                                      datetime(2015, 1, 1),
+                                      datetime(2015, 12, 31)),
+                            ACSSource("2018",
+                                      datetime(2016, 1, 1),
+                                      datetime(2016, 12, 31)),
+                            ACSSource("2019",
+                                      datetime(2017, 1, 1),
+                                      datetime(2017, 12, 31)),
+                            ACSSource("2020",
+                                      datetime(2018, 1, 1),
+                                      datetime(2018, 12, 31))
+                            ]
 
     def data_sets(self):
         """
@@ -78,7 +106,7 @@ class ACSDataSource:
                 data_set_elements.update({data_set_name: [data_element]})
         return data_set_elements
 
-    def data_frames(self, test_mode=False):
+    def data_frames(self, data_year="2018", test_mode=False):
         """
         :return: {acs data set: data frame of data set data from all acs census tracts}
         """
@@ -86,10 +114,17 @@ class ACSDataSource:
         geography = get_geography()
         try:
             data_frames = map(lambda data_set: (
-                data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+                data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, data_year=data_year, test_mode=test_mode)), data_sets)
             return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
+
+    def comprehensive_data_frames(self, test_mode=False):
+        """
+        :return: {year: {acs data set: data frame of data set data from all acs census tracts}
+        """
+        comprehensive_data_frames = map(lambda acs_source: (acs_source.acs_year, self.data_frames(data_year=acs_source.acs_year, test_mode=test_mode)), self.acs_sources)
+        return dict(comprehensive_data_frames)
 
 
 class DataFrameEnhancer:
@@ -145,7 +180,7 @@ class DataFrameEnhancer:
 
     def get_data_element_values(self):
         self.global_cache.load_cache()
-        data_frames = self.acs_data_source.data_frames(self.test_mode)
+        data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
@@ -185,7 +220,7 @@ class DataFrameEnhancer:
 
     def load_comprehensive_data_element_values(self):
         check_temp_dir()
-        data_frames = self.acs_data_source.data_frames(self.test_mode)
+        comprehensive_data_frames = self.acs_data_source.comprehensive_data_frames(test_mode=self.test_mode)
         data_set_elements = self.acs_data_source.data_set_elements()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
