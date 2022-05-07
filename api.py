@@ -18,9 +18,11 @@ def get_response(url, test_mode=False):
     try:
         return response.json()
     except Exception:
-        print(response)
-        quit(1)
-
+        if response.status_code == 400:
+            return constant.NOT_AVAILABLE
+        else:
+            print(response)
+            quit(1)
 
 
 def get_header_row_and_truncated_json(json_to_process):

@@ -13,29 +13,57 @@ load_dotenv()
 
 
 def get_value(data_element, arguments, data_files, version=1):
-    if version == 1:
-        if data_element.get_strategy == GetStrategy.FILE:
-            # if type(data_element.source_variable) == list:
-            #     else:
-            #
-            return get_file_value(data_element.source_variable,
-                                  arguments,
-                                  data_files[data_element.data_source][0],
-                                  data_files[data_element.data_source][1])
-        elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
-            return get_calculated_file_value(data_element.source_variable,
-                                             arguments,
-                                             data_files[data_element.data_source][0],
-                                             data_files[data_element.data_source][1],
-                                             data_element.variable_name)
-    elif version == 2:
-        if data_element.get_strategy == GetStrategy.FILE:
-            return get_file_value(data_element.source_variable, arguments, data_files.data_frame, data_files.tract_column)
-        elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
-            return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
-                                             data_files.tract_column, data_element.variable_name)
-        elif data_element.get_strategy == GetStrategy.RASTER_FILE:
-            return get_raster_file_value(arguments, data_files)
+    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
+        if version == 1:
+            if data_element.get_strategy == GetStrategy.FILE:
+                # if type(data_element.source_variable) == list:
+                #     else:
+                #
+                return get_file_value(data_element.source_variable,
+                                      arguments,
+                                      data_files[data_element.data_source][0],
+                                      data_files[data_element.data_source][1])
+            elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+                return get_calculated_file_value(data_element.source_variable,
+                                                 arguments,
+                                                 data_files[data_element.data_source][0],
+                                                 data_files[data_element.data_source][1],
+                                                 data_element.variable_name)
+        elif version == 2:
+            if data_element.get_strategy == GetStrategy.FILE:
+                return get_file_value(data_element.source_variable, arguments, data_files.data_frame, data_files.tract_column)
+            elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+                return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
+                                                 data_files.tract_column, data_element.variable_name)
+            elif data_element.get_strategy == GetStrategy.RASTER_FILE:
+                return get_raster_file_value(arguments, data_files)
+    else:
+        return None
+
+
+def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, version=1):
+    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
+        if type(data_frame) == str and data_frame == constant.NOT_AVAILABLE:
+            return constant.NOT_AVAILABLE
+        elif arguments["fips_concatenated_code"] not in data_frame[constant.GEO_ID_NAME]:
+            return constant.NOT_AVAILABLE
+        elif data_element.get_strategy == GetStrategy.CALCULATION:
+            if "," in data_element.source_variable:
+                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
+                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
+                return get_acs_calculation(data_element.variable_name,
+                                                     [data_frame.loc[arguments["fips_concatenated_code"], source_var],
+                                                      data_frame.loc[arguments["fips_concatenated_code"], calc_var]],
+                                                      arguments, data_files, version)
+            else:
+                return get_acs_calculation(data_element.variable_name,
+                                           data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable],
+                                            arguments, data_files, version)
+        else:
+            return data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable]
+    else:
+        return None
+
 
 # ACS specific methods
 def construct_geography_argument(arguments):
