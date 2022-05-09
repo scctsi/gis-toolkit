@@ -198,31 +198,6 @@ class DataFrameEnhancer:
         data_sets = self.acs_data_source.data_element_data_set()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
-        # for data_set in data_sets:
-        #     for data_element in data_set_elements[data_set]:
-        #         element_data_frame = data_element_data_frame(self.data_frame, data_element,
-        #                                                      self.data_files[data_element.data_source])
-        #         for i, acs_source in enumerate(self.data_files[data_element.data_source]):
-        #             for index, row in element_data_frame.iterrows():
-        #                 arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
-        #                 if i == 0 and element_data_frame.loc[index, 'address_start_date'] < acs_source.start_date:
-        #                     element_data_frame.loc[index, 'address_start_date'] = acs_source.start_date
-        #                 if acs_source.start_date <= element_data_frame.loc[
-        #                     index, 'address_start_date'] <= acs_source.end_date:
-        #                     element_data_frame.loc[index, data_element.variable_name] = \
-        #                         value_getter.get_acs_data_frame_value(
-        #                             comprehensive_data_frames[acs_source.acs_year][data_set],
-        #                             data_element, arguments, self.data_files, self.version)
-        #                     if element_data_frame.loc[index, 'address_end_date'] > acs_source.end_date:
-        #                         if i + 1 == len(self.data_files[data_element.data_source]):
-        #                             element_data_frame.loc[index, 'address_end_date'] = acs_source.end_date
-        #                         else:
-        #                             new_row = element_data_frame.iloc[[index]].copy()
-        #                             new_row.loc[index, 'address_start_date'] = acs_source.end_date + timedelta(days=1)
-        #                             element_data_frame.loc[index, 'address_end_date'] = acs_source.end_date
-        #                             element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
-        #         element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
-        #         write_excel_sheet(excel_path, element_data_frame, data_element)
         for data_element in self.data_elements:
             element_data_frame = data_element_data_frame(self.data_frame, data_element,
                                                          self.data_files[data_element.data_source])
@@ -251,8 +226,6 @@ class DataFrameEnhancer:
                                 new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
                                 element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
                                 element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
-            # if 'Unnamed: 0' in element_data_frame.columns:
-            #     element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
             write_excel_sheet(excel_path, element_data_frame, data_element)
 
     def enhance(self):
