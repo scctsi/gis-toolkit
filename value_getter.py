@@ -43,7 +43,7 @@ def get_value(data_element, arguments, data_files, version=1):
 
 def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, version=1):
     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-        if type(data_frame) == str and data_frame == constant.NOT_AVAILABLE:
+        if "," not in data_element.source_variable and data_element.source_variable not in data_frame.columns:
             return constant.NOT_AVAILABLE
         elif arguments["fips_concatenated_code"] not in data_frame[constant.GEO_ID_NAME]:
             return constant.NOT_AVAILABLE
@@ -148,6 +148,7 @@ def get_acs_batch(data_set, source_variables, geographies, data_year="2018", tes
         census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
 
     api_url = api.construct_url(census_api_interpolation_string, arguments)
+    # print(api_url)
     return api.get_batch_values(api_url, test_mode)
 
 

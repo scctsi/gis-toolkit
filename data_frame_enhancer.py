@@ -39,7 +39,7 @@ def get_geography():
         else:
             state_codes += f"{str(i)},"
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
-
+    # return f"for=tract:*&in=county:*&in=state:06"
 
 def write_excel_sheet(excel_path, data_frame, data_element):
     if os.path.exists(excel_path):
@@ -70,18 +70,24 @@ def data_element_data_frame(data_frame, data_element, date_list):
 class ACSDataSource:
     def __init__(self, acs_elements):
         self.acs_elements = acs_elements
+        self.omit_source_string = {"2012": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2013": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2014": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2015": ["S2801_C02_011E", "S2801_C02_019E"],
+                                   "2016": ["S2801_C02_011E", "S2801_C02_019E"]}
 
-    def data_sets(self):
+    def data_sets(self, data_year):
         """
         :return: {acs data set: joined source variable string}
         """
         data_sets = {}
         for data_element in self.acs_elements:
-            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-            if data_set_name in data_sets.keys():
-                data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
-            else:
-                data_sets.update({data_set_name: data_element.source_variable})
+            if data_year not in self.omit_source_string.keys() or data_element.source_variable not in self.omit_source_string[data_year]:
+                data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+                if data_set_name in data_sets.keys():
+                    data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
+                else:
+                    data_sets.update({data_set_name: data_element.source_variable})
         return data_sets
 
     def data_element_data_set(self):
@@ -97,13 +103,19 @@ class ACSDataSource:
         """
         :return: {acs data set: data frame of data set data from all acs census tracts}
         """
-        data_sets = self.data_sets()
+        data_sets = self.data_sets(data_year)
+        # data_sets = self.data_element_data_set()
         geography = get_geography()
         try:
             data_frames = map(lambda data_set: (
                 data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, data_year=data_year,
                                                      test_mode=test_mode)), data_sets)
             return dict(data_frames)
+        # try:
+        #     data_frames = map(lambda data_element: (data_element.source_variable, value_getter.get_acs_batch(data_sets[data_element], data_element.source_variable,
+        #                                                                                                 geography, data_year=data_year, test_mode=test_mode)),
+        #                       self.acs_elements)
+        #     return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
 
