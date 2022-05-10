@@ -14,7 +14,6 @@ def get_response(url, test_mode=False):
         response = requests.get(url)
     else:
         response = requests.get(url, verify=False)
-    # print(response.status_code)
     try:
         return response.json()
     except Exception:

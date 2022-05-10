@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
-from data_structure import GetStrategy, ACSSource
 import constant
 import sedoh_data_structure as sds
 import value_getter
@@ -39,7 +38,7 @@ def get_geography():
         else:
             state_codes += f"{str(i)},"
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
-    # return f"for=tract:*&in=county:*&in=state:06"
+
 
 def write_excel_sheet(excel_path, data_frame, data_element):
     if os.path.exists(excel_path):
@@ -104,18 +103,12 @@ class ACSDataSource:
         :return: {acs data set: data frame of data set data from all acs census tracts}
         """
         data_sets = self.data_sets(data_year)
-        # data_sets = self.data_element_data_set()
         geography = get_geography()
         try:
             data_frames = map(lambda data_set: (
                 data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, data_year=data_year,
                                                      test_mode=test_mode)), data_sets)
             return dict(data_frames)
-        # try:
-        #     data_frames = map(lambda data_element: (data_element.source_variable, value_getter.get_acs_batch(data_sets[data_element], data_element.source_variable,
-        #                                                                                                 geography, data_year=data_year, test_mode=test_mode)),
-        #                       self.acs_elements)
-        #     return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
 

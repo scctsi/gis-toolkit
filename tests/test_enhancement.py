@@ -29,7 +29,7 @@ def load_data_files():
     data_files = {
         sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces/calepa_ces_3.0.xlsx"), "Census Tract"),
         sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc/cdc_2018.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer.csv"), "GEOID"),
+        sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer_2020.csv"), "GEOID"),
         sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda/usda.xls'), "CensusTrac")
     }
 

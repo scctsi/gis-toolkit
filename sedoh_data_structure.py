@@ -42,7 +42,10 @@ class DataFiles:
                           datetime(2017, 12, 31)),
                 ACSSource("2020",
                           datetime(2018, 1, 1),
-                          datetime(2018, 12, 31))
+                          datetime(2018, 12, 31)),
+                ACSSource("2021",
+                          datetime(2019, 1, 1),
+                          datetime(2019, 12, 31))
             ],
             SedohDataSource.CalEPA_CES: [
                 DataSource("calepa_ces/calepa_ces_2.0.xlsx",
@@ -81,10 +84,14 @@ class DataFiles:
                            datetime(2019, 12, 31))
             ],
             SedohDataSource.Gazetteer: [
-                DataSource("gazetteer/gazetteer.txt",
+                DataSource("gazetteer/gazetteer_2010.txt",
                            "GEOID",
-                           None,
-                           None)
+                           datetime(2000, 1, 1),
+                           datetime(2009, 12, 31)),
+                DataSource("gazetteer/gazetteer_2020.txt",
+                           "GEOID",
+                           datetime(2010, 1, 1),
+                           datetime(2019, 12, 31))
             ],
             SedohDataSource.USDA: [
                 DataSource("usda/usda_2010.xlsx",

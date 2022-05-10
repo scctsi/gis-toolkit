@@ -16,9 +16,6 @@ def get_value(data_element, arguments, data_files, version=1):
     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
         if version == 1:
             if data_element.get_strategy == GetStrategy.FILE:
-                # if type(data_element.source_variable) == list:
-                #     else:
-                #
                 return get_file_value(data_element.source_variable,
                                       arguments,
                                       data_files[data_element.data_source][0],
@@ -163,14 +160,14 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files, vers
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
-        if version == 1:
+        if version is None or version == 1:
             aland = get_file_value("ALAND", arguments,
                                    data_files[SedohDataSource.Gazetteer][0],
                                    data_files[SedohDataSource.Gazetteer][1])
         else:
             aland = get_file_value("ALAND", arguments,
-                                   data_files[SedohDataSource.Gazetteer][0].data_frame,
-                                   data_files[SedohDataSource.Gazetteer][0].tract_column)
+                                   data_files[SedohDataSource.Gazetteer][1].data_frame,
+                                   data_files[SedohDataSource.Gazetteer][1].tract_column)
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
