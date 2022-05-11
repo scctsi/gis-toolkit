@@ -12,33 +12,22 @@ load_dotenv()
 #                        options = optional arguments which allow yoy to customize the function
 
 
-def get_value(data_element, arguments, data_files, version=1):
+def get_value(data_element, arguments, data_source, version=1):
     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-        if version == 1:
-            if data_element.get_strategy == GetStrategy.FILE:
-                return get_file_value(data_element.source_variable,
-                                      arguments,
-                                      data_files[data_element.data_source][0],
-                                      data_files[data_element.data_source][1])
-            elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
-                return get_calculated_file_value(data_element.source_variable,
-                                                 arguments,
-                                                 data_files[data_element.data_source][0],
-                                                 data_files[data_element.data_source][1],
-                                                 data_element.variable_name)
-        elif version == 2:
-            if data_element.get_strategy == GetStrategy.FILE:
-                return get_file_value(data_element.source_variable, arguments, data_files.data_frame, data_files.tract_column)
-            elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
-                return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
-                                                 data_files.tract_column, data_element.variable_name)
-            elif data_element.get_strategy == GetStrategy.RASTER_FILE:
-                return get_raster_file_value(arguments, data_files)
+        if data_element.get_strategy == GetStrategy.FILE:
+            return get_file_value(data_element.source_variable, arguments, data_source.data_frame, data_source.tract_column)
+        elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
+            return get_calculated_file_value(data_element.source_variable, arguments, data_source.data_frame,
+                                             data_source.tract_column, data_element.variable_name)
+        elif data_element.get_strategy == GetStrategy.RASTER_FILE and version == 2:
+            return get_raster_file_value(arguments, data_source)
+        else:
+            return None
     else:
         return None
 
 
-def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, version=1):
+def get_acs_data_frame_value(data_frame, data_element, arguments, data_files):
     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
         if "," not in data_element.source_variable and data_element.source_variable not in data_frame.columns:
             return constant.NOT_AVAILABLE
@@ -51,11 +40,11 @@ def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, ve
                 return get_acs_calculation(data_element.variable_name,
                                                      [data_frame.loc[arguments["fips_concatenated_code"], source_var],
                                                       data_frame.loc[arguments["fips_concatenated_code"], calc_var]],
-                                                      arguments, data_files, version)
+                                                      arguments, data_files)
             else:
                 return get_acs_calculation(data_element.variable_name,
                                            data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable],
-                                            arguments, data_files, version)
+                                            arguments, data_files)
         else:
             return data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable]
     else:
@@ -149,7 +138,7 @@ def get_acs_batch(data_set, source_variables, geographies, data_year="2018", tes
     return api.get_batch_values(api_url, test_mode)
 
 
-def get_acs_calculation(variable_name, source_value, arguments, data_files, version=1):
+def get_acs_calculation(variable_name, source_value, arguments, data_files):
     # TODO: Change from using hardcoded variable_name checks
     if source_value == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
@@ -160,14 +149,8 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files, vers
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
-        if version is None or version == 1:
-            aland = get_file_value("ALAND", arguments,
-                                   data_files[SedohDataSource.Gazetteer][0],
-                                   data_files[SedohDataSource.Gazetteer][1])
-        else:
-            aland = get_file_value("ALAND", arguments,
-                                   data_files[SedohDataSource.Gazetteer][1].data_frame,
-                                   data_files[SedohDataSource.Gazetteer][1].tract_column)
+        aland = get_file_value("ALAND", arguments, data_files[SedohDataSource.Gazetteer][1].data_frame,
+                               data_files[SedohDataSource.Gazetteer][1].tract_column)
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
