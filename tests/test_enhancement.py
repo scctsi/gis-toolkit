@@ -91,3 +91,14 @@ def test_non_geocodable_address():
     input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
+
+
+def test_comprehensive_geocoding():
+    file_path = '../tests/comprehensive_geocoding_input.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path, version=2)
+    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
+    comprehensive_output = [3, 2, 2, 1, 0]
+    for index, row in input_data_frame.iterrows():
+        address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
+        assert len(address_count) == comprehensive_output[index]
