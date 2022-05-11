@@ -94,7 +94,7 @@ def test_non_geocodable_address():
 
 
 def test_comprehensive_geocoding():
-    file_path = '../tests/comprehensive_geocoding_input.csv'
+    file_path = './tests/comprehensive_geocoding_input.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path, version=2)
     geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
