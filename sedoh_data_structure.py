@@ -1,4 +1,4 @@
-from data_structure import DataElement, DataSource, RasterSource, ACSSource,GetStrategy
+from data_structure import DataElement, DataSource, RasterSource, ACSSource, GetStrategy
 from enum import Enum
 from datetime import datetime
 
@@ -13,135 +13,165 @@ class SedohDataSource(Enum):
 
 
 class DataFiles:
-    def __init__(self):
-        self.data_files = {
-            SedohDataSource.ACS: [
-                ACSSource("2012",
-                          datetime(2010, 1, 1),
-                          datetime(2010, 12, 31)),
-                ACSSource("2013",
-                          datetime(2011, 1, 1),
-                          datetime(2011, 12, 31)),
-                ACSSource("2014",
-                          datetime(2012, 1, 1),
-                          datetime(2012, 12, 31)),
-                ACSSource("2015",
-                          datetime(2013, 1, 1),
-                          datetime(2013, 12, 31)),
-                ACSSource("2016",
-                          datetime(2014, 1, 1),
-                          datetime(2014, 12, 31)),
-                ACSSource("2017",
-                          datetime(2015, 1, 1),
-                          datetime(2015, 12, 31)),
-                ACSSource("2018",
-                          datetime(2016, 1, 1),
-                          datetime(2016, 12, 31)),
-                ACSSource("2019",
-                          datetime(2017, 1, 1),
-                          datetime(2017, 12, 31)),
-                ACSSource("2020",
-                          datetime(2018, 1, 1),
-                          datetime(2018, 12, 31)),
-                ACSSource("2021",
-                          datetime(2019, 1, 1),
-                          datetime(2019, 12, 31))
-            ],
-            SedohDataSource.CalEPA_CES: [
-                DataSource("calepa_ces/calepa_ces_2.0.xlsx",
-                           "Census Tract",
-                           datetime(2014, 10, 1),
-                           datetime(2018, 5, 31)),
-                DataSource("calepa_ces/calepa_ces_3.0.xlsx",
-                           "Census Tract",
-                           datetime(2018, 6, 1),
-                           datetime(2021, 10, 12)),
-                DataSource("calepa_ces/calepa_ces_4.0.xlsx",
-                           "Census Tract",
-                           datetime(2021, 10, 13),
-                           datetime(2024, 12, 31))
-            ],
-            SedohDataSource.CDC: [
-                DataSource("cdc/cdc_2000.csv",
-                           "FIPS",
-                           datetime(2000, 1, 1),
-                           datetime(2009, 12, 31)),
-                DataSource("cdc/cdc_2010.csv",
-                           "FIPS",
-                           datetime(2010, 1, 1),
-                           datetime(2013, 12, 31)),
-                DataSource("cdc/cdc_2014.csv",
-                           "FIPS",
-                           datetime(2014, 1, 1),
-                           datetime(2015, 12, 31)),
-                DataSource("cdc/cdc_2016.csv",
-                           "FIPS",
-                           datetime(2016, 1, 1),
-                           datetime(2017, 12, 31)),
-                DataSource("cdc/cdc_2018.csv",
-                           "FIPS",
-                           datetime(2018, 1, 1),
-                           datetime(2019, 12, 31))
-            ],
-            SedohDataSource.Gazetteer: [
-                DataSource("gazetteer/gazetteer_2010.txt",
-                           "GEOID",
-                           datetime(2000, 1, 1),
-                           datetime(2009, 12, 31)),
-                DataSource("gazetteer/gazetteer_2020.txt",
-                           "GEOID",
-                           datetime(2010, 1, 1),
-                           datetime(2019, 12, 31))
-            ],
-            SedohDataSource.USDA: [
-                DataSource("usda/usda_2010.xlsx",
-                           "CensusTract",
-                           datetime(2010, 1, 1),
-                           datetime(2014, 12, 31)),
-                DataSource("usda/usda_2015.xlsx",
-                           "CensusTract",
-                           datetime(2015, 1, 1),
-                           datetime(2018, 12, 31)),
-                DataSource("usda/usda_2019.xlsx",
-                           "CensusTract",
-                           datetime(2019, 1, 1),
-                           datetime(2024, 12, 31))
-            ],
-            (SedohDataSource.SCEHSC, "O3"): [
-                RasterSource("scehsc/O3_2009_ANN.tif",
-                             (32.5, 35.5),
-                             (-121.05, -114.1),
-                             2,
-                             datetime(2009, 1, 1),
-                             datetime(2009, 12, 31))
-            ],
-            (SedohDataSource.SCEHSC, "NO2"): [
-                RasterSource("scehsc/NO2_2009_ANN.tif",
-                             (32.5, 35.5),
-                             (-121.05, -114.1),
-                             2,
-                             datetime(2009, 1, 1),
-                             datetime(2009, 12, 31))
-            ],
-            (SedohDataSource.SCEHSC, "PM10"): [
-                RasterSource("scehsc/PM10_2009_ANN.tif",
-                             (32.5, 35.5),
-                             (-121.05, -114.1),
-                             2,
-                             datetime(2009, 1, 1),
-                             datetime(2009, 12, 31))
-            ],
-            (SedohDataSource.SCEHSC, "PM25"): [
-                RasterSource("scehsc/PM25_2009_ANN.tif",
-                             (32.5, 35.5),
-                             (-121.05, -114.1),
-                             2,
-                             datetime(2009, 1, 1),
-                             datetime(2009, 12, 31))
-            ]
-        }
-        for data_source in self.data_files[SedohDataSource.CalEPA_CES]:
+    def __init__(self, version):
+        self.version = version
+
+    def get_data_files(self):
+        if self.version is None or self.version == 1:
+            data_files = {
+                SedohDataSource.CalEPA_CES: [
+                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
+                               "Census Tract",
+                               datetime(2018, 6, 1),
+                               datetime(2021, 10, 12))],
+                SedohDataSource.CDC: [
+                    DataSource("cdc/cdc_2018.csv",
+                               "FIPS",
+                               datetime(2018, 1, 1),
+                               datetime(2019, 12, 31))],
+                SedohDataSource.Gazetteer: [
+                    DataSource("gazetteer/gazetteer_2020.txt",
+                               "GEOID",
+                               datetime(2010, 1, 1),
+                               datetime(2019, 12, 31))],
+                SedohDataSource.USDA: [
+                    DataSource("usda/usda_2019.xlsx",
+                               "CensusTract",
+                               datetime(2019, 1, 1),
+                               datetime(2024, 12, 31))]
+            }
+        elif self.version == 2:
+            data_files = {
+                SedohDataSource.ACS: [
+                    ACSSource("2012",
+                              datetime(2010, 1, 1),
+                              datetime(2010, 12, 31)),
+                    ACSSource("2013",
+                              datetime(2011, 1, 1),
+                              datetime(2011, 12, 31)),
+                    ACSSource("2014",
+                              datetime(2012, 1, 1),
+                              datetime(2012, 12, 31)),
+                    ACSSource("2015",
+                              datetime(2013, 1, 1),
+                              datetime(2013, 12, 31)),
+                    ACSSource("2016",
+                              datetime(2014, 1, 1),
+                              datetime(2014, 12, 31)),
+                    ACSSource("2017",
+                              datetime(2015, 1, 1),
+                              datetime(2015, 12, 31)),
+                    ACSSource("2018",
+                              datetime(2016, 1, 1),
+                              datetime(2016, 12, 31)),
+                    ACSSource("2019",
+                              datetime(2017, 1, 1),
+                              datetime(2017, 12, 31)),
+                    ACSSource("2020",
+                              datetime(2018, 1, 1),
+                              datetime(2018, 12, 31)),
+                    ACSSource("2021",
+                              datetime(2019, 1, 1),
+                              datetime(2019, 12, 31))
+                ],
+                SedohDataSource.CalEPA_CES: [
+                    DataSource("calepa_ces/calepa_ces_2.0.xlsx",
+                               "Census Tract",
+                               datetime(2014, 10, 1),
+                               datetime(2018, 5, 31)),
+                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
+                               "Census Tract",
+                               datetime(2018, 6, 1),
+                               datetime(2021, 10, 12)),
+                    DataSource("calepa_ces/calepa_ces_4.0.xlsx",
+                               "Census Tract",
+                               datetime(2021, 10, 13),
+                               datetime(2024, 12, 31))
+                ],
+                SedohDataSource.CDC: [
+                    DataSource("cdc/cdc_2000.csv",
+                               "FIPS",
+                               datetime(2000, 1, 1),
+                               datetime(2009, 12, 31)),
+                    DataSource("cdc/cdc_2010.csv",
+                               "FIPS",
+                               datetime(2010, 1, 1),
+                               datetime(2013, 12, 31)),
+                    DataSource("cdc/cdc_2014.csv",
+                               "FIPS",
+                               datetime(2014, 1, 1),
+                               datetime(2015, 12, 31)),
+                    DataSource("cdc/cdc_2016.csv",
+                               "FIPS",
+                               datetime(2016, 1, 1),
+                               datetime(2017, 12, 31)),
+                    DataSource("cdc/cdc_2018.csv",
+                               "FIPS",
+                               datetime(2018, 1, 1),
+                               datetime(2019, 12, 31))
+                ],
+                SedohDataSource.Gazetteer: [
+                    DataSource("gazetteer/gazetteer_2010.txt",
+                               "GEOID",
+                               datetime(2000, 1, 1),
+                               datetime(2009, 12, 31)),
+                    DataSource("gazetteer/gazetteer_2020.txt",
+                               "GEOID",
+                               datetime(2010, 1, 1),
+                               datetime(2019, 12, 31))
+                ],
+                SedohDataSource.USDA: [
+                    DataSource("usda/usda_2010.xlsx",
+                               "CensusTract",
+                               datetime(2010, 1, 1),
+                               datetime(2014, 12, 31)),
+                    DataSource("usda/usda_2015.xlsx",
+                               "CensusTract",
+                               datetime(2015, 1, 1),
+                               datetime(2018, 12, 31)),
+                    DataSource("usda/usda_2019.xlsx",
+                               "CensusTract",
+                               datetime(2019, 1, 1),
+                               datetime(2024, 12, 31))
+                ],
+                (SedohDataSource.SCEHSC, "O3"): [
+                    RasterSource("scehsc/O3_2009_ANN.tif",
+                                 (32.5, 35.5),
+                                 (-121.05, -114.1),
+                                 2,
+                                 datetime(2009, 1, 1),
+                                 datetime(2009, 12, 31))
+                ],
+                (SedohDataSource.SCEHSC, "NO2"): [
+                    RasterSource("scehsc/NO2_2009_ANN.tif",
+                                 (32.5, 35.5),
+                                 (-121.05, -114.1),
+                                 2,
+                                 datetime(2009, 1, 1),
+                                 datetime(2009, 12, 31))
+                ],
+                (SedohDataSource.SCEHSC, "PM10"): [
+                    RasterSource("scehsc/PM10_2009_ANN.tif",
+                                 (32.5, 35.5),
+                                 (-121.05, -114.1),
+                                 2,
+                                 datetime(2009, 1, 1),
+                                 datetime(2009, 12, 31))
+                ],
+                (SedohDataSource.SCEHSC, "PM25"): [
+                    RasterSource("scehsc/PM25_2009_ANN.tif",
+                                 (32.5, 35.5),
+                                 (-121.05, -114.1),
+                                 2,
+                                 datetime(2009, 1, 1),
+                                 datetime(2009, 12, 31))
+                ]
+            }
+        else:
+            raise
+        for data_source in data_files[SedohDataSource.CalEPA_CES]:
             data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
+        return data_files
 
 
 class SedohDataElements:

@@ -27,7 +27,7 @@ def get_value(data_element, arguments, data_source, version=1):
         return None
 
 
-def get_acs_data_frame_value(data_frame, data_element, arguments, data_files):
+def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, data_year):
     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
         if "," not in data_element.source_variable and data_element.source_variable not in data_frame.columns:
             return constant.NOT_AVAILABLE
@@ -40,11 +40,11 @@ def get_acs_data_frame_value(data_frame, data_element, arguments, data_files):
                 return get_acs_calculation(data_element.variable_name,
                                                      [data_frame.loc[arguments["fips_concatenated_code"], source_var],
                                                       data_frame.loc[arguments["fips_concatenated_code"], calc_var]],
-                                                      arguments, data_files)
+                                                      arguments, data_files, data_year)
             else:
                 return get_acs_calculation(data_element.variable_name,
                                            data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable],
-                                            arguments, data_files)
+                                            arguments, data_files, data_year)
         else:
             return data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable]
     else:
@@ -134,11 +134,10 @@ def get_acs_batch(data_set, source_variables, geographies, data_year="2018", tes
         census_api_interpolation_string = "{host_name}/{data_year}/{dataset_name}?get={variables}&{geographies}"
 
     api_url = api.construct_url(census_api_interpolation_string, arguments)
-    # print(api_url)
     return api.get_batch_values(api_url, test_mode)
 
 
-def get_acs_calculation(variable_name, source_value, arguments, data_files):
+def get_acs_calculation(variable_name, source_value, arguments, data_files, data_year):
     # TODO: Change from using hardcoded variable_name checks
     if source_value == constant.NOT_AVAILABLE:
         return constant.NOT_AVAILABLE
@@ -149,14 +148,22 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files):
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
-        aland = get_file_value("ALAND", arguments, data_files[SedohDataSource.Gazetteer][1].data_frame,
-                               data_files[SedohDataSource.Gazetteer][1].tract_column)
+        gazetteer_index = data_source_intersection(data_files[SedohDataSource.Gazetteer], data_year)
+        aland = get_file_value("ALAND", arguments, data_files[SedohDataSource.Gazetteer][gazetteer_index].data_frame,
+                               data_files[SedohDataSource.Gazetteer][gazetteer_index].tract_column)
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
             return str(round(1000000 * (float(source_value) / int(aland)), 0))
     else:
         return None
+
+
+def data_source_intersection(data_sources, data_year):
+    for index, source in enumerate(data_sources):
+        if source.start_date <= data_year <= source.end_date:
+            return index
+    raise 0
 
 
 # File specific methods

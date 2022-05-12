@@ -44,7 +44,7 @@ def data_source_intersection(data_sources, data_year):
     for index, source in enumerate(data_sources):
         if source.start_date <= data_year <= source.end_date:
             return index
-    raise Exception("2019 intersection NOT FOUND")
+    raise 0
 
 
 def write_excel_sheet(excel_path, data_frame, data_element):
@@ -194,12 +194,10 @@ class DataFrameEnhancer:
                 for data_element in self.data_elements:
                     if data_element in self.acs_data_elements:
                         self.data_frame.loc[index, data_element.variable_name] = value_getter.get_acs_data_frame_value(
-                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files)
+                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files, "2019")
                     else:
-                        data_source_index = data_source_intersection(self.data_files[data_element.data_source], datetime(2019, 1, 1))
-                        data_source = self.data_files[data_element.data_source][data_source_index]
                         self.data_frame.loc[index, data_element.variable_name] = \
-                            value_getter.get_value(data_element, arguments, data_source)
+                            value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
@@ -227,7 +225,7 @@ class DataFrameEnhancer:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
                                     comprehensive_data_frames[data_source.acs_year][data_sets[data_element]],
-                                    data_element, arguments, self.data_files)
+                                    data_element, arguments, self.data_files, data_source.acs_year)
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
                                 data_element, arguments, data_source, version=2)

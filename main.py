@@ -84,7 +84,7 @@ def main(options):
 
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
-    data_files = sds.DataFiles().data_files
+    data_files = sds.DataFiles(options.version).get_data_files()
 
     # Optional Step: Geocode addresses
     if geocoder.geocodable(input_data_frame):
