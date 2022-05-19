@@ -59,9 +59,9 @@ def data_element_data_frame(data_frame, data_element, date_list):
     element_data_frame = data_frame.copy()
     element_data_frame[data_element.variable_name] = ''
     element_data_frame.drop(element_data_frame.index[
-                                element_data_frame['address_start_date'] > date_list[-1].end_date], inplace=True)
+                                element_data_frame[constant.ADDRESS_START_DATE] > date_list[-1].end_date], inplace=True)
     element_data_frame.drop(element_data_frame.index[
-                                element_data_frame['address_end_date'] <= date_list[0].start_date], inplace=True)
+                                element_data_frame[constant.ADDRESS_END_DATE] <= date_list[0].start_date], inplace=True)
     element_data_frame.reset_index(drop=True, inplace=True)
     return element_data_frame
 
@@ -211,10 +211,10 @@ class DataFrameEnhancer:
                     arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
                                  "latitude": element_data_frame.loc[index, "latitude"],
                                  "longitude": element_data_frame.loc[index, "longitude"]}
-                    if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
-                        element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
+                    if i == 0 and element_data_frame.loc[index, constant.ADDRESS_START_DATE] < data_source.start_date:
+                        element_data_frame.loc[index, constant.ADDRESS_START_DATE] = data_source.start_date
                     if data_source.start_date <= element_data_frame.loc[
-                        index, 'address_start_date'] <= data_source.end_date:
+                        index, constant.ADDRESS_START_DATE] <= data_source.end_date:
                         if data_element in self.acs_data_elements:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
@@ -223,13 +223,13 @@ class DataFrameEnhancer:
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
                                 data_element, arguments, data_source, self.version)
-                        if element_data_frame.loc[index, 'address_end_date'] > data_source.end_date:
+                        if element_data_frame.loc[index, constant.ADDRESS_END_DATE] > data_source.end_date:
                             if i + 1 == len(self.data_files[data_element.data_source]):
-                                element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                                element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
                             else:
                                 new_row = element_data_frame.iloc[[index]].copy()
-                                new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
-                                element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                                new_row.loc[index, constant.ADDRESS_START_DATE] = data_source.end_date + timedelta(days=1)
+                                element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
                                 element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
             write_excel_sheet(excel_path, element_data_frame, data_element)
 

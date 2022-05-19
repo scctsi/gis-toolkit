@@ -56,8 +56,8 @@ def input_file_validation(data_frame, version):
             if len(zip_missing) > 0:
                 print(f"{len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
         if version == 2:
-            address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
-            address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
+            address_start_date_missing = data_frame.index[data_frame[constant.ADDRESS_START_DATE] == ''].tolist()
+            address_end_date_missing = data_frame.index[data_frame[constant.ADDRESS_END_DATE] == ''].tolist()
             if len(address_start_date_missing) > 0:
                 print(f"{len(address_start_date_missing)} rows are missing an address start date at these indexes: {address_start_date_missing}")
             if len(address_end_date_missing) > 0:
