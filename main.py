@@ -40,8 +40,8 @@ def data_key_to_file_name(data_key):
     return file_name, extension
 
 
-def input_file_validation(data_frame, argument):
-    if argument.geocode:
+def input_file_validation(data_frame, version, geocode):
+    if geocode:
         if not ('street' in data_frame.columns and 'city' in data_frame.columns and
                 'state' in data_frame.columns and 'zip' in data_frame.columns):
             raise Exception(f"Input file is missing at least one address column, (street, city, state, zip) are required.")
@@ -56,7 +56,7 @@ def input_file_validation(data_frame, argument):
     elif constant.GEO_ID_NAME not in data_frame.columns:
         raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
-    if argument.version == 2:
+    if version == 2:
         address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
         address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
         if len(address_start_date_missing) > 0:
@@ -74,7 +74,7 @@ def main(argument):
     file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {input_file_path}")
     input_data_frame = importer.import_file(input_file_path, argument.version)
-    input_file_validation(input_data_frame, argument)
+    input_file_validation(input_data_frame, argument.version, argument.geocode)
 
     data_elements = sds.SedohDataElements().data_elements
 
