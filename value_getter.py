@@ -34,7 +34,7 @@ def get_value(data_element, arguments, data_files, version=1):
             elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
                 return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
                                                  data_files.tract_column, data_element.variable_name)
-            elif data_element.get_strategy == GetStrategy.RASTER_FILE:
+            elif data_element.get_strategy == GetStrategy.RASTER_FILE and constant.LATITUDE in arguments.keys() and constant.LONGITUDE in arguments.keys():
                 return get_raster_file_value(arguments, data_files)
     else:
         return None
@@ -217,8 +217,8 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
 
 
 def get_raster_file_value(arguments, data_file):
-    latitude = round(float(arguments["latitude"]), data_file.precision)
-    longitude = round(float(arguments["longitude"]), data_file.precision)
+    latitude = round(float(arguments[constant.LATITUDE]), data_file.precision)
+    longitude = round(float(arguments[constant.LONGITUDE]), data_file.precision)
     if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[
         0] <= longitude <= data_file.longitude_range[1]:
         latitude_difference = round(latitude - data_file.latitude_range[0], data_file.precision)
