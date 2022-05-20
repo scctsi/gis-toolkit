@@ -7,6 +7,7 @@ import constant
 
 load_dotenv()
 
+
 # Note on naming scheme: parameters = named variables passed to a function,
 #                        arguments = expressions used when calling the function,
 #                        options = optional arguments which allow yoy to customize the function
@@ -28,7 +29,8 @@ def get_value(data_element, arguments, data_files, version=1):
                                                  data_element.variable_name)
         elif version == 2:
             if data_element.get_strategy == GetStrategy.FILE:
-                return get_file_value(data_element.source_variable, arguments, data_files.data_frame, data_files.tract_column)
+                return get_file_value(data_element.source_variable, arguments, data_files.data_frame,
+                                      data_files.tract_column)
             elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
                 return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
                                                  data_files.tract_column, data_element.variable_name)
@@ -49,13 +51,14 @@ def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, ve
                 source_var = data_element.source_variable[:data_element.source_variable.index(',')]
                 calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
                 return get_acs_calculation(data_element.variable_name,
-                                                     [data_frame.loc[arguments["fips_concatenated_code"], source_var],
-                                                      data_frame.loc[arguments["fips_concatenated_code"], calc_var]],
-                                                      arguments, data_files, version)
+                                           [data_frame.loc[arguments["fips_concatenated_code"], source_var],
+                                            data_frame.loc[arguments["fips_concatenated_code"], calc_var]],
+                                           arguments, data_files, version)
             else:
                 return get_acs_calculation(data_element.variable_name,
-                                           data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable],
-                                            arguments, data_files, version)
+                                           data_frame.loc[
+                                               arguments["fips_concatenated_code"], data_element.source_variable],
+                                           arguments, data_files, version)
         else:
             return data_frame.loc[arguments["fips_concatenated_code"], data_element.source_variable]
     else:
@@ -160,14 +163,16 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files, vers
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
-        if version is None or version == 1:
+        if version == 1:
             aland = get_file_value("ALAND", arguments,
                                    data_files[SedohDataSource.Gazetteer][0],
                                    data_files[SedohDataSource.Gazetteer][1])
-        else:
+        elif version == 2:
             aland = get_file_value("ALAND", arguments,
                                    data_files[SedohDataSource.Gazetteer][1].data_frame,
                                    data_files[SedohDataSource.Gazetteer][1].tract_column)
+        else:
+            aland = constant.NOT_AVAILABLE
         if aland == constant.NOT_AVAILABLE or int(aland) == 0:
             return constant.NOT_AVAILABLE
         else:
@@ -214,7 +219,8 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
 def get_raster_file_value(arguments, data_file):
     latitude = round(float(arguments["latitude"]), data_file.precision)
     longitude = round(float(arguments["longitude"]), data_file.precision)
-    if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[0] <= longitude <= data_file.longitude_range[1]:
+    if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[
+        0] <= longitude <= data_file.longitude_range[1]:
         latitude_difference = round(latitude - data_file.latitude_range[0], data_file.precision)
         longitude_difference = round(longitude - data_file.longitude_range[0], data_file.precision)
         latitude_index = data_file.latitude_transform - int(round(latitude_difference / data_file.step, 2))
@@ -223,4 +229,3 @@ def get_raster_file_value(arguments, data_file):
         if value != -99:
             return value
     return constant.NOT_AVAILABLE
-
