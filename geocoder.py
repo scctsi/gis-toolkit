@@ -22,9 +22,9 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = 0  # 2000-2010
-    Ten = 1  # 2010-2020
-    Twenty = 2  # 2020-2030
+    Zero = 0  # 2001-2010
+    Ten = 1  # 2011-2020
+    Twenty = 2  # 2021-2030
 
 
 # Decade 'Twenty' extends from 2020-present, so the vintage value needs to be updated yearly
