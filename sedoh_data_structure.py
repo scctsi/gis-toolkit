@@ -17,7 +17,7 @@ class DataFiles:
         self.version = version
 
     def get_data_files(self):
-        if self.version is None or self.version == 1:
+        if self.version == 1:
             data_files = {
                 SedohDataSource.CalEPA_CES: [
                     DataSource("calepa_ces/calepa_ces_3.0.xlsx",
@@ -31,6 +31,29 @@ class DataFiles:
                                datetime(2019, 12, 31))],
                 SedohDataSource.Gazetteer: [
                     DataSource("gazetteer/gazetteer_2020.txt",
+                               "GEOID",
+                               datetime(2010, 1, 1),
+                               datetime(2019, 12, 31))],
+                SedohDataSource.USDA: [
+                    DataSource("usda/usda_2019.xlsx",
+                               "CensusTract",
+                               datetime(2019, 1, 1),
+                               datetime(2024, 12, 31))]
+            }
+        elif self.version == "Test":
+            data_files = {
+                SedohDataSource.CalEPA_CES: [
+                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
+                               "Census Tract",
+                               datetime(2018, 6, 1),
+                               datetime(2021, 10, 12))],
+                SedohDataSource.CDC: [
+                    DataSource("cdc/cdc_2018.csv",
+                               "FIPS",
+                               datetime(2018, 1, 1),
+                               datetime(2019, 12, 31))],
+                SedohDataSource.Gazetteer: [
+                    DataSource("../tests/gazetteer_2020.csv",
                                "GEOID",
                                datetime(2010, 1, 1),
                                datetime(2019, 12, 31))],
