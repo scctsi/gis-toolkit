@@ -84,10 +84,7 @@ def main(argument):
 
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
-    if argument.version == 2:
-        data_files = sds.DataFiles().data_files
-    else:
-        data_files = load_data_files()
+    data_files = sds.DataFiles(options.version).get_data_files()
 
     # Optional Step: Geocode addresses
     if argument.geocode:
