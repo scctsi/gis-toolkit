@@ -163,7 +163,7 @@ def data_source_intersection(data_sources, data_year):
     for index, source in enumerate(data_sources):
         if source.start_date <= data_year <= source.end_date:
             return index
-    raise 0
+    return 0
 
 
 # File specific methods

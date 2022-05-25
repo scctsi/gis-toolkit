@@ -9,6 +9,7 @@ import os
 import importer
 import requests
 from openpyxl import load_workbook
+from data_structure import GetStrategy
 
 
 def check_temp_dir():
@@ -194,8 +195,8 @@ class DataFrameEnhancer:
                 for data_element in self.data_elements:
                     if data_element in self.acs_data_elements:
                         self.data_frame.loc[index, data_element.variable_name] = value_getter.get_acs_data_frame_value(
-                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files, "2019")
-                    else:
+                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files, datetime(2019, 1, 1))
+                    elif data_element.get_strategy != GetStrategy.RASTER_FILE:
                         self.data_frame.loc[index, data_element.variable_name] = \
                             value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
@@ -225,7 +226,7 @@ class DataFrameEnhancer:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
                                     comprehensive_data_frames[data_source.acs_year][data_sets[data_element]],
-                                    data_element, arguments, self.data_files, data_source.acs_year)
+                                    data_element, arguments, self.data_files, data_source.start_date)
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
                                 data_element, arguments, data_source, version=2)

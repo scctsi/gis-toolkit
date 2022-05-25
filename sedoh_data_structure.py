@@ -35,8 +35,8 @@ class DataFiles:
                                datetime(2010, 1, 1),
                                datetime(2019, 12, 31))],
                 SedohDataSource.USDA: [
-                    DataSource("usda/usda_2019.xlsx",
-                               "CensusTract",
+                    DataSource("usda/usda.xls",
+                               "CensusTrac",
                                datetime(2019, 1, 1),
                                datetime(2024, 12, 31))]
             }
@@ -113,12 +113,12 @@ class DataFiles:
                 SedohDataSource.Gazetteer: [
                     DataSource("gazetteer/gazetteer_2010.txt",
                                "GEOID",
-                               datetime(2000, 1, 1),
-                               datetime(2009, 12, 31)),
+                               datetime(2001, 1, 1),
+                               datetime(2010, 12, 31)),
                     DataSource("gazetteer/gazetteer_2020.txt",
                                "GEOID",
-                               datetime(2010, 1, 1),
-                               datetime(2019, 12, 31))
+                               datetime(2011, 1, 1),
+                               datetime(2020, 12, 31))
                 ],
                 SedohDataSource.USDA: [
                     DataSource("usda/usda_2010.xlsx",
@@ -168,7 +168,7 @@ class DataFiles:
                 ]
             }
         else:
-            raise
+            return None
         for data_source in data_files[SedohDataSource.CalEPA_CES]:
             data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
         return data_files
