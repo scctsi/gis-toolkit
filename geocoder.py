@@ -230,7 +230,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
