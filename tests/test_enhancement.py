@@ -50,7 +50,7 @@ def test_enhancement_validity():
         if data_element.get_strategy != GetStrategy.RASTER_FILE:
             assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
-    # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+
 
 
 def test_input_file_validation():
