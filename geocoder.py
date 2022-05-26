@@ -27,7 +27,7 @@ class Decade(Enum):
     Twenty = 2  # 2020-2030
 
 
-# Decade 'Twenty' extends from 2020-present, so the vintage value needs to be updated yearly
+# Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
 
 decade_dict = {
     Decade.Zero: {
@@ -72,6 +72,7 @@ def geocode_data_frame(data_frame):
 
 
 def parse_lat_long(data_frame, geocoded_data_frame):
+    # Latitude and longitude columns from the geocoder are added to the data. Will be used for reading raster file pollutant data
     data_frame[constant.LATITUDE] = ''
     data_frame[constant.LONGITUDE] = ''
     for index, row in geocoded_data_frame.iterrows():
@@ -95,10 +96,12 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
         data_frame[constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
     if version == 2:
+        # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
                 data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
                 addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
                 geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
                 data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
@@ -127,11 +130,16 @@ def addresses_to_geocoder(data_frame, data_key, decade):
 
 def separate_data_frame_by_decade(data_frame):
     data_frames = {}
+    # Decades are defined as starting on the first year after new census information is released (2001, 2011, etc)
     decades = [datetime(2000, 1, 1), datetime(2010, 1, 1), datetime(2020, 1, 1), datetime(2030, 1, 1)]
+    # Addresses occurring entirely before the range of valid census information (2001-present) are cropped from data
+    # Addresses only starting before this range have their start date redefined to the start of this range (2001)
     data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
     before_first_decade = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < decades[0]]
     data_frame.loc[before_first_decade, constant.ADDRESS_START_DATE] = decades[0]
     for i in range(3):
+        # Addresses starting within a decade are found and copied. If they extend into the next decade, a new instance
+        # of the address is created with appropriate start and end dates
         decade = data_frame.index[(decades[i] <= data_frame[constant.ADDRESS_START_DATE]) & (
                     data_frame[constant.ADDRESS_START_DATE] < decades[i + 1])]
         decade_data_frame = data_frame.loc[decade].copy()

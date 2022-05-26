@@ -231,8 +231,8 @@ class DataFrameEnhancer:
                     # Redefines the address start date if it occurs before the data source start date
                     if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
                         element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
-                    if data_source.start_date <= element_data_frame.loc[
-                        index, 'address_start_date'] <= data_source.end_date:
+                    # If address start date falls within the time range of the data source, address is enhanced with this variable
+                    if data_source.start_date <= element_data_frame.loc[index, 'address_start_date'] <= data_source.end_date:
                         if data_element in self.acs_data_elements:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
@@ -242,7 +242,7 @@ class DataFrameEnhancer:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
                                 data_element, arguments, data_source, version=2)
                         # Redefines address end date to data source end date, and creates a new instance of the address
-                        # whose start date is that of the next data source and end date is original address end date
+                        # whose start date is that of the next data source and end date is the original address end date
                         if element_data_frame.loc[index, 'address_end_date'] > data_source.end_date:
                             if i + 1 == len(self.data_files[data_element.data_source]):
                                 element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
