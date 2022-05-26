@@ -52,7 +52,6 @@ def test_enhancement_validity():
                 control_data_frame.iloc[0][data_element.variable_name]
 
 
-
 def test_input_file_validation():
     input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
     input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv')
