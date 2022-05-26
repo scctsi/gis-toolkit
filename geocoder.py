@@ -228,7 +228,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
                     "state_code", "county_code", "tract_code", "block_code"]
     # Loading the progress of a key-specific batch geocoding process
     batch_progress = load_geocode_progress(data_key)
-    # Each batch needs it's own API request
+    # Each batch needs its own API request
     for i in range(batch_progress, batch_calls):
         # The end of addresses can only be read on the last batch
         if i + 1 == batch_calls:
