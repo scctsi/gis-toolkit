@@ -34,6 +34,8 @@ def get_value(data_element, arguments, data_files, version=1):
         elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
             return get_calculated_file_value(data_element.source_variable, arguments, data_files.data_frame,
                                              data_files.tract_column, data_element.variable_name)
+        elif data_element.get_strategy == GetStrategy.RASTER_FILE:
+            return get_raster_file_value(arguments, data_files)
 
 # ACS specific methods
 def construct_geography_argument(arguments):
@@ -181,3 +183,18 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
             return str(source_values['lapop10share'])
 
     return None
+
+
+def get_raster_file_value(arguments, data_file):
+    latitude = round(float(arguments["latitude"]), data_file.precision)
+    longitude = round(float(arguments["longitude"]), data_file.precision)
+    if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[0] <= longitude <= data_file.longitude_range[1]:
+        latitude_difference = round(latitude - data_file.latitude_range[0], data_file.precision)
+        longitude_difference = round(longitude - data_file.longitude_range[0], data_file.precision)
+        latitude_index = data_file.latitude_transform - int(round(latitude_difference / data_file.step, 2))
+        longitude_index = int(round(longitude_difference / data_file.step, 2))
+        value = data_file.array[latitude_index][longitude_index]
+        if value != -99:
+            return value
+    return constant.NOT_AVAILABLE
+

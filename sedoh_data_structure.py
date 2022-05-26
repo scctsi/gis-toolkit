@@ -1,4 +1,4 @@
-from data_structure import DataElement, DataSource, GetStrategy
+from data_structure import DataElement, DataSource, RasterSource, GetStrategy
 from enum import Enum
 from datetime import datetime
 
@@ -9,6 +9,7 @@ class SedohDataSource(Enum):
     CalEPA_CES = 3
     CDC = 4
     USDA = 5
+    SCEHSC = 6
 
 
 class DataFiles:
@@ -69,11 +70,42 @@ class DataFiles:
                            "CensusTract",
                            datetime(2019, 1, 1),
                            datetime(2024, 12, 31))
+            ],
+            (SedohDataSource.SCEHSC, "O3"): [
+                RasterSource("O3_2009_ANN.tif",
+                             (32.5, 35.5),
+                             (-121.05, -114.1),
+                             2,
+                             datetime(2009, 1, 1),
+                             datetime(2009, 12, 31))
+            ],
+            (SedohDataSource.SCEHSC, "NO2"): [
+                RasterSource("NO2_2009_ANN.tif",
+                             (32.5, 35.5),
+                             (-121.05, -114.1),
+                             2,
+                             datetime(2009, 1, 1),
+                             datetime(2009, 12, 31))
+            ],
+            (SedohDataSource.SCEHSC, "PM10"): [
+                RasterSource("PM10_2009_ANN.tif",
+                             (32.5, 35.5),
+                             (-121.05, -114.1),
+                             2,
+                             datetime(2009, 1, 1),
+                             datetime(2009, 12, 31))
+            ],
+            (SedohDataSource.SCEHSC, "PM25"): [
+                RasterSource("PM25_2009_ANN.tif",
+                             (32.5, 35.5),
+                             (-121.05, -114.1),
+                             2,
+                             datetime(2009, 1, 1),
+                             datetime(2009, 12, 31))
             ]
         }
         for data_source in self.data_files[SedohDataSource.CalEPA_CES]:
             data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
-
 
 
 class SedohDataElements:
@@ -297,13 +329,13 @@ class SedohDataElements:
                         "air_quality_indicator_ozone_o3",
                         "Ozone",
                         GetStrategy.FILE,
-                        "OZONE"),
+                        "OZONE_CES"),
             DataElement(SedohDataSource.CalEPA_CES,
                         "Air Quality Indicator - PM2.5",
                         "air_quality_indicator_pm25",
                         "PM2.5",
                         GetStrategy.FILE,
-                        "PM_2.5"),
+                        "PM_2.5_CES"),
             DataElement(SedohDataSource.CalEPA_CES,
                         "Drinking Water Quality Indicator",
                         "drinking_water_quality_indicator",
@@ -330,6 +362,30 @@ class SedohDataElements:
                         "LA1and10",
                         GetStrategy.FILE,
                         "FOOD_LOW_ACCESS_TRACT"),
+            DataElement((SedohDataSource.SCEHSC, "O3"),
+                        "Annual Pollutant Data - Ozone",
+                        "annual_pollutant_ozone_ppb",
+                        "O3",
+                        GetStrategy.RASTER_FILE,
+                        "OZONE"),
+            DataElement((SedohDataSource.SCEHSC, "NO2"),
+                        "Annual Pollutant Data - Nitrogen Dioxide",
+                        "annual_pollutant_nitrogen_dioxide_ppb",
+                        "NO2",
+                        GetStrategy.RASTER_FILE,
+                        "NITROGEN DIOXIDE"),
+            DataElement((SedohDataSource.SCEHSC, "PM25"),
+                        "Annual Pollutant Data - PM2.5",
+                        "annual_pollutant_pm25_ug/m^3",
+                        "PM25",
+                        GetStrategy.RASTER_FILE,
+                        "PM_2.5"),
+            DataElement((SedohDataSource.SCEHSC, "PM10"),
+                        "Annual Pollutant Data - PM10",
+                        "annual_pollutant_pm10_ug/m^3",
+                        "PM10",
+                        GetStrategy.RASTER_FILE,
+                        "PM_10")
         ]
 
     def filtered_data_elements(self, data_source, get_strategy=None):

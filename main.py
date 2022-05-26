@@ -75,7 +75,7 @@ def main(options):
     data_key = get_data_key(input_file_path)
     file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {input_file_path}")
-    input_data_frame = importer.import_file(input_file_path, options.verison)
+    input_data_frame = importer.import_file(input_file_path, options.version)
     input_file_validation(input_data_frame, options.version)
 
     data_elements = sds.SedohDataElements().data_elements
@@ -107,7 +107,7 @@ def main(options):
 
 if __name__ == "__main__""":
     parser = OptionParser()
-    parser.add_option('-f', '--file', dest='filename', help='name of input file')
-    parser.add_option('-v', '--version', dest='version', help='version of gis-toolkit')
+    parser.add_option('-f', '--file', type='string', dest='filename', help='name of input file: string')
+    parser.add_option('-v', '--version', type='int', dest='version', help='version of gis-toolkit: int')
     (options, args) = parser.parse_args()
     main(options)

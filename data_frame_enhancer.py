@@ -120,7 +120,7 @@ class DataFrameEnhancer:
 
     def load_enhancement_job(self):
         check_temp_dir()
-        if self.version == 1:
+        if self.version is None or self.version == 1:
             if os.path.exists(f"./temp/enhanced_{self.data_key}.csv"):
                 self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
                 self.print_previous_enhancement()
@@ -137,7 +137,7 @@ class DataFrameEnhancer:
     def print_previous_enhancement(self):
         file_name, extension = data_key_to_file_name(self.data_key)
         print(f"{file_name}.{extension} has already been enhanced with version {self.version}.")
-        if self.version == 1:
+        if self.version is None or self.version == 1:
             print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
         if self.version == 2:
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
@@ -197,7 +197,7 @@ class DataFrameEnhancer:
                     arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
                     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                         if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
-                            element_data_frame.iloc[index][data_element.variable_name] = constant.NOT_AVAILABLE
+                            element_data_frame.loc[index, data_element.variable_name] = constant.NOT_AVAILABLE
                         elif data_element.get_strategy == GetStrategy.CALCULATION:
                             if "," in data_element.source_variable:
                                 source_var = data_element.source_variable[:data_element.source_variable.index(',')]
@@ -236,7 +236,9 @@ class DataFrameEnhancer:
             element_data_frame.reset_index(drop=True, inplace=True)
             for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
-                    arguments = {"fips_concatenated_code": element_data_frame.iloc[index][constant.GEO_ID_NAME]}
+                    arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
+                                 "latitude": element_data_frame.loc[index, "latitude"],
+                                 "longitude": element_data_frame.loc[index, "longitude"]}
                     if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
                         if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
                             element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
@@ -266,7 +268,7 @@ class DataFrameEnhancer:
 
     def enhance(self):
         self.load_enhancement_job()
-        if self.version == 1:
+        if self.version is None or self.version == 1:
             return self.data_frame
 
 
