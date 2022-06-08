@@ -97,11 +97,12 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     if version == 2:
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
-            data_frames[decade.name][constant.GEO_ID_NAME] = ''
-            addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
-            geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-            data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
-            data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
+            if len(data_frames[decade.name]) > 0:
+                data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
+                geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
+                data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
+                data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
         data_frame.drop(columns=['Unnamed: 0'], inplace=True)
     return data_frame
