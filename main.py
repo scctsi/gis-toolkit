@@ -89,11 +89,11 @@ def main(options):
 
     # Optional Step: Geocode addresses
     if geocoder.geocodable(input_data_frame):
-        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=options.version)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, options.version)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=options.version)
     if options.version == 2:
         sedoh_enhancer.enhance()
     else:
