@@ -71,8 +71,9 @@ def test_geocodable_address():
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.reset_index(drop=True, inplace=True)
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
-    assert input_data_frame.iloc[50][constant.GEO_ID_NAME] == "04013618000"
+    assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
 
 
 def test_non_geocodable_address():
@@ -80,8 +81,9 @@ def test_non_geocodable_address():
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.reset_index(drop=True, inplace=True)
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
-    assert input_data_frame.iloc[51][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
+    assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
 
 
 def test_comprehensive_geocoding():
