@@ -30,7 +30,7 @@ class DataSource:
 
 
 class RasterSource:
-    def __init__(self, file_name, latitude_range, longitude_range, precision,start_date, end_date):
+    def __init__(self, file_name, latitude_range, longitude_range, precision, start_date, end_date):
         raster_data = importer.import_file(f'./data_files/{file_name}')
         raster_bounds = raster_data.bounds
         self.array = raster_data.read(1)
@@ -40,6 +40,13 @@ class RasterSource:
         self.precision = precision
         self.step = round((raster_bounds.top - raster_bounds.bottom) / self.array.shape[0], self.precision)
         self.latitude_transform = self.array.shape[0] - 1
+        self.start_date = start_date
+        self.end_date = end_date
+
+
+class ACSSource:
+    def __init__(self, acs_year, start_date, end_date):
+        self.acs_year = acs_year
         self.start_date = start_date
         self.end_date = end_date
 

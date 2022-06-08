@@ -6,6 +6,7 @@ import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
 from data_structure import GetStrategy
+import constant
 
 
 def handle_remove_readonly(func, path, exc):
@@ -17,11 +18,18 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+
+
 def load_data_files():
     data_files = {
         sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces/calepa_ces_3.0.xlsx"), "Census Tract"),
         sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc/cdc_2018.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer.csv"), "GEOID"),
+        sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer_2020.csv"), "GEOID"),
         sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda/usda.xls'), "CensusTrac")
     }
 
@@ -63,3 +71,34 @@ def test_input_file_validation():
         main.input_file_validation(input_data_frame_v2, 2)
     except Exception:
         pytest.fail("input_file_validation() failed with version 2")
+
+
+def test_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
+
+
+def test_non_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
+
+
+def test_comprehensive_geocoding():
+    file_path = './tests/comprehensive_geocoding_input.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path, version=2)
+    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
+    comprehensive_output = [3, 2, 2, 1, 0]
+    for index, row in input_data_frame.iterrows():
+        address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
+        assert len(address_count) == comprehensive_output[index]

@@ -1,4 +1,4 @@
-from data_structure import DataElement, DataSource, RasterSource, GetStrategy
+from data_structure import DataElement, DataSource, RasterSource, ACSSource,GetStrategy
 from enum import Enum
 from datetime import datetime
 
@@ -15,6 +15,38 @@ class SedohDataSource(Enum):
 class DataFiles:
     def __init__(self):
         self.data_files = {
+            SedohDataSource.ACS: [
+                ACSSource("2012",
+                          datetime(2010, 1, 1),
+                          datetime(2010, 12, 31)),
+                ACSSource("2013",
+                          datetime(2011, 1, 1),
+                          datetime(2011, 12, 31)),
+                ACSSource("2014",
+                          datetime(2012, 1, 1),
+                          datetime(2012, 12, 31)),
+                ACSSource("2015",
+                          datetime(2013, 1, 1),
+                          datetime(2013, 12, 31)),
+                ACSSource("2016",
+                          datetime(2014, 1, 1),
+                          datetime(2014, 12, 31)),
+                ACSSource("2017",
+                          datetime(2015, 1, 1),
+                          datetime(2015, 12, 31)),
+                ACSSource("2018",
+                          datetime(2016, 1, 1),
+                          datetime(2016, 12, 31)),
+                ACSSource("2019",
+                          datetime(2017, 1, 1),
+                          datetime(2017, 12, 31)),
+                ACSSource("2020",
+                          datetime(2018, 1, 1),
+                          datetime(2018, 12, 31)),
+                ACSSource("2021",
+                          datetime(2019, 1, 1),
+                          datetime(2019, 12, 31))
+            ],
             SedohDataSource.CalEPA_CES: [
                 DataSource("calepa_ces/calepa_ces_2.0.xlsx",
                            "Census Tract",
@@ -52,10 +84,14 @@ class DataFiles:
                            datetime(2019, 12, 31))
             ],
             SedohDataSource.Gazetteer: [
-                DataSource("gazetteer/gazetteer.txt",
+                DataSource("gazetteer/gazetteer_2010.txt",
                            "GEOID",
-                           None,
-                           None)
+                           datetime(2000, 1, 1),
+                           datetime(2009, 12, 31)),
+                DataSource("gazetteer/gazetteer_2020.txt",
+                           "GEOID",
+                           datetime(2010, 1, 1),
+                           datetime(2019, 12, 31))
             ],
             SedohDataSource.USDA: [
                 DataSource("usda/usda_2010.xlsx",

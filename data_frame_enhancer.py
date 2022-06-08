@@ -1,7 +1,6 @@
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
-from data_structure import GetStrategy
 import constant
 import sedoh_data_structure as sds
 import value_getter
@@ -41,55 +40,85 @@ def get_geography():
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
 
 
-def source_intersection(source, row):
-    if source.start_date <= row.iloc[0]['address_start_date'] <= source.end_date:
-        return True
+def write_excel_sheet(excel_path, data_frame, data_element):
+    if os.path.exists(excel_path):
+        book = load_workbook(excel_path)
+        writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+        writer.book = book
+        data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
+        writer.save()
+        writer.close()
     else:
-        return False
+        writer = pd.ExcelWriter(excel_path, engine='openpyxl')
+        data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
+        writer.save()
+        writer.close()
+
+
+def data_element_data_frame(data_frame, data_element, date_list):
+    element_data_frame = data_frame.copy()
+    element_data_frame[data_element.variable_name] = ''
+    element_data_frame.drop(element_data_frame.index[
+                                element_data_frame['address_start_date'] > date_list[-1].end_date], inplace=True)
+    element_data_frame.drop(element_data_frame.index[
+                                element_data_frame['address_end_date'] <= date_list[0].start_date], inplace=True)
+    element_data_frame.reset_index(drop=True, inplace=True)
+    return element_data_frame
 
 
 class ACSDataSource:
     def __init__(self, acs_elements):
         self.acs_elements = acs_elements
+        self.omit_source_string = {"2012": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2013": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2014": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+                                   "2015": ["S2801_C02_011E", "S2801_C02_019E"],
+                                   "2016": ["S2801_C02_011E", "S2801_C02_019E"]}
 
-    def data_sets(self):
+    def data_sets(self, data_year):
         """
         :return: {acs data set: joined source variable string}
         """
         data_sets = {}
         for data_element in self.acs_elements:
-            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-            if data_set_name in data_sets.keys():
-                data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
-            else:
-                data_sets.update({data_set_name: data_element.source_variable})
+            if data_year not in self.omit_source_string.keys() or data_element.source_variable not in self.omit_source_string[data_year]:
+                data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+                if data_set_name in data_sets.keys():
+                    data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
+                else:
+                    data_sets.update({data_set_name: data_element.source_variable})
         return data_sets
 
-    def data_set_elements(self):
+    def data_element_data_set(self):
         """
-        :return: {acs data set: list of corresponding data elements}
+        :return: {data element: data set}
         """
-        data_set_elements = {}
-        for data_element in self.acs_elements:
-            data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
-            if data_set_name in data_set_elements.keys():
-                data_set_elements[data_set_name].append(data_element)
-            else:
-                data_set_elements.update({data_set_name: [data_element]})
-        return data_set_elements
+        data_element_data_set = map(
+            lambda data_element: (data_element, value_getter.get_acs_dataset_name(data_element.source_variable)),
+            self.acs_elements)
+        return dict(data_element_data_set)
 
-    def data_frames(self, test_mode=False):
+    def data_frames(self, data_year="2018", test_mode=False):
         """
         :return: {acs data set: data frame of data set data from all acs census tracts}
         """
-        data_sets = self.data_sets()
+        data_sets = self.data_sets(data_year)
         geography = get_geography()
         try:
             data_frames = map(lambda data_set: (
-                data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, test_mode)), data_sets)
+                data_set, value_getter.get_acs_batch(data_set, data_sets[data_set], geography, data_year=data_year,
+                                                     test_mode=test_mode)), data_sets)
             return dict(data_frames)
         except requests.exceptions.RequestException as e:
             SystemExit(e)
+
+    def comprehensive_data_frames(self, acs_sources, test_mode=False):
+        """
+        :return: {year: {acs data set: data frame of data set data from all acs census tracts}
+        """
+        comprehensive_data_frames = map(lambda acs_source: (
+            acs_source.acs_year, self.data_frames(data_year=acs_source.acs_year, test_mode=test_mode)), acs_sources)
+        return dict(comprehensive_data_frames)
 
 
 class DataFrameEnhancer:
@@ -145,8 +174,8 @@ class DataFrameEnhancer:
 
     def get_data_element_values(self):
         self.global_cache.load_cache()
-        data_frames = self.acs_data_source.data_frames(self.test_mode)
-        data_set_elements = self.acs_data_source.data_set_elements()
+        data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
+        data_sets = self.acs_data_source.data_element_data_set()
         for index, row in self.data_frame.iterrows():
             progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
             arguments = {"fips_concatenated_code": self.data_frame.loc[index, constant.GEO_ID_NAME]}
@@ -154,117 +183,55 @@ class DataFrameEnhancer:
                 cache_row = self.global_cache.get_cache_row(arguments["fips_concatenated_code"])
                 for data_element in self.data_elements:
                     self.data_frame.loc[index, data_element.variable_name] = cache_row.loc[0, data_element.variable_name]
-            elif not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                for data_set in data_frames:
-                    for data_element in data_set_elements[data_set]:
-                        if arguments["fips_concatenated_code"] not in data_frames[data_set].index:
-                            self.data_frame.loc[index, data_element.variable_name] = constant.NOT_AVAILABLE
-                        elif data_element.get_strategy == GetStrategy.CALCULATION:
-                            if "," in data_element.source_variable:
-                                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
-                                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
-                                self.data_frame.loc[index, data_element.variable_name] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
-                                                                      data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
-                                                                     arguments, self.data_files)
-                            else:
-                                self.data_frame.loc[index, data_element.variable_name] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     data_frames[data_set].loc[arguments["fips_concatenated_code"],
-                                                                         data_element.source_variable], arguments, self.data_files)
-                        else:
-                            self.data_frame.loc[index, data_element.variable_name] = \
-                                data_frames[data_set].loc[arguments["fips_concatenated_code"], data_element.source_variable]
-                for data_element in self.non_acs_data_elements:
-                    self.data_frame.loc[index, data_element.variable_name] = \
-                        value_getter.get_value(data_element, arguments, self.data_files)
+            else:
+                for data_element in self.data_elements:
+                    if data_element in self.acs_data_elements:
+                        self.data_frame.loc[index, data_element.variable_name] = value_getter.get_acs_data_frame_value(
+                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files)
+                    else:
+                        self.data_frame.loc[index, data_element.variable_name] = value_getter.get_value(data_element,
+                                                                                                        arguments,
+                                                                                                        self.data_files)
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def load_comprehensive_data_element_values(self):
         check_temp_dir()
-        data_frames = self.acs_data_source.data_frames(self.test_mode)
-        data_set_elements = self.acs_data_source.data_set_elements()
+        comprehensive_data_frames = self.acs_data_source.comprehensive_data_frames(
+            self.data_files[sds.SedohDataSource.ACS], test_mode=self.test_mode)
+        data_sets = self.acs_data_source.data_element_data_set()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
-        for data_set in data_frames:
-            for data_element in data_set_elements[data_set]:
-                element_data_frame = self.data_frame.copy()
-                element_data_frame[data_element.variable_name] = ''
-                for index, row in element_data_frame.iterrows():
-                    arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
-                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                        if arguments["fips_concatenated_code"] not in data_frames[data_set][constant.GEO_ID_NAME]:
-                            element_data_frame.loc[index, data_element.variable_name] = constant.NOT_AVAILABLE
-                        elif data_element.get_strategy == GetStrategy.CALCULATION:
-                            if "," in data_element.source_variable:
-                                source_var = data_element.source_variable[:data_element.source_variable.index(',')]
-                                calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
-                                element_data_frame.loc[index, data_element.variable_name] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     [data_frames[data_set].loc[arguments["fips_concatenated_code"], source_var],
-                                                                      data_frames[data_set].loc[arguments["fips_concatenated_code"], calc_var]],
-                                                                     arguments, self.data_files, 2)
-                            else:
-                                element_data_frame.loc[index, data_element.variable_name] = \
-                                    value_getter.get_acs_calculation(data_element.variable_name,
-                                                                     data_frames[data_set].loc[arguments["fips_concatenated_code"],
-                                                                         data_element.source_variable], arguments, self.data_files, 2)
-                        else:
-                            element_data_frame.loc[index, data_element.variable_name] = \
-                                data_frames[data_set].loc[arguments["fips_concatenated_code"], data_element.source_variable]
-                element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
-                if os.path.exists(excel_path):
-                    book = load_workbook(excel_path)
-                    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                    writer.book = book
-                    element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-                    writer.save()
-                    writer.close()
-                else:
-                    writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                    element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-                    writer.save()
-                    writer.close()
-        for data_element in self.non_acs_data_elements:
-            element_data_frame = self.data_frame.copy()
-            element_data_frame[data_element.variable_name] = ''
-            element_data_frame.drop(element_data_frame.index[element_data_frame['address_start_date'] > self.data_files[data_element.data_source][-1].end_date], inplace=True)
-            element_data_frame.drop(element_data_frame.index[element_data_frame['address_end_date'] <= self.data_files[data_element.data_source][0].start_date], inplace=True)
-            element_data_frame.reset_index(drop=True, inplace=True)
+        for data_element in self.data_elements:
+            element_data_frame = data_element_data_frame(self.data_frame, data_element,
+                                                         self.data_files[data_element.data_source])
             for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
                     arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
                                  "latitude": element_data_frame.loc[index, "latitude"],
                                  "longitude": element_data_frame.loc[index, "longitude"]}
-                    if not arguments["fips_concatenated_code"] == constant.ADDRESS_NOT_GEOCODABLE:
-                        if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
-                            element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
-                        if data_source.start_date <= element_data_frame.loc[index, 'address_start_date'] <= data_source.end_date:
-                            element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(data_element, arguments, data_source, 2)
-                            if element_data_frame.loc[index, 'address_end_date'] > data_source.end_date:
-                                if i + 1 == len(self.data_files[data_element.data_source]):
-                                    element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
-                                else:
-                                    new_row = element_data_frame.iloc[[index]].copy()
-                                    new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
-                                    element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
-                                    element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
-            element_data_frame.drop(columns=['Unnamed: 0'], inplace=True)
-            if os.path.exists(excel_path):
-                book = load_workbook(excel_path)
-                writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                writer.book = book
-                element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-                writer.save()
-                writer.close()
-            else:
-                writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-                element_data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-                writer.save()
-                writer.close()
+                    if i == 0 and element_data_frame.loc[index, 'address_start_date'] < data_source.start_date:
+                        element_data_frame.loc[index, 'address_start_date'] = data_source.start_date
+                    if data_source.start_date <= element_data_frame.loc[
+                        index, 'address_start_date'] <= data_source.end_date:
+                        if data_element in self.acs_data_elements:
+                            element_data_frame.loc[index, data_element.variable_name] = \
+                                value_getter.get_acs_data_frame_value(
+                                    comprehensive_data_frames[data_source.acs_year][data_sets[data_element]],
+                                    data_element, arguments, self.data_files, self.version)
+                        else:
+                            element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
+                                data_element, arguments, data_source, self.version)
+                        if element_data_frame.loc[index, 'address_end_date'] > data_source.end_date:
+                            if i + 1 == len(self.data_files[data_element.data_source]):
+                                element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                            else:
+                                new_row = element_data_frame.iloc[[index]].copy()
+                                new_row.loc[index, 'address_start_date'] = data_source.end_date + timedelta(days=1)
+                                element_data_frame.loc[index, 'address_end_date'] = data_source.end_date
+                                element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
+            write_excel_sheet(excel_path, element_data_frame, data_element)
 
     def enhance(self):
         self.load_enhancement_job()
