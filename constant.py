@@ -5,3 +5,5 @@ ADDRESS_NOT_GEOCODABLE = "Not_Found"  # Geocoder did not find a census tract mat
 DATE_COLUMN = "Date"  # Column name of census tract date in cache
 ADDRESS_START_DATE = "address_start_date"
 ADDRESS_END_DATE = "address_end_date"
+LATITUDE = "latitude"
+LONGITUDE = "longitude"

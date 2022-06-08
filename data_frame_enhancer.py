@@ -203,14 +203,21 @@ class DataFrameEnhancer:
         data_sets = self.acs_data_source.data_element_data_set()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
+        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
+            read_raster = True
+        else:
+            read_raster = False
         for data_element in self.data_elements:
             element_data_frame = data_element_data_frame(self.data_frame, data_element,
                                                          self.data_files[data_element.data_source])
             for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
-                    arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
-                                 "latitude": element_data_frame.loc[index, "latitude"],
-                                 "longitude": element_data_frame.loc[index, "longitude"]}
+                    if read_raster:
+                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
+                                     constant.LATITUDE: element_data_frame.loc[index, constant.LATITUDE],
+                                     constant.LONGITUDE: element_data_frame.loc[index, constant.LONGITUDE]}
+                    else:
+                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
                     if i == 0 and element_data_frame.loc[index, constant.ADDRESS_START_DATE] < data_source.start_date:
                         element_data_frame.loc[index, constant.ADDRESS_START_DATE] = data_source.start_date
                     if data_source.start_date <= element_data_frame.loc[
