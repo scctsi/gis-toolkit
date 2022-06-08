@@ -18,6 +18,13 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+
+
 def load_data_files():
     data_files = {
         sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces/calepa_ces_3.0.xlsx"), "Census Tract"),
@@ -71,7 +78,7 @@ def test_geocodable_address():
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
-    input_data_frame.reset_index(drop=True, inplace=True)
+    input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
 
@@ -81,7 +88,7 @@ def test_non_geocodable_address():
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
-    input_data_frame.reset_index(drop=True, inplace=True)
+    input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
 
