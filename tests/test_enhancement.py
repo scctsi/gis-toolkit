@@ -1,5 +1,4 @@
 import pytest
-import constant
 import geocoder
 import importer
 import main
@@ -16,13 +15,6 @@ def handle_remove_readonly(func, path, exc):
         func(path)
     else:
         raise
-
-
-@pytest.fixture(autouse=True)
-def run_around_tests():
-    yield
-    if os.path.exists('./temp'):
-        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
 
 
 def load_data_files():
@@ -61,8 +53,8 @@ def test_enhancement_validity():
 
 
 def test_input_file_validation():
-    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
-    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv')
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version=1)
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version=2)
     try:
         main.input_file_validation(input_data_frame_v1, 1)
     except Exception:
