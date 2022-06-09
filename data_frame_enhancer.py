@@ -149,7 +149,7 @@ class DataFrameEnhancer:
 
     def load_enhancement_job(self):
         check_temp_dir()
-        if self.version is None or self.version == 1:
+        if self.version == 1:
             if os.path.exists(f"./temp/enhanced_{self.data_key}.csv"):
                 self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
                 self.print_previous_enhancement()
@@ -166,7 +166,7 @@ class DataFrameEnhancer:
     def print_previous_enhancement(self):
         file_name, extension = data_key_to_file_name(self.data_key)
         print(f"{file_name}.{extension} has already been enhanced with version {self.version}.")
-        if self.version is None or self.version == 1:
+        if self.version == 1:
             print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
         if self.version == 2:
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
@@ -203,14 +203,21 @@ class DataFrameEnhancer:
         data_sets = self.acs_data_source.data_element_data_set()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
+        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
+            read_raster = True
+        else:
+            read_raster = False
         for data_element in self.data_elements:
             element_data_frame = data_element_data_frame(self.data_frame, data_element,
                                                          self.data_files[data_element.data_source])
             for i, data_source in enumerate(self.data_files[data_element.data_source]):
                 for index, row in element_data_frame.iterrows():
-                    arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
-                                 "latitude": element_data_frame.loc[index, "latitude"],
-                                 "longitude": element_data_frame.loc[index, "longitude"]}
+                    if read_raster:
+                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
+                                     constant.LATITUDE: element_data_frame.loc[index, constant.LATITUDE],
+                                     constant.LONGITUDE: element_data_frame.loc[index, constant.LONGITUDE]}
+                    else:
+                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
                     if i == 0 and element_data_frame.loc[index, constant.ADDRESS_START_DATE] < data_source.start_date:
                         element_data_frame.loc[index, constant.ADDRESS_START_DATE] = data_source.start_date
                     if data_source.start_date <= element_data_frame.loc[
@@ -235,7 +242,7 @@ class DataFrameEnhancer:
 
     def enhance(self):
         self.load_enhancement_job()
-        if self.version is None or self.version == 1:
+        if self.version == 1:
             return self.data_frame
 
 

@@ -72,13 +72,13 @@ def geocode_data_frame(data_frame):
 
 
 def parse_lat_long(data_frame, geocoded_data_frame):
-    data_frame['latitude'] = ''
-    data_frame['longitude'] = ''
+    data_frame[constant.LATITUDE] = ''
+    data_frame[constant.LONGITUDE] = ''
     for index, row in geocoded_data_frame.iterrows():
         if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
             comma = row['latitude_longitude'].index(',')
-            data_frame.loc[index, 'longitude'] = row['latitude_longitude'][0: comma]
-            data_frame.loc[index, 'latitude'] = row['latitude_longitude'][comma + 1:]
+            data_frame.loc[index, constant.LATITUDE] = row['latitude_longitude'][0: comma]
+            data_frame.loc[index, constant.LONGITUDE] = row['latitude_longitude'][comma + 1:]
     return data_frame
 
 
@@ -89,7 +89,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     :param version: Toggles geocoding in one time frame or multiple (decades)
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
-    if version is None or version == 1:
+    if version == 1:
         data_frame[constant.GEO_ID_NAME] = ''
         addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Ten])
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
