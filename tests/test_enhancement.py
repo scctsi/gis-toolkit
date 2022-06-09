@@ -1,5 +1,4 @@
 import pytest
-import constant
 import geocoder
 import importer
 import main
@@ -7,6 +6,7 @@ import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
 from data_structure import GetStrategy
+import constant
 
 
 def handle_remove_readonly(func, path, exc):
@@ -46,7 +46,7 @@ def test_enhancement_validity():
 
 
 def test_input_file_validation():
-    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv')
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version=1)
     input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version=2)
     try:
         main.input_file_validation(input_data_frame_v1, version=1, geocode="geocode")
@@ -76,3 +76,14 @@ def test_non_geocodable_address():
     input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
     assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
+
+
+def test_comprehensive_geocoding():
+    file_path = './tests/comprehensive_geocoding_input.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path, version=2)
+    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
+    comprehensive_output = [3, 2, 2, 1, 0]
+    for index, row in input_data_frame.iterrows():
+        address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
+        assert len(address_count) == comprehensive_output[index]

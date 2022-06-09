@@ -1,5 +1,5 @@
 import pandas as pd
-
+from datetime import datetime
 import constant
 import geocoder
 from data_frame_enhancer import DataFrameEnhancer
@@ -71,7 +71,7 @@ def main(argument):
 
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
-    data_files = sds.DataFiles(options.version).get_data_files()
+    data_files = sds.DataFiles(argument.version).get_data_files()
 
     # Optional Step: Geocode addresses
     if argument.geocode:

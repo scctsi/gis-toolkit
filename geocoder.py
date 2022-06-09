@@ -22,9 +22,9 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = 0  # 2000-2010
-    Ten = 1  # 2010-2020
-    Twenty = 2  # 2020-2030
+    Zero = 0  # 2001-2010
+    Ten = 1  # 2011-2020
+    Twenty = 2  # 2021-2030
 
 
 # Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
@@ -131,7 +131,7 @@ def addresses_to_geocoder(data_frame, data_key, decade):
 def separate_data_frame_by_decade(data_frame):
     data_frames = {}
     # Decades are defined as starting on the first year after new census information is released (2001, 2011, etc)
-    decades = [datetime(2000, 1, 1), datetime(2010, 1, 1), datetime(2020, 1, 1), datetime(2030, 1, 1)]
+    decades = [datetime(2001, 1, 1), datetime(2011, 1, 1), datetime(2021, 1, 1), datetime(2031, 1, 1)]
     # Addresses occurring entirely before the range of valid census information (2001-present) are cropped from data
     # Addresses only starting before this range have their start date redefined to the start of this range (2001)
     data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
