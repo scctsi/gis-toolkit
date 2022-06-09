@@ -2,6 +2,7 @@ import os
 import pathlib
 import pandas as pd
 import rasterio
+import constant
 
 
 def import_file(full_file_path, version=1):
@@ -34,10 +35,10 @@ def import_file(full_file_path, version=1):
                                 f"Please convert to CSV or Microsoft Excel")
     if version == 2:
         try:
-            input_data_frame['address_start_date'] = pd.to_datetime(input_data_frame['address_start_date'],
+            input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(input_data_frame[constant.ADDRESS_START_DATE],
                                                                     infer_datetime_format=True)
-            input_data_frame['address_end_date'] = pd.to_datetime(input_data_frame['address_end_date'],
+            input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(input_data_frame[constant.ADDRESS_END_DATE],
                                                                   infer_datetime_format=True)
-        except ValueError:
+        except KeyError:
             raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
     return input_data_frame

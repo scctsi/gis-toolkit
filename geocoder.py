@@ -22,9 +22,9 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = 0  # 2000-2010
-    Ten = 1  # 2010-2020
-    Twenty = 2  # 2020-2030
+    Zero = 0  # 2001-2010
+    Ten = 1  # 2011-2020
+    Twenty = 2  # 2021-2030
 
 
 # Decade 'Twenty' extends from 2020-present, so the vintage value needs to be updated yearly
@@ -72,13 +72,13 @@ def geocode_data_frame(data_frame):
 
 
 def parse_lat_long(data_frame, geocoded_data_frame):
-    data_frame['latitude'] = ''
-    data_frame['longitude'] = ''
+    data_frame[constant.LATITUDE] = ''
+    data_frame[constant.LONGITUDE] = ''
     for index, row in geocoded_data_frame.iterrows():
         if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
             comma = row['latitude_longitude'].index(',')
-            data_frame.loc[index, 'longitude'] = row['latitude_longitude'][0: comma]
-            data_frame.loc[index, 'latitude'] = row['latitude_longitude'][comma + 1:]
+            data_frame.loc[index, constant.LATITUDE] = row['latitude_longitude'][0: comma]
+            data_frame.loc[index, constant.LONGITUDE] = row['latitude_longitude'][comma + 1:]
     return data_frame
 
 
@@ -89,7 +89,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     :param version: Toggles geocoding in one time frame or multiple (decades)
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
-    if version is None or version == 1:
+    if version == 1:
         data_frame[constant.GEO_ID_NAME] = ''
         addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Ten])
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
@@ -97,11 +97,12 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
     if version == 2:
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
-            data_frames[decade.name][constant.GEO_ID_NAME] = ''
-            addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
-            geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-            data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
-            data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
+            if len(data_frames[decade.name]) > 0:
+                data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
+                geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
+                data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
+                data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
         data_frame.drop(columns=['Unnamed: 0'], inplace=True)
     return data_frame
@@ -126,7 +127,7 @@ def addresses_to_geocoder(data_frame, data_key, decade):
 
 def separate_data_frame_by_decade(data_frame):
     data_frames = {}
-    decades = [datetime(2000, 1, 1), datetime(2010, 1, 1), datetime(2020, 1, 1), datetime(2030, 1, 1)]
+    decades = [datetime(2001, 1, 1), datetime(2011, 1, 1), datetime(2021, 1, 1), datetime(2031, 1, 1)]
     data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
     before_first_decade = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < decades[0]]
     data_frame.loc[before_first_decade, constant.ADDRESS_START_DATE] = decades[0]

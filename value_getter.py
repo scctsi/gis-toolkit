@@ -7,6 +7,7 @@ import constant
 
 load_dotenv()
 
+
 # Note on naming scheme: parameters = named variables passed to a function,
 #                        arguments = expressions used when calling the function,
 #                        options = optional arguments which allow yoy to customize the function
@@ -202,9 +203,10 @@ def get_calculated_file_value(source_variables, arguments, data_file, data_file_
 
 
 def get_raster_file_value(arguments, data_file):
-    latitude = round(float(arguments["latitude"]), data_file.precision)
-    longitude = round(float(arguments["longitude"]), data_file.precision)
-    if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[0] <= longitude <= data_file.longitude_range[1]:
+    latitude = round(float(arguments[constant.LATITUDE]), data_file.precision)
+    longitude = round(float(arguments[constant.LONGITUDE]), data_file.precision)
+    if data_file.latitude_range[0] <= latitude <= data_file.latitude_range[1] and data_file.longitude_range[
+        0] <= longitude <= data_file.longitude_range[1]:
         latitude_difference = round(latitude - data_file.latitude_range[0], data_file.precision)
         longitude_difference = round(longitude - data_file.longitude_range[0], data_file.precision)
         latitude_index = data_file.latitude_transform - int(round(latitude_difference / data_file.step, 2))
@@ -213,4 +215,3 @@ def get_raster_file_value(arguments, data_file):
         if value != -99:
             return value
     return constant.NOT_AVAILABLE
-
