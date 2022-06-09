@@ -9,6 +9,7 @@ import os
 import importer
 import requests
 from openpyxl import load_workbook
+from data_structure import GetStrategy
 
 
 def check_temp_dir():
@@ -38,6 +39,13 @@ def get_geography():
         else:
             state_codes += f"{str(i)},"
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
+
+
+def data_source_intersection(data_sources, data_year):
+    for index, source in enumerate(data_sources):
+        if source.start_date <= data_year <= source.end_date:
+            return index
+    raise 0
 
 
 def write_excel_sheet(excel_path, data_frame, data_element):
@@ -187,11 +195,10 @@ class DataFrameEnhancer:
                 for data_element in self.data_elements:
                     if data_element in self.acs_data_elements:
                         self.data_frame.loc[index, data_element.variable_name] = value_getter.get_acs_data_frame_value(
-                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files)
-                    else:
-                        self.data_frame.loc[index, data_element.variable_name] = value_getter.get_value(data_element,
-                                                                                                        arguments,
-                                                                                                        self.data_files)
+                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files, datetime(2019, 1, 1))
+                    elif data_element.get_strategy != GetStrategy.RASTER_FILE:
+                        self.data_frame.loc[index, data_element.variable_name] = \
+                            value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
@@ -226,10 +233,10 @@ class DataFrameEnhancer:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
                                     comprehensive_data_frames[data_source.acs_year][data_sets[data_element]],
-                                    data_element, arguments, self.data_files, self.version)
+                                    data_element, arguments, self.data_files, data_source.start_date)
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
-                                data_element, arguments, data_source, self.version)
+                                data_element, arguments, data_source, version=2)
                         if element_data_frame.loc[index, constant.ADDRESS_END_DATE] > data_source.end_date:
                             if i + 1 == len(self.data_files[data_element.data_source]):
                                 element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
