@@ -5,6 +5,8 @@ import main
 import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
+from data_structure import GetStrategy
+import constant
 
 
 def handle_remove_readonly(func, path, exc):
@@ -16,36 +18,72 @@ def handle_remove_readonly(func, path, exc):
         raise
 
 
-def load_data_files():
-    data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("./tests/gazetteer.csv"), "GEOID"),
-        sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda.xls'), "CensusTrac")
-    }
-
-    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
-    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
-    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
-
-    return data_files
+@pytest.fixture(autouse=True)
+def run_around_tests():
+    yield
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
 
 
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
-    data_files = load_data_files()
+    data_files = sds.DataFiles(version="Test").get_data_files()
     file_path = './validation/addresses-us-all.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame[:3]
-    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, True)
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=1)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=1, test_mode=True)
     enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
         print(data_element.variable_name)
         # print("newly enhanced:  ", enhanced_data_frame.iloc[0][data_element.variable_name])
         # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
-        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
-            control_data_frame.iloc[0][data_element.variable_name]
-    # shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+        if data_element.get_strategy != GetStrategy.RASTER_FILE:
+            assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+                control_data_frame.iloc[0][data_element.variable_name]
+
+
+def test_input_file_validation():
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version=1)
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version=2)
+    try:
+        main.input_file_validation(input_data_frame_v1, version=1, geocode="geocode")
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 1")
+    try:
+        main.input_file_validation(input_data_frame_v2, version=2, geocode=None)
+    except Exception:
+        pytest.fail("input_file_validation() failed with version 2")
+
+
+def test_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
+
+
+def test_non_geocodable_address():
+    file_path = './validation/addresses-us-all.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path)
+    input_data_frame = input_data_frame.iloc[50:52]
+    input_data_frame.index = [0, 1]
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
+
+
+def test_comprehensive_geocoding():
+    file_path = './tests/comprehensive_geocoding_input.csv'
+    data_key = main.get_data_key(file_path)
+    input_data_frame = importer.import_file(file_path, version=2)
+    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
+    comprehensive_output = [3, 2, 2, 1, 0]
+    for index, row in input_data_frame.iterrows():
+        address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
+        assert len(address_count) == comprehensive_output[index]
