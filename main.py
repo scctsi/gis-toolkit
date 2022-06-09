@@ -13,19 +13,6 @@ from optparse import OptionParser
 sedoh_data_elements = sds.SedohDataElements()
 
 
-def load_data_files():
-    data_files = {
-        sds.SedohDataSource.CalEPA_CES: (importer.import_file("./data_files/calepa_ces/calepa_ces_3.0.xlsx"), "Census Tract"),
-        sds.SedohDataSource.CDC: (importer.import_file("./data_files/cdc/cdc_2018.csv"), "FIPS"),
-        sds.SedohDataSource.Gazetteer: (importer.import_file("./data_files/gazetteer/gazetteer_2020.txt"), "GEOID"),
-        sds.SedohDataSource.USDA: (importer.import_file('./data_files/usda/usda.xls'), "CensusTrac")
-    }
-    # TODO: This is a fix to add a leading 0 to the CalEPA_CES data file. Get the data from CalEPA to fix this issue.
-    calepa_ces_data_file = data_files[sds.SedohDataSource.CalEPA_CES][0]
-    calepa_ces_data_file['Census Tract'] = '0' + calepa_ces_data_file['Census Tract']
-    return data_files
-
-
 def get_data_key(file_path):
     index = file_path.rindex('/')
     file_name = file_path[index + 1:]

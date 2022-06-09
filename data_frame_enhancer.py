@@ -89,7 +89,8 @@ class ACSDataSource:
         """
         data_sets = {}
         for data_element in self.acs_elements:
-            if data_year not in self.omit_source_string.keys() or data_element.source_variable not in self.omit_source_string[data_year]:
+            if data_year not in self.omit_source_string.keys() or data_element.source_variable not in \
+                    self.omit_source_string[data_year]:
                 data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
                 if data_set_name in data_sets.keys():
                     data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
@@ -178,7 +179,8 @@ class DataFrameEnhancer:
             print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
         if self.version == 2:
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
-        print(f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
+        print(
+            f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
 
     def get_data_element_values(self):
         self.global_cache.load_cache()
@@ -190,7 +192,8 @@ class DataFrameEnhancer:
             if self.global_cache.in_cache(arguments["fips_concatenated_code"]):
                 cache_row = self.global_cache.get_cache_row(arguments["fips_concatenated_code"])
                 for data_element in self.data_elements:
-                    self.data_frame.loc[index, data_element.variable_name] = cache_row.loc[0, data_element.variable_name]
+                    self.data_frame.loc[index, data_element.variable_name] = cache_row.loc[
+                        0, data_element.variable_name]
             else:
                 for data_element in self.data_elements:
                     if data_element in self.acs_data_elements:
@@ -225,10 +228,11 @@ class DataFrameEnhancer:
                                      constant.LONGITUDE: element_data_frame.loc[index, constant.LONGITUDE]}
                     else:
                         arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
+                    # Redefines the address start date if it occurs before the data source start date
                     if i == 0 and element_data_frame.loc[index, constant.ADDRESS_START_DATE] < data_source.start_date:
                         element_data_frame.loc[index, constant.ADDRESS_START_DATE] = data_source.start_date
-                    if data_source.start_date <= element_data_frame.loc[
-                        index, constant.ADDRESS_START_DATE] <= data_source.end_date:
+                    # If address start date falls within the time range of the data source, address is enhanced with this variable
+                    if data_source.start_date <= element_data_frame.loc[index, constant.ADDRESS_START_DATE] <= data_source.end_date:
                         if data_element in self.acs_data_elements:
                             element_data_frame.loc[index, data_element.variable_name] = \
                                 value_getter.get_acs_data_frame_value(
@@ -237,6 +241,8 @@ class DataFrameEnhancer:
                         else:
                             element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
                                 data_element, arguments, data_source, version=2)
+                        # Redefines address end date to data source end date, and creates a new instance of the address
+                        # whose start date is that of the next data source and end date is the original address end date
                         if element_data_frame.loc[index, constant.ADDRESS_END_DATE] > data_source.end_date:
                             if i + 1 == len(self.data_files[data_element.data_source]):
                                 element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
@@ -261,8 +267,10 @@ class GlobalCache:
     def load_cache(self):
         check_cache_dir()
         if os.path.exists('./cache/global_cache.csv'):
-            self.data_frame = pd.read_csv('./cache/global_cache.csv', parse_dates=[constant.DATE_COLUMN], infer_datetime_format=True)
-            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[constant.DATE_COLUMN]).dt.days >= self.timeframe], inplace=True)
+            self.data_frame = pd.read_csv('./cache/global_cache.csv', parse_dates=[constant.DATE_COLUMN],
+                                          infer_datetime_format=True)
+            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[
+                constant.DATE_COLUMN]).dt.days >= self.timeframe], inplace=True)
 
     def in_cache(self, geo_id):
         if geo_id in self.data_frame[constant.GEO_ID_NAME].values:

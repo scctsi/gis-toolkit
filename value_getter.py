@@ -20,7 +20,7 @@ def get_value(data_element, arguments, data_source, version=1):
         elif data_element.get_strategy == GetStrategy.FILE_AND_CALCULATION:
             return get_calculated_file_value(data_element.source_variable, arguments, data_source.data_frame,
                                              data_source.tract_column, data_element.variable_name)
-        elif data_element.get_strategy == GetStrategy.RASTER_FILE and version == 2:
+        elif data_element.get_strategy == GetStrategy.RASTER_FILE and version == 2 and constant.LATITUDE in arguments.keys() and constant.LONGITUDE in arguments.keys():
             return get_raster_file_value(arguments, data_source)
         else:
             return None
@@ -35,6 +35,7 @@ def get_acs_data_frame_value(data_frame, data_element, arguments, data_files, da
         elif arguments["fips_concatenated_code"] not in data_frame[constant.GEO_ID_NAME]:
             return constant.NOT_AVAILABLE
         elif data_element.get_strategy == GetStrategy.CALCULATION:
+            # Some calculated values require values from two sources, calculation func will accept two values in a list
             if "," in data_element.source_variable:
                 source_var = data_element.source_variable[:data_element.source_variable.index(',')]
                 calc_var = data_element.source_variable[data_element.source_variable.index(',') + 1:]
@@ -149,6 +150,7 @@ def get_acs_calculation(variable_name, source_value, arguments, data_files, data
     elif variable_name == 'housing_percent_occupied_lacking_complete_kitchen':
         return str(100 - float(source_value))
     elif variable_name == 'population_density':
+        # The Gazetteer data source is only used in this calculated value, so its time range is found with this func
         gazetteer_index = data_source_intersection(data_files[SedohDataSource.Gazetteer], data_year)
         aland = get_file_value("ALAND", arguments, data_files[SedohDataSource.Gazetteer][gazetteer_index].data_frame,
                                data_files[SedohDataSource.Gazetteer][gazetteer_index].tract_column)

@@ -65,6 +65,9 @@ class DataFiles:
             }
         elif self.version == 2:
             data_files = {
+                # ACS data sets overlap, where each year is valid for up to 5 years before it, so the middle year is
+                # chosen as the median to represent the data of those 5 years (ex. acs query for "2012" is valid for the
+                # range 2008-2012, so the middle year, 2010, will be the time range for this query)
                 SedohDataSource.ACS: [
                     ACSSource("2012",
                               datetime(2010, 1, 1),
@@ -97,6 +100,7 @@ class DataFiles:
                               datetime(2019, 1, 1),
                               datetime(2019, 12, 31))
                 ],
+                # The following data sets include the data used for file-based variables. These data sets do not overlap
                 SedohDataSource.CalEPA_CES: [
                     DataSource("calepa_ces/calepa_ces_2.0.xlsx",
                                "Census Tract",
@@ -157,6 +161,7 @@ class DataFiles:
                                datetime(2019, 1, 1),
                                datetime(2024, 12, 31))
                 ],
+                # The remaining data sets are for geographic pollutant data which are read from raster files.
                 (SedohDataSource.SCEHSC, "O3"): [
                     RasterSource("scehsc/O3_2009_ANN.tif",
                                  (32.5, 35.5),
