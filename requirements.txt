@@ -5,3 +5,4 @@ requests>=2.25.1
 python-dotenv>=0.18.0
 pytest>=7.1.1
 rasterio>=1.2.10
+XlsxWriter~=3.0.3

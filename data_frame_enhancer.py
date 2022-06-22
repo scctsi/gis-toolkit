@@ -1,3 +1,4 @@
+import timeit
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
@@ -41,11 +42,11 @@ def get_geography():
     return f"for=tract:*&in=county:*&in=state:{state_codes[:-1:]}"
 
 
-def data_source_intersection(data_sources, data_year):
-    for index, source in enumerate(data_sources):
-        if source.start_date <= data_year <= source.end_date:
-            return index
-    raise 0
+def write_xlsxwriter_output(excel_path, data_frames):
+    writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
+    for data_element in data_frames:
+        data_frames[data_element].to_excel(writer, sheet_name=data_element.sheet_name)
+    writer.save()
 
 
 def write_excel_sheet(excel_path, data_frame, data_element):
@@ -139,10 +140,24 @@ class DataFrameEnhancer:
         self.version = version
         self.test_mode = test_mode
         self.global_cache = GlobalCache()
-        self.acs_data_elements, self.non_acs_data_elements = self.group_data_elements()
+        self.raster_elements, self.data_elements = self.group_raster_elements()
+        self.acs_data_elements, self.non_acs_data_elements = self.group_acs_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
 
-    def group_data_elements(self):
+    def group_raster_elements(self):
+        raster_data_elements = []
+        non_raster_data_elements = []
+        for data_element in self.data_elements:
+            if data_element.get_strategy == GetStrategy.RASTER_FILE:
+                raster_data_elements.append(data_element)
+            else:
+                non_raster_data_elements.append(data_element)
+        if self.version == 1:
+            return raster_data_elements, non_raster_data_elements
+        elif self.version == 2:
+            return raster_data_elements, non_raster_data_elements + raster_data_elements
+
+    def group_acs_elements(self):
         acs_data_elements = []
         non_acs_data_elements = []
         for data_element in self.data_elements:
@@ -163,14 +178,13 @@ class DataFrameEnhancer:
                 self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
                 self.print_previous_enhancement()
             else:
-                self.add_data_elements()
-                self.get_data_element_values()
+                self.enhancement()
         elif self.version == 2:
             file_name, extension = data_key_to_file_name(self.data_key)
             if os.path.exists(f"./output/comprehensive_enhanced_{file_name}.xlsx"):
                 self.print_previous_enhancement()
             else:
-                self.load_comprehensive_data_element_values()
+                self.comprehensive_enhancement()
 
     def print_previous_enhancement(self):
         file_name, extension = data_key_to_file_name(self.data_key)
@@ -181,6 +195,17 @@ class DataFrameEnhancer:
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
         print(
             f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
+
+    def enhancement(self):
+        acs_data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
+        acs_data_sets = self.acs_data_source.data_element_data_set()
+        for data_element in self.data_elements:
+            if data_element in self.acs_data_elements:
+                enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
+            else:
+                enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][0])
+            self.data_frame = value_getter.enhance_data_element(self.data_frame, enhancer_data_frame, data_element, self.data_files)
+        self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def get_data_element_values(self):
         self.global_cache.load_cache()
@@ -204,7 +229,39 @@ class DataFrameEnhancer:
                             value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
-        self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
+        # self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
+
+    def comprehensive_enhancement(self):
+        comprehensive_data_frames = self.acs_data_source.comprehensive_data_frames(
+            self.data_files[sds.SedohDataSource.ACS], test_mode=self.test_mode)
+        data_sets = self.acs_data_source.data_element_data_set()
+        file_name, extension = data_key_to_file_name(self.data_key)
+        excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
+        data_source_addresses = {}
+        element_data_frames_output = {}
+        for data_element in self.data_elements:
+            element_data_frames = []
+            if data_element.data_source not in data_source_addresses.keys():
+                data_source_addresses.update({data_element.data_source: value_getter.organize_data_frame_by_source(
+                    self.data_frame.copy(), self.data_files[data_element.data_source])})
+            for data_source in self.data_files[data_element.data_source]:
+                organized_data_frame = data_source_addresses[data_element.data_source][data_source.start_date]
+                if len(organized_data_frame) > 0:
+                    if data_element not in self.raster_elements:
+                        if data_element in self.acs_data_elements:
+                            enhancer_data_frame = comprehensive_data_frames[data_source.acs_year][data_sets[data_element]]
+                        else:
+                            enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
+                        element_data_frames.append(value_getter.enhance_data_element(
+                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version))
+                    else:
+                        element_data_frames.append(value_getter.enhance_raster_element(
+                            organized_data_frame, data_element, data_source))
+            if len(element_data_frames) > 0:
+                element_data_frame = pd.concat(element_data_frames, ignore_index=True)
+                element_data_frame.reset_index(drop=True, inplace=True)
+                element_data_frames_output.update({data_element: element_data_frame})
+        write_xlsxwriter_output(excel_path, element_data_frames_output)
 
     def load_comprehensive_data_element_values(self):
         check_temp_dir()

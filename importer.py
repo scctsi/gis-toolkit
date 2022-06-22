@@ -20,7 +20,7 @@ def import_file(full_file_path, version=1):
         except IOError:
             print(f"There was an error opening file {full_file_path}. It might be open in another program. "
                   f"Please close the program keeping the file open and try again.")
-    elif file_extension == '.xls' or file_extension.lower() == '.xlsx':
+    elif file_extension == '.xls' or file_extension == '.xlsx':
         try:
             input_data_frame = pd.read_excel(full_file_path, dtype=str)
         except IOError:
