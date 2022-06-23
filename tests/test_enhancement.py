@@ -27,7 +27,7 @@ def run_around_tests():
 
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
-    data_files = sds.DataFiles(version="Test").get_data_files()
+    data_files = sds.DataFiles(version=1).get_data_files()
     file_path = './validation/addresses-us-all.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
@@ -36,12 +36,9 @@ def test_enhancement_validity():
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=1, test_mode=True)
     enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
-    for data_element in data_elements:
+    for data_element in sedoh_enhancer.data_elements:
         print(data_element.variable_name)
-        # print("newly enhanced:  ", enhanced_data_frame.iloc[0][data_element.variable_name])
-        # print("control:         ", control_data_frame.iloc[0][data_element.variable_name])
-        if data_element.get_strategy != GetStrategy.RASTER_FILE:
-            assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
 
 
