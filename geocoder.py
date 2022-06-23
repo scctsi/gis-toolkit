@@ -78,8 +78,8 @@ def parse_lat_long(data_frame, geocoded_data_frame):
     for index, row in geocoded_data_frame.iterrows():
         if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
             comma = row['latitude_longitude'].index(',')
-            data_frame.loc[index, constant.LATITUDE] = row['latitude_longitude'][0: comma]
-            data_frame.loc[index, constant.LONGITUDE] = row['latitude_longitude'][comma + 1:]
+            data_frame.loc[index, constant.LONGITUDE] = row['latitude_longitude'][0: comma]
+            data_frame.loc[index, constant.LATITUDE] = row['latitude_longitude'][comma + 1:]
     return data_frame
 
 
