@@ -19,6 +19,7 @@ class DataFiles:
     def get_data_files(self):
         if self.version == 1:
             data_files = {
+                SedohDataSource.ACS: [],
                 SedohDataSource.CalEPA_CES: [
                     DataSource("calepa_ces/calepa_ces_4.0.csv",
                                "Census Tract",
