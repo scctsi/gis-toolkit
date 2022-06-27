@@ -19,31 +19,9 @@ class DataFiles:
     def get_data_files(self):
         if self.version == 1:
             data_files = {
+                SedohDataSource.ACS: [],
                 SedohDataSource.CalEPA_CES: [
-                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
-                               "Census Tract",
-                               datetime(2018, 6, 1),
-                               datetime(2021, 10, 12))],
-                SedohDataSource.CDC: [
-                    DataSource("cdc/cdc_2018.csv",
-                               "FIPS",
-                               datetime(2018, 1, 1),
-                               datetime(2019, 12, 31))],
-                SedohDataSource.Gazetteer: [
-                    DataSource("gazetteer/gazetteer_2020.txt",
-                               "GEOID",
-                               datetime(2010, 1, 1),
-                               datetime(2019, 12, 31))],
-                SedohDataSource.USDA: [
-                    DataSource("usda/usda_2019.xlsx",
-                               "CensusTract",
-                               datetime(2019, 1, 1),
-                               datetime(2024, 12, 31))]
-            }
-        elif self.version == "Test":
-            data_files = {
-                SedohDataSource.CalEPA_CES: [
-                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
+                    DataSource("calepa_ces/calepa_ces_4.0.csv",
                                "Census Tract",
                                datetime(2018, 6, 1),
                                datetime(2021, 10, 12))],
@@ -58,8 +36,8 @@ class DataFiles:
                                datetime(2010, 1, 1),
                                datetime(2019, 12, 31))],
                 SedohDataSource.USDA: [
-                    DataSource("usda/usda.xls",
-                               "CensusTrac",
+                    DataSource("usda/usda_2019.csv",
+                               "CensusTract",
                                datetime(2019, 1, 1),
                                datetime(2024, 12, 31))]
             }
@@ -95,22 +73,22 @@ class DataFiles:
                               datetime(2017, 12, 31)),
                     ACSSource("2020",
                               datetime(2018, 1, 1),
-                              datetime(2018, 12, 31)),
-                    ACSSource("2021",
-                              datetime(2019, 1, 1),
-                              datetime(2019, 12, 31))
+                              datetime(2018, 12, 31))
+                    # ACSSource("2021",
+                    #           datetime(2019, 1, 1),
+                    #           datetime(2019, 12, 31))
                 ],
                 # The following data sets include the data used for file-based variables. These data sets do not overlap
                 SedohDataSource.CalEPA_CES: [
-                    DataSource("calepa_ces/calepa_ces_2.0.xlsx",
+                    DataSource("calepa_ces/calepa_ces_2.0.csv",
                                "Census Tract",
                                datetime(2014, 10, 1),
                                datetime(2018, 5, 31)),
-                    DataSource("calepa_ces/calepa_ces_3.0.xlsx",
+                    DataSource("calepa_ces/calepa_ces_3.0.csv",
                                "Census Tract",
                                datetime(2018, 6, 1),
                                datetime(2021, 10, 12)),
-                    DataSource("calepa_ces/calepa_ces_4.0.xlsx",
+                    DataSource("calepa_ces/calepa_ces_4.0.csv",
                                "Census Tract",
                                datetime(2021, 10, 13),
                                datetime(2024, 12, 31))
@@ -148,15 +126,15 @@ class DataFiles:
                                datetime(2020, 12, 31))
                 ],
                 SedohDataSource.USDA: [
-                    DataSource("usda/usda_2010.xlsx",
+                    DataSource("usda/usda_2010.csv",
                                "CensusTract",
                                datetime(2010, 1, 1),
                                datetime(2014, 12, 31)),
-                    DataSource("usda/usda_2015.xlsx",
+                    DataSource("usda/usda_2015.csv",
                                "CensusTract",
                                datetime(2015, 1, 1),
                                datetime(2018, 12, 31)),
-                    DataSource("usda/usda_2019.xlsx",
+                    DataSource("usda/usda_2019.csv",
                                "CensusTract",
                                datetime(2019, 1, 1),
                                datetime(2024, 12, 31))
@@ -461,8 +439,6 @@ class DataFiles:
             }
         else:
             return None
-        for data_source in data_files[SedohDataSource.CalEPA_CES]:
-            data_source.data_frame[data_source.tract_column] = '0' + data_source.data_frame[data_source.tract_column]
         return data_files
 
 
