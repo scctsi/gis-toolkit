@@ -1,4 +1,3 @@
-import timeit
 from datetime import datetime
 from datetime import timedelta
 import pandas as pd
@@ -22,6 +21,14 @@ def check_temp_dir():
 def check_cache_dir():
     if not os.path.isdir('./cache'):
         os.mkdir('./cache')
+    return None
+
+
+def check_acs_cache_dir():
+    if not os.path.isdir('./acs_cache'):
+        os.mkdir('./acs_cache')
+        os.mkdir('./acs_cache/1')
+        os.mkdir('./acs_cache/2')
     return None
 
 
@@ -73,6 +80,79 @@ def data_element_data_frame(data_frame, data_element, date_list):
                                 element_data_frame[constant.ADDRESS_END_DATE] <= date_list[0].start_date], inplace=True)
     element_data_frame.reset_index(drop=True, inplace=True)
     return element_data_frame
+
+
+def normalize_data_frame(data_frame):
+    data_frame = data_frame.loc[:, ~data_frame.columns.duplicated()]
+    data_frame.index = data_frame[constant.GEO_ID_NAME]
+    return data_frame
+
+
+class ACSCache:
+    def __init__(self, acs_data_source, acs_sources, version, test_mode):
+        self.days = 30
+        self.acs_data_source = acs_data_source
+        self.version = version
+        self.test_mode = test_mode
+        self.acs_sources = acs_sources
+        self.sets = {'subject': 'acs/acs5/subject', 'profile': 'acs/acs5/profile', 'default': 'acs/acs5'}
+        self.files = {'acs/acs5/subject': 'subject', 'acs/acs5/profile': 'profile', 'acs/acs5': 'default'}
+
+    def check_cache(self):
+        check_acs_cache_dir()
+        file_path = f'./acs_cache/{self.version}/timestamp.csv'
+        if os.path.exists(file_path):
+            return self.check_date(file_path)
+        else:
+            return False
+
+    def check_date(self, file_path):
+        time_frame = importer.import_file(file_path)
+        time_frame[constant.DATE_COLUMN] = pd.to_datetime(time_frame[constant.DATE_COLUMN], infer_datetime_format=True)
+        if (datetime.today() - time_frame.loc[0, constant.DATE_COLUMN]).days <= self.days:
+            return True
+        else:
+            return False
+
+    def load_single(self):
+        if self.check_cache():
+            data_frames = {}
+            for file in os.listdir(f'./acs_cache/{self.version}'):
+                name = file[:file.index('.')]
+                if name in self.sets.keys():
+                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/1/{file}'))
+                    data_frames.update({self.sets[name]: data_frame})
+        else:
+            data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
+            self.set_single(data_frames)
+        return data_frames
+
+    def set_single(self, data_frames):
+        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/1/timestamp.csv')
+        for data_set in data_frames:
+            data_frames[data_set].to_csv(f'./acs_cache/1/{self.files[data_set]}.csv')
+
+    def load_comprehensive(self):
+        if self.check_cache():
+            comprehensive_frames = {}
+            for file in os.listdir(f'./acs_cache/{self.version}'):
+                if '_' in file:
+                    year = file[:file.index('_')]
+                    name = file[file.index('_') + 1: file.index('.')]
+                    if year not in comprehensive_frames.keys():
+                        comprehensive_frames.update({year: {}})
+                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/2/{file}'))
+                    comprehensive_frames[year].update({self.sets[name]: data_frame})
+        else:
+            comprehensive_frames = self.acs_data_source.comprehensive_data_frames(self.acs_sources, self.test_mode)
+            self.set_comprehensive(comprehensive_frames)
+        return comprehensive_frames
+
+    def set_comprehensive(self, comprehensive_frames):
+        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/2/timestamp.csv')
+        for year in comprehensive_frames:
+            for data_set in comprehensive_frames[year]:
+                comprehensive_frames[year][data_set].to_csv(f'./acs_cache/2/{year}_{self.files[data_set]}.csv')
 
 
 class ACSDataSource:
@@ -143,6 +223,7 @@ class DataFrameEnhancer:
         self.raster_elements, self.data_elements = self.group_raster_elements()
         self.acs_data_elements, self.non_acs_data_elements = self.group_acs_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
+        self.acs_cache = ACSCache(self.acs_data_source, self.data_files[sds.SedohDataSource.ACS], self.version, self.test_mode)
 
     def group_raster_elements(self):
         raster_data_elements = []
@@ -197,7 +278,7 @@ class DataFrameEnhancer:
             f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
 
     def enhancement(self):
-        acs_data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
+        acs_data_frames = self.acs_cache.load_single()
         acs_data_sets = self.acs_data_source.data_element_data_set()
         for data_element in self.data_elements:
             if data_element in self.acs_data_elements:
@@ -232,8 +313,7 @@ class DataFrameEnhancer:
         # self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def comprehensive_enhancement(self):
-        comprehensive_data_frames = self.acs_data_source.comprehensive_data_frames(
-            self.data_files[sds.SedohDataSource.ACS], test_mode=self.test_mode)
+        comprehensive_data_frames = self.acs_cache.load_comprehensive()
         data_sets = self.acs_data_source.data_element_data_set()
         file_name, extension = data_key_to_file_name(self.data_key)
         excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
