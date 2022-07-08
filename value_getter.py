@@ -72,6 +72,11 @@ def calculate_raster_value(latitude, longitude, raster_source):
     return constant.NOT_AVAILABLE
 
 
+def get_raster_value(src, lon, lat):
+    py, px = src.index(float(lon), float(lat))
+    return src.read(1)[py][px]
+
+
 def get_lambda_calculation(data_frame, variable_name):
     if variable_name in ['housing_percent_occupied_units_lacking_plumbing', 'housing_percent_occupied_lacking_complete_kitchen']:
         data_frame[variable_name] = data_frame.apply(lambda col: complementary_percent(col[variable_name]), axis=1)
@@ -129,8 +134,14 @@ def enhance_raster_element(data_frame, data_element, raster_source):
     missing_data_frame[data_element.variable_name] = constant.NOT_AVAILABLE
     data_frame.drop(idx_missing, inplace=True)
 
-    data_frame[data_element.variable_name] = data_frame.apply(lambda col: calculate_raster_value(
-        col[constant.LATITUDE], col[constant.LONGITUDE], raster_source), axis=1)
+    if sds.SedohDataSource.SCEHSC in data_element.data_source:
+        data_frame[data_element.variable_name] = data_frame.apply(lambda col: calculate_raster_value(
+            col[constant.LATITUDE], col[constant.LONGITUDE], raster_source), axis=1)
+    else:
+        nasa_source = raster_source.read()
+        data_frame[data_element.variable_name] = data_frame.apply(lambda col: get_raster_value(
+            nasa_source, col[constant.LONGITUDE], col[constant.LATITUDE]), axis=1)
+        raster_source.close()
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
