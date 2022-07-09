@@ -83,19 +83,20 @@ def parse_lat_long(data_frame, geocoded_data_frame):
     return data_frame
 
 
-def geocode_addresses_in_data_frame(data_frame, data_key, version=1):
+def geocode_addresses_in_data_frame(data_frame, data_key, version):
     """
     :param data_frame: Data frame of addresses, to be geocoded
     :param data_key: Key of save file, associated with a file's geocoding process
     :param version: Toggles geocoding in one time frame or multiple (decades)
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
-    if version == 1:
+    if version == 'latest':
         data_frame[constant.GEO_ID_NAME] = ''
-        addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Ten])
+        addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
         data_frame[constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
-    if version == 2:
+        data_frame = parse_lat_long(data_frame, geocoded_data_frame)
+    if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:

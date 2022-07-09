@@ -27,14 +27,14 @@ def run_around_tests():
 
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
-    data_files = sds.DataFiles(version=1).get_data_files()
+    data_files = sds.DataFiles().data_files
     file_path = './validation/addresses-us-all.csv'
     data_key = main.get_data_key(file_path)
-    input_data_frame = importer.import_file(file_path)
-    input_data_frame = input_data_frame[:3]
-    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=1)
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=1, test_mode=True)
-    enhanced_data_frame = sedoh_enhancer.enhance().iloc[[2]]
+    input_data_frame = importer.import_file(file_path)[94:95]
+    input_data_frame.reset_index(drop=True, inplace=True)
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='latest')
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version='latest', test_mode=True)
+    enhanced_data_frame = sedoh_enhancer.enhance()
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in sedoh_enhancer.data_elements:
         print(data_element.variable_name)
@@ -43,16 +43,16 @@ def test_enhancement_validity():
 
 
 def test_input_file_validation():
-    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version=1)
-    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version=2)
+    input_data_frame_v1 = importer.import_file('./tests/input_file_validation_v1.csv', version='latest')
+    input_data_frame_v2 = importer.import_file('./tests/input_file_validation_v2.csv', version='comprehensive')
     try:
-        main.input_file_validation(input_data_frame_v1, version=1, geocode="geocode")
+        main.input_file_validation(input_data_frame_v1, version='latest', geocode="geocode")
     except Exception:
-        pytest.fail("input_file_validation() failed with version 1")
+        pytest.fail("input_file_validation() failed with version latest")
     try:
-        main.input_file_validation(input_data_frame_v2, version=2, geocode=None)
+        main.input_file_validation(input_data_frame_v2, version='comprehensive', geocode=None)
     except Exception:
-        pytest.fail("input_file_validation() failed with version 2")
+        pytest.fail("input_file_validation() failed with version comprehensive")
 
 
 def test_geocodable_address():
@@ -61,7 +61,7 @@ def test_geocodable_address():
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
     input_data_frame.index = [0, 1]
-    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='latest')
     assert input_data_frame.iloc[0][constant.GEO_ID_NAME] == "04013618000"
 
 
@@ -71,15 +71,15 @@ def test_non_geocodable_address():
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
     input_data_frame.index = [0, 1]
-    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key)
+    input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='latest')
     assert input_data_frame.iloc[1][constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE
 
 
 def test_comprehensive_geocoding():
     file_path = './tests/comprehensive_geocoding_input.csv'
     data_key = main.get_data_key(file_path)
-    input_data_frame = importer.import_file(file_path, version=2)
-    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version=2)
+    input_data_frame = importer.import_file(file_path, version='comprehensive')
+    geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='comprehensive')
     comprehensive_output = [3, 2, 2, 1, 0]
     for index, row in input_data_frame.iterrows():
         address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
