@@ -220,23 +220,17 @@ class DataFrameEnhancer:
         self.version = version
         self.test_mode = test_mode
         self.global_cache = GlobalCache()
-        self.raster_elements, self.data_elements = self.group_raster_elements()
+        self.non_raster_elements = self.group_raster_elements()
         self.acs_data_elements, self.non_acs_data_elements = self.group_acs_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
         self.acs_cache = ACSCache(self.acs_data_source, self.data_files[sds.SedohDataSource.ACS], self.version, self.test_mode)
 
     def group_raster_elements(self):
-        raster_data_elements = []
         non_raster_data_elements = []
         for data_element in self.data_elements:
-            if data_element.get_strategy == GetStrategy.RASTER_FILE:
-                raster_data_elements.append(data_element)
-            else:
+            if data_element.get_strategy != GetStrategy.RASTER_FILE:
                 non_raster_data_elements.append(data_element)
-        if self.version == 1:
-            return raster_data_elements, non_raster_data_elements
-        elif self.version == 2:
-            return raster_data_elements, non_raster_data_elements + raster_data_elements
+        return non_raster_data_elements
 
     def group_acs_elements(self):
         acs_data_elements = []
@@ -280,7 +274,7 @@ class DataFrameEnhancer:
     def enhancement(self):
         acs_data_frames = self.acs_cache.load_single()
         acs_data_sets = self.acs_data_source.data_element_data_set()
-        for data_element in self.data_elements:
+        for data_element in self.non_raster_elements:
             if data_element in self.acs_data_elements:
                 enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
             else:
@@ -327,7 +321,7 @@ class DataFrameEnhancer:
             for data_source in self.data_files[data_element.data_source]:
                 organized_data_frame = data_source_addresses[data_element.data_source][data_source.start_date]
                 if len(organized_data_frame) > 0:
-                    if data_element not in self.raster_elements:
+                    if data_element in self.non_raster_elements:
                         if data_element in self.acs_data_elements:
                             enhancer_data_frame = comprehensive_data_frames[data_source.acs_year][data_sets[data_element]]
                         else:
