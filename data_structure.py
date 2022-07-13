@@ -51,6 +51,7 @@ class NasaSource:
         self.end_date = end_date
 
     def read(self):
+        # Read/close the file when needed
         self.raster_data = importer.import_file(f'./data_files/nasa/{self.file_name}')
         return self.raster_data
 
