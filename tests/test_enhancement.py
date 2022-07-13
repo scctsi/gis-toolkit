@@ -36,7 +36,7 @@ def test_enhancement_validity():
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version='latest', test_mode=True)
     enhanced_data_frame = sedoh_enhancer.enhance()
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
-    for data_element in sedoh_enhancer.non_raster_elements:
+    for data_element in sedoh_enhancer.data_elements:
         print(data_element.variable_name)
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
