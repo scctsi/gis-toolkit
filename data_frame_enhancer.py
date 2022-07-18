@@ -27,8 +27,8 @@ def check_cache_dir():
 def check_acs_cache_dir():
     if not os.path.isdir('./acs_cache'):
         os.mkdir('./acs_cache')
-        os.mkdir('./acs_cache/1')
-        os.mkdir('./acs_cache/2')
+        os.mkdir('./acs_cache/latest')
+        os.mkdir('./acs_cache/comprehensive')
     return None
 
 
@@ -120,7 +120,7 @@ class ACSCache:
             for file in os.listdir(f'./acs_cache/{self.version}'):
                 name = file[:file.index('.')]
                 if name in self.sets.keys():
-                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/1/{file}'))
+                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/latest/{file}'))
                     data_frames.update({self.sets[name]: data_frame})
         else:
             data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
@@ -128,9 +128,9 @@ class ACSCache:
         return data_frames
 
     def set_single(self, data_frames):
-        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/1/timestamp.csv')
+        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/latest/timestamp.csv')
         for data_set in data_frames:
-            data_frames[data_set].to_csv(f'./acs_cache/1/{self.files[data_set]}.csv')
+            data_frames[data_set].to_csv(f'./acs_cache/latest/{self.files[data_set]}.csv')
 
     def load_comprehensive(self):
         if self.check_cache():
@@ -141,7 +141,7 @@ class ACSCache:
                     name = file[file.index('_') + 1: file.index('.')]
                     if year not in comprehensive_frames.keys():
                         comprehensive_frames.update({year: {}})
-                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/2/{file}'))
+                    data_frame = normalize_data_frame(importer.import_file(f'./acs_cache/comprehensive/{file}'))
                     comprehensive_frames[year].update({self.sets[name]: data_frame})
         else:
             comprehensive_frames = self.acs_data_source.comprehensive_data_frames(self.acs_sources, self.test_mode)
@@ -149,10 +149,10 @@ class ACSCache:
         return comprehensive_frames
 
     def set_comprehensive(self, comprehensive_frames):
-        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/2/timestamp.csv')
+        pd.DataFrame(data={constant.DATE_COLUMN: [datetime.today()]}).to_csv(f'./acs_cache/comprehensive/timestamp.csv')
         for year in comprehensive_frames:
             for data_set in comprehensive_frames[year]:
-                comprehensive_frames[year][data_set].to_csv(f'./acs_cache/2/{year}_{self.files[data_set]}.csv')
+                comprehensive_frames[year][data_set].to_csv(f'./acs_cache/comprehensive/{year}_{self.files[data_set]}.csv')
 
 
 class ACSDataSource:
@@ -212,7 +212,7 @@ class ACSDataSource:
 
 
 class DataFrameEnhancer:
-    def __init__(self, data_frame, data_elements, data_files, data_key, version=1, test_mode=False):
+    def __init__(self, data_frame, data_elements, data_files, data_key, version, test_mode=False):
         self.data_frame = data_frame
         self.data_elements = data_elements
         self.data_files = data_files
@@ -248,13 +248,13 @@ class DataFrameEnhancer:
 
     def load_enhancement_job(self):
         check_temp_dir()
-        if self.version == 1:
+        if self.version == 'latest':
             if os.path.exists(f"./temp/enhanced_{self.data_key}.csv"):
                 self.data_frame = importer.import_file(f"./temp/enhanced_{self.data_key}.csv")
                 self.print_previous_enhancement()
             else:
                 self.enhancement()
-        elif self.version == 2:
+        elif self.version == 'comprehensive':
             file_name, extension = data_key_to_file_name(self.data_key)
             if os.path.exists(f"./output/comprehensive_enhanced_{file_name}.xlsx"):
                 self.print_previous_enhancement()
@@ -263,10 +263,10 @@ class DataFrameEnhancer:
 
     def print_previous_enhancement(self):
         file_name, extension = data_key_to_file_name(self.data_key)
-        print(f"{file_name}.{extension} has already been enhanced with version {self.version}.")
-        if self.version == 1:
+        print(f"{file_name}.{extension} has already been enhanced with {self.version} version of enhancement.")
+        if self.version == 'latest':
             print(f"Please look at output/{file_name}_enhanced.{extension} for enhanced data.")
-        if self.version == 2:
+        if self.version == 'comprehensive':
             print(f"Please look at output/comprehensive_enhanced_{file_name}.xlsx for enhanced data.")
         print(
             f"If you would like to enhance a new data set, please make sure to use a new and unique file name (different from {file_name}.{extension})")
@@ -274,12 +274,17 @@ class DataFrameEnhancer:
     def enhancement(self):
         acs_data_frames = self.acs_cache.load_single()
         acs_data_sets = self.acs_data_source.data_element_data_set()
-        for data_element in self.non_raster_elements:
-            if data_element in self.acs_data_elements:
-                enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
+        for data_element in self.data_elements:
+            if data_element in self.non_raster_elements:
+                if data_element in self.acs_data_elements:
+                    enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
+                else:
+                    enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
+                self.data_frame = value_getter.enhance_data_element(
+                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version)
             else:
-                enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][0])
-            self.data_frame = value_getter.enhance_data_element(self.data_frame, enhancer_data_frame, data_element, self.data_files)
+                self.data_frame = value_getter.enhance_raster_element(
+                    self.data_frame, data_element, self.data_files[data_element.data_source][-1])
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def get_data_element_values(self):
@@ -304,7 +309,6 @@ class DataFrameEnhancer:
                             value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
                 self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
         self.global_cache.write_to_cache()
-        # self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def comprehensive_enhancement(self):
         comprehensive_data_frames = self.acs_cache.load_comprehensive()
@@ -386,7 +390,7 @@ class DataFrameEnhancer:
 
     def enhance(self):
         self.load_enhancement_job()
-        if self.version == 1:
+        if self.version == 'latest':
             return self.data_frame
 
 
