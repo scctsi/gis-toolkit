@@ -274,7 +274,7 @@ class DataFrameEnhancer:
     def enhancement(self):
         acs_data_frames = self.acs_cache.load_single()
         acs_data_sets = self.acs_data_source.data_element_data_set()
-        for data_element in self.data_elements:
+        for data_element in self.non_raster_elements:
             if data_element in self.non_raster_elements:
                 if data_element in self.acs_data_elements:
                     enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
