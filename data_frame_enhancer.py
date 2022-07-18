@@ -27,8 +27,8 @@ def check_cache_dir():
 def check_acs_cache_dir():
     if not os.path.isdir('./acs_cache'):
         os.mkdir('./acs_cache')
-        os.mkdir('acs_cache/latest')
-        os.mkdir('acs_cache/comprehensive')
+        os.mkdir('./acs_cache/latest')
+        os.mkdir('./acs_cache/comprehensive')
     return None
 
 
