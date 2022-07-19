@@ -85,16 +85,16 @@ class DataFiles:
                            datetime(2018, 1, 1),
                            datetime(2019, 12, 31))
             ],
-            # SedohDataSource.Gazetteer: [
-            #     DataSource("gazetteer/gazetteer_2010.txt",
-            #                "GEOID",
-            #                datetime(2001, 1, 1),
-            #                datetime(2010, 12, 31)),
-            #     DataSource("gazetteer/gazetteer_2020.txt",
-            #                "GEOID",
-            #                datetime(2011, 1, 1),
-            #                datetime(2020, 12, 31))
-            # ],
+            SedohDataSource.Gazetteer: [
+                DataSource("gazetteer/gazetteer_2010.csv",
+                           "GEOID",
+                           datetime(2001, 1, 1),
+                           datetime(2010, 12, 31)),
+                DataSource("gazetteer/gazetteer_2020.csv",
+                           "GEOID",
+                           datetime(2011, 1, 1),
+                           datetime(2020, 12, 31))
+            ],
             SedohDataSource.USDA: [
                 DataSource("usda/usda_2010.csv",
                            "CensusTract",
