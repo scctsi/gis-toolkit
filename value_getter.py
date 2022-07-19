@@ -18,7 +18,7 @@ load_dotenv()
 
 def join_gazetteer_source(data_frame, data_files, version):
     gazetteer_index = -1
-    if version == 2:
+    if version == 'comprehensive':
         for i, data_source in enumerate(data_files[sds.SedohDataSource.Gazetteer]):
             if data_source.start_date <= data_frame.loc[0, constant.ADDRESS_START_DATE] < data_source.end_date:
                 gazetteer_index = i
@@ -52,9 +52,15 @@ def population_density(population, area_land):
 
 def food_fraction_with_low_access(urban, la_pop_one, la_pop_ten):
     if urban == '1':
-        return str(float(la_pop_one) * 100)
+        if math.isnan(float(la_pop_one)):
+            return constant.NOT_AVAILABLE
+        else:
+            return str(float(la_pop_one) * 100)
     else:
-        return str(la_pop_ten)
+        if math.isnan(float(la_pop_ten)):
+            return constant.NOT_AVAILABLE
+        else:
+            return la_pop_ten
 
 
 def calculate_raster_value(latitude, longitude, raster_source):
@@ -68,8 +74,13 @@ def calculate_raster_value(latitude, longitude, raster_source):
         longitude_index = int(round(longitude_difference / raster_source.step, 2))
         value = raster_source.array[latitude_index][longitude_index]
         if value != -99:
-            return value
+            return str(value)
     return constant.NOT_AVAILABLE
+
+
+def get_raster_value(src, lon, lat):
+    py, px = src.index(float(lon), float(lat))
+    return str(src.read(1)[py][px])
 
 
 def get_lambda_calculation(data_frame, variable_name):
@@ -86,7 +97,7 @@ def get_lambda_calculation(data_frame, variable_name):
     return data_frame
 
 
-def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_files, version=1):
+def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_files, version):
     idx_non_geocoded = data_frame.index[data_frame[constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE]
     non_geocoded_data_frame = data_frame.loc[idx_non_geocoded]
     non_geocoded_data_frame[data_element.variable_name] = ''
@@ -129,8 +140,14 @@ def enhance_raster_element(data_frame, data_element, raster_source):
     missing_data_frame[data_element.variable_name] = constant.NOT_AVAILABLE
     data_frame.drop(idx_missing, inplace=True)
 
-    data_frame[data_element.variable_name] = data_frame.apply(lambda col: calculate_raster_value(
-        col[constant.LATITUDE], col[constant.LONGITUDE], raster_source), axis=1)
+    if sds.SedohDataSource.SCEHSC in data_element.data_source:
+        data_frame[data_element.variable_name] = data_frame.apply(lambda col: calculate_raster_value(
+            col[constant.LATITUDE], col[constant.LONGITUDE], raster_source), axis=1)
+    else:
+        nasa_source = raster_source.read()
+        data_frame[data_element.variable_name] = data_frame.apply(lambda col: get_raster_value(
+            nasa_source, col[constant.LONGITUDE], col[constant.LATITUDE]), axis=1)
+        raster_source.close()
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)

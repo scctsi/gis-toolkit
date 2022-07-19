@@ -5,7 +5,7 @@ import rasterio
 import constant
 
 
-def import_file(full_file_path, version=1):
+def import_file(full_file_path, version='latest'):
     input_data_frame = None
 
     if not (os.path.isfile(full_file_path)):
@@ -26,19 +26,19 @@ def import_file(full_file_path, version=1):
         except IOError:
             print(f"There was an error opening file {full_file_path}. It might be open in Excel. "
                   f"Please close Excel and try again.")
-    elif file_extension == '.txt': # NOTE: Support is included only for tab delimited text files
+    elif file_extension == '.txt':  # NOTE: Support is included only for tab delimited text files
         input_data_frame = pd.read_csv(full_file_path, sep='\t', lineterminator='\r', dtype=str)
     elif file_extension == '.tif':
         input_data_frame = rasterio.open(full_file_path)
     else:
         raise FileNotFoundError(f"{file_extension} files are not currently supported. "
                                 f"Please convert to CSV or Microsoft Excel")
-    if version == 2:
+    if version == 'comprehensive':
         try:
-            input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(input_data_frame[constant.ADDRESS_START_DATE],
-                                                                    infer_datetime_format=True)
-            input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(input_data_frame[constant.ADDRESS_END_DATE],
-                                                                  infer_datetime_format=True)
+            input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(
+                input_data_frame[constant.ADDRESS_START_DATE], infer_datetime_format=True)
+            input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(
+                input_data_frame[constant.ADDRESS_END_DATE], infer_datetime_format=True)
         except KeyError:
             raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
     return input_data_frame

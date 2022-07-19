@@ -44,6 +44,20 @@ class RasterSource:
         self.end_date = end_date
 
 
+class NasaSource:
+    def __init__(self, file_name, start_date, end_date):
+        self.file_name = file_name
+        self.start_date = start_date
+        self.end_date = end_date
+
+    def read(self):
+        self.raster_data = importer.import_file(f'./data_files/nasa/{self.file_name}')
+        return self.raster_data
+
+    def close(self):
+        self.raster_data.close()
+
+
 class ACSSource:
     def __init__(self, acs_year, start_date, end_date):
         self.acs_year = acs_year

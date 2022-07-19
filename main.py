@@ -43,11 +43,11 @@ def input_file_validation(data_frame, version, geocode):
     elif constant.GEO_ID_NAME not in data_frame.columns:
         raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
-    elif version == 2 and (constant.LATITUDE not in data_frame.columns or constant.LONGITUDE not in data_frame.columns):
+    elif constant.LATITUDE not in data_frame.columns or constant.LONGITUDE not in data_frame.columns:
         print(f"Warning: {constant.LATITUDE} and/or {constant.LONGITUDE} columns are missing. Addresses will not be able "
               f"to be enhanced with pollutant data from raster files. Raster file data is geographic and requires the "
               f"latitude and longitude of address to be read.")
-    if version == 2:
+    if version == 'comprehensive':
         address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
         address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
         if len(address_start_date_missing) > 0:
@@ -71,7 +71,7 @@ def main(argument):
 
     # Setup: Load data files for data sources that do not have an existing API
     print(f"Importing data files")
-    data_files = sds.DataFiles(argument.version).get_data_files()
+    data_files = sds.DataFiles().data_files
 
     # Optional Step: Geocode addresses
     if argument.geocode:
@@ -96,7 +96,7 @@ if __name__ == "__main__""":
     parser = OptionParser()
     parser.add_option('-f', '--file', type='string', dest='filename', default='addresses.xlsx',
                       help='name of input file: string')
-    parser.add_option('-v', '--version', type='int', dest='version', default=1, help='version of gis-toolkit: int')
+    parser.add_option('-v', '--version', type='choice', dest='version', default='latest', help='latest/comprehensive enhancement', choices=['latest', 'comprehensive'])
     parser.add_option('-g', '--geocode', type='choice', dest='geocode', default=None, choices=['geocode'],
                       help='turn on geocoding, default is off')
     (options, args) = parser.parse_args()
