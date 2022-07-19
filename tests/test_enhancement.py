@@ -26,7 +26,6 @@ def run_around_tests():
 
 
 def test_enhancement_validity():
-    raise Exception("First test entered")
     data_elements = sds.SedohDataElements().data_elements
     data_files = sds.DataFiles().data_files
     raise Exception("Data Files loaded")
