@@ -32,14 +32,14 @@ class DataSource:
 
 class RasterSource:
     def __init__(self, file_name, latitude_range, longitude_range, precision, start_date, end_date):
-        # raster_data = importer.import_file(f'./data_files/{file_name}')
-        # self.array = raster_data.read(1)
-        # raster_data.close()
-        # self.latitude_range = latitude_range
-        # self.longitude_range = longitude_range
-        # self.precision = precision
-        # self.step = round((self.latitude_range[1] - self.latitude_range[0]) / self.array.shape[0], self.precision)
-        # self.latitude_transform = self.array.shape[0] - 1
+        raster_data = importer.import_file(f'./data_files/{file_name}')
+        self.array = raster_data.read(1)
+        raster_data.close()
+        self.latitude_range = latitude_range
+        self.longitude_range = longitude_range
+        self.precision = precision
+        self.step = round((self.latitude_range[1] - self.latitude_range[0]) / self.array.shape[0], self.precision)
+        self.latitude_transform = self.array.shape[0] - 1
         self.start_date = start_date
         self.end_date = end_date
 
