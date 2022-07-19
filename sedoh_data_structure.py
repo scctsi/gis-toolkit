@@ -85,37 +85,37 @@ class DataFiles:
                            datetime(2018, 1, 1),
                            datetime(2019, 12, 31))
             ],
+            SedohDataSource.Gazetteer: [
+                DataSource("gazetteer/gazetteer_2010.txt",
+                           "GEOID",
+                           datetime(2001, 1, 1),
+                           datetime(2010, 12, 31)),
+                DataSource("gazetteer/gazetteer_2020.txt",
+                           "GEOID",
+                           datetime(2011, 1, 1),
+                           datetime(2020, 12, 31))
+            ],
+            SedohDataSource.USDA: [
+                DataSource("usda/usda_2010.csv",
+                           "CensusTract",
+                           datetime(2010, 1, 1),
+                           datetime(2014, 12, 31)),
+                DataSource("usda/usda_2015.csv",
+                           "CensusTract",
+                           datetime(2015, 1, 1),
+                           datetime(2018, 12, 31)),
+                DataSource("usda/usda_2019.csv",
+                           "CensusTract",
+                           datetime(2019, 1, 1),
+                           datetime(2024, 12, 31))
+            ],
         }
-            # SedohDataSource.Gazetteer: [
-            #     DataSource("gazetteer/gazetteer_2010.txt",
-            #                "GEOID",
-            #                datetime(2001, 1, 1),
-            #                datetime(2010, 12, 31)),
-            #     DataSource("gazetteer/gazetteer_2020.txt",
-            #                "GEOID",
-            #                datetime(2011, 1, 1),
-            #                datetime(2020, 12, 31))
-            # ],
-            # SedohDataSource.USDA: [
-            #     DataSource("usda/usda_2010.csv",
-            #                "CensusTract",
-            #                datetime(2010, 1, 1),
-            #                datetime(2014, 12, 31)),
-            #     DataSource("usda/usda_2015.csv",
-            #                "CensusTract",
-            #                datetime(2015, 1, 1),
-            #                datetime(2018, 12, 31)),
-            #     DataSource("usda/usda_2019.csv",
-            #                "CensusTract",
-            #                datetime(2019, 1, 1),
-            #                datetime(2024, 12, 31))
-            # ],
             # The remaining data sets are for geographic pollutant data which are read from raster files.
-        #     (SedohDataSource.SCEHSC, "NO2"): [
-        #         RasterSource("scehsc/NO2/NO2_1998_ANN.tif",
-        #                      (32.5, 35.5),
-        #                      (-121.05, -114.1),
-        #                      2,
+            # (SedohDataSource.SCEHSC, "NO2"): [
+            #     RasterSource("scehsc/NO2/NO2_1998_ANN.tif",
+            #                  (32.5, 35.5),
+            #                  (-121.05, -114.1),
+            #                  2,
         #                      datetime(1998, 1, 1),
         #                      datetime(1998, 12, 31)),
         #         RasterSource("scehsc/NO2/NO2_1999_ANN.tif",
