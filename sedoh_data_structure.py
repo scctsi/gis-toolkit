@@ -95,20 +95,20 @@ class DataFiles:
                            datetime(2011, 1, 1),
                            datetime(2020, 12, 31))
             ],
-            SedohDataSource.USDA: [
-                DataSource("usda/usda_2010.csv",
-                           "CensusTract",
-                           datetime(2010, 1, 1),
-                           datetime(2014, 12, 31)),
-                DataSource("usda/usda_2015.csv",
-                           "CensusTract",
-                           datetime(2015, 1, 1),
-                           datetime(2018, 12, 31)),
-                DataSource("usda/usda_2019.csv",
-                           "CensusTract",
-                           datetime(2019, 1, 1),
-                           datetime(2024, 12, 31))
-            ],
+            # SedohDataSource.USDA: [
+            #     DataSource("usda/usda_2010.csv",
+            #                "CensusTract",
+            #                datetime(2010, 1, 1),
+            #                datetime(2014, 12, 31)),
+            #     DataSource("usda/usda_2015.csv",
+            #                "CensusTract",
+            #                datetime(2015, 1, 1),
+            #                datetime(2018, 12, 31)),
+            #     DataSource("usda/usda_2019.csv",
+            #                "CensusTract",
+            #                datetime(2019, 1, 1),
+            #                datetime(2024, 12, 31))
+            # ],
         }
             # The remaining data sets are for geographic pollutant data which are read from raster files.
             # (SedohDataSource.SCEHSC, "NO2"): [
