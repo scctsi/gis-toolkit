@@ -15,42 +15,40 @@ class SedohDataSource(Enum):
 
 class DataFiles:
     def __init__(self):
-        self.data_files = {}
+        self.data_files = {
             # ACS data sets overlap, where each year is valid for up to 5 years before it, so the middle year is
             # chosen as the median to represent the data of those 5 years (ex. acs query for "2012" is valid for the
             # range 2008-2012, so the middle year, 2010, will be the time range for this query)
-            # SedohDataSource.ACS: [
-            #     ACSSource("2012",
-            #               datetime(2010, 1, 1),
-            #               datetime(2010, 12, 31)),
-            #     ACSSource("2013",
-            #               datetime(2011, 1, 1),
-            #               datetime(2011, 12, 31)),
-            #     ACSSource("2014",
-            #               datetime(2012, 1, 1),
-            #               datetime(2012, 12, 31)),
-            #     ACSSource("2015",
-            #               datetime(2013, 1, 1),
-            #               datetime(2013, 12, 31)),
-            #     ACSSource("2016",
-            #               datetime(2014, 1, 1),
-            #               datetime(2014, 12, 31)),
-            #     ACSSource("2017",
-            #               datetime(2015, 1, 1),
-            #               datetime(2015, 12, 31)),
-            #     ACSSource("2018",
-            #               datetime(2016, 1, 1),
-            #               datetime(2016, 12, 31)),
-            #     ACSSource("2019",
-            #               datetime(2017, 1, 1),
-            #               datetime(2017, 12, 31)),
-            #     ACSSource("2020",
-            #               datetime(2018, 1, 1),
-            #               datetime(2018, 12, 31))
-                # ACSSource("2021",
-                #           datetime(2019, latest, latest),
-                #           datetime(2019, 12, 31))
-            # ],
+            SedohDataSource.ACS: [
+                ACSSource("2012",
+                          datetime(2010, 1, 1),
+                          datetime(2010, 12, 31)),
+                ACSSource("2013",
+                          datetime(2011, 1, 1),
+                          datetime(2011, 12, 31)),
+                ACSSource("2014",
+                          datetime(2012, 1, 1),
+                          datetime(2012, 12, 31)),
+                ACSSource("2015",
+                          datetime(2013, 1, 1),
+                          datetime(2013, 12, 31)),
+                ACSSource("2016",
+                          datetime(2014, 1, 1),
+                          datetime(2014, 12, 31)),
+                ACSSource("2017",
+                          datetime(2015, 1, 1),
+                          datetime(2015, 12, 31)),
+                ACSSource("2018",
+                          datetime(2016, 1, 1),
+                          datetime(2016, 12, 31)),
+                ACSSource("2019",
+                          datetime(2017, 1, 1),
+                          datetime(2017, 12, 31)),
+                ACSSource("2020",
+                          datetime(2018, 1, 1),
+                          datetime(2018, 12, 31))
+            ],
+        }
             # # The following data sets include the data used for file-based variables. These data sets do not overlap
             # SedohDataSource.CalEPA_CES: [
             #     DataSource("calepa_ces/calepa_ces_2.0.csv",
