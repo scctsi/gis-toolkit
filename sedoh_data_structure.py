@@ -48,22 +48,22 @@ class DataFiles:
                           datetime(2018, 1, 1),
                           datetime(2018, 12, 31))
             ],
+            # The following data sets include the data used for file-based variables. These data sets do not overlap
+            SedohDataSource.CalEPA_CES: [
+                DataSource("calepa_ces/calepa_ces_2.0.csv",
+                           "Census Tract",
+                           datetime(2014, 10, 1),
+                           datetime(2018, 5, 31)),
+                DataSource("calepa_ces/calepa_ces_3.0.csv",
+                           "Census Tract",
+                           datetime(2018, 6, 1),
+                           datetime(2021, 10, 12)),
+                DataSource("calepa_ces/calepa_ces_4.0.csv",
+                           "Census Tract",
+                           datetime(2021, 10, 13),
+                           datetime(2024, 12, 31))
+            ],
         }
-            # # The following data sets include the data used for file-based variables. These data sets do not overlap
-            # SedohDataSource.CalEPA_CES: [
-            #     DataSource("calepa_ces/calepa_ces_2.0.csv",
-            #                "Census Tract",
-            #                datetime(2014, 10, 1),
-            #                datetime(2018, 5, 31)),
-            #     DataSource("calepa_ces/calepa_ces_3.0.csv",
-            #                "Census Tract",
-            #                datetime(2018, 6, 1),
-            #                datetime(2021, 10, 12)),
-            #     DataSource("calepa_ces/calepa_ces_4.0.csv",
-            #                "Census Tract",
-            #                datetime(2021, 10, 13),
-            #                datetime(2024, 12, 31))
-            # ],
             # SedohDataSource.CDC: [
             #     DataSource("cdc/cdc_2000.csv",
             #                "FIPS",
