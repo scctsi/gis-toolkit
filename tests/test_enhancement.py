@@ -35,12 +35,15 @@ def test_enhancement_validity():
     input_data_frame.reset_index(drop=True, inplace=True)
     input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='latest')
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version='latest', test_mode=True)
+    raise Exception("Enhancer initialized")
     enhanced_data_frame = sedoh_enhancer.enhance()
+    raise Exception("Enhancement Complete")
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in sedoh_enhancer.non_raster_elements:
         print(data_element.variable_name)
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
+    raise Exception("First test complete")
 
 
 def test_input_file_validation():
