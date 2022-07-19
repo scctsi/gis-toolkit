@@ -28,7 +28,6 @@ def run_around_tests():
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
     data_files = sds.DataFiles().data_files
-    raise Exception("Data Files loaded")
     file_path = './validation/addresses-us-all.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
@@ -38,11 +37,10 @@ def test_enhancement_validity():
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version='latest', test_mode=True)
     enhanced_data_frame = sedoh_enhancer.enhance()
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
-    for data_element in sedoh_enhancer.non_raster_elements:
+    for data_element in data_elements:
         print(data_element.variable_name)
         assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
                 control_data_frame.iloc[0][data_element.variable_name]
-    raise Exception("First test complete")
 
 
 def test_input_file_validation():
