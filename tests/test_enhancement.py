@@ -5,7 +5,6 @@ import main
 import sedoh_data_structure as sds
 from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
-from data_structure import GetStrategy
 import constant
 
 

@@ -1,26 +1,17 @@
 from datetime import datetime
-from datetime import timedelta
 import pandas as pd
 import constant
 import sedoh_data_structure as sds
 import value_getter
-import progress_bar
 import os
 import importer
 import requests
-from openpyxl import load_workbook
 from data_structure import GetStrategy
 
 
 def check_temp_dir():
     if not os.path.isdir('./temp'):
         os.mkdir('./temp')
-    return None
-
-
-def check_cache_dir():
-    if not os.path.isdir('./cache'):
-        os.mkdir('./cache')
     return None
 
 
@@ -54,32 +45,6 @@ def write_xlsxwriter_output(excel_path, data_frames):
     for data_element in data_frames:
         data_frames[data_element].to_excel(writer, sheet_name=data_element.sheet_name)
     writer.save()
-
-
-def write_excel_sheet(excel_path, data_frame, data_element):
-    if os.path.exists(excel_path):
-        book = load_workbook(excel_path)
-        writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-        writer.book = book
-        data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-        writer.save()
-        writer.close()
-    else:
-        writer = pd.ExcelWriter(excel_path, engine='openpyxl')
-        data_frame.to_excel(writer, sheet_name=data_element.sheet_name)
-        writer.save()
-        writer.close()
-
-
-def data_element_data_frame(data_frame, data_element, date_list):
-    element_data_frame = data_frame.copy()
-    element_data_frame[data_element.variable_name] = ''
-    element_data_frame.drop(element_data_frame.index[
-                                element_data_frame[constant.ADDRESS_START_DATE] > date_list[-1].end_date], inplace=True)
-    element_data_frame.drop(element_data_frame.index[
-                                element_data_frame[constant.ADDRESS_END_DATE] <= date_list[0].start_date], inplace=True)
-    element_data_frame.reset_index(drop=True, inplace=True)
-    return element_data_frame
 
 
 def normalize_data_frame(data_frame):
@@ -219,7 +184,6 @@ class DataFrameEnhancer:
         self.data_key = data_key
         self.version = version
         self.test_mode = test_mode
-        self.global_cache = GlobalCache()
         self.non_raster_elements = self.group_raster_elements()
         self.acs_data_elements, self.non_acs_data_elements = self.group_acs_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
@@ -241,10 +205,6 @@ class DataFrameEnhancer:
             else:
                 non_acs_data_elements.append(data_element)
         return acs_data_elements, non_acs_data_elements
-
-    def add_data_elements(self):
-        for data_element in self.data_elements:
-            self.data_frame[data_element.variable_name] = ""
 
     def load_enhancement_job(self):
         check_temp_dir()
@@ -287,29 +247,6 @@ class DataFrameEnhancer:
                     self.data_frame, data_element, self.data_files[data_element.data_source][-1])
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
-    def get_data_element_values(self):
-        self.global_cache.load_cache()
-        data_frames = self.acs_data_source.data_frames(test_mode=self.test_mode)
-        data_sets = self.acs_data_source.data_element_data_set()
-        for index, row in self.data_frame.iterrows():
-            progress_bar.progress(index, len(self.data_frame.index), "Enhancing with SEDoH data elements")
-            arguments = {"fips_concatenated_code": self.data_frame.loc[index, constant.GEO_ID_NAME]}
-            if self.global_cache.in_cache(arguments["fips_concatenated_code"]):
-                cache_row = self.global_cache.get_cache_row(arguments["fips_concatenated_code"])
-                for data_element in self.data_elements:
-                    self.data_frame.loc[index, data_element.variable_name] = cache_row.loc[
-                        0, data_element.variable_name]
-            else:
-                for data_element in self.data_elements:
-                    if data_element in self.acs_data_elements:
-                        self.data_frame.loc[index, data_element.variable_name] = value_getter.get_acs_data_frame_value(
-                            data_frames[data_sets[data_element]], data_element, arguments, self.data_files, datetime(2019, 1, 1))
-                    elif data_element.get_strategy != GetStrategy.RASTER_FILE:
-                        self.data_frame.loc[index, data_element.variable_name] = \
-                            value_getter.get_value(data_element, arguments, self.data_files[data_element.data_source][0])
-                self.global_cache.set_cache(arguments["fips_concatenated_code"], self.data_frame.iloc[[index]])
-        self.global_cache.write_to_cache()
-
     def comprehensive_enhancement(self):
         comprehensive_data_frames = self.acs_cache.load_comprehensive()
         data_sets = self.acs_data_source.data_element_data_set()
@@ -341,86 +278,8 @@ class DataFrameEnhancer:
                 element_data_frames_output.update({data_element: element_data_frame})
         write_xlsxwriter_output(excel_path, element_data_frames_output)
 
-    def load_comprehensive_data_element_values(self):
-        check_temp_dir()
-        comprehensive_data_frames = self.acs_data_source.comprehensive_data_frames(
-            self.data_files[sds.SedohDataSource.ACS], test_mode=self.test_mode)
-        data_sets = self.acs_data_source.data_element_data_set()
-        file_name, extension = data_key_to_file_name(self.data_key)
-        excel_path = f'./output/comprehensive_enhanced_{file_name}.xlsx'
-        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
-            read_raster = True
-        else:
-            read_raster = False
-        for data_element in self.data_elements:
-            element_data_frame = data_element_data_frame(self.data_frame, data_element,
-                                                         self.data_files[data_element.data_source])
-            for i, data_source in enumerate(self.data_files[data_element.data_source]):
-                for index, row in element_data_frame.iterrows():
-                    if read_raster:
-                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME],
-                                     constant.LATITUDE: element_data_frame.loc[index, constant.LATITUDE],
-                                     constant.LONGITUDE: element_data_frame.loc[index, constant.LONGITUDE]}
-                    else:
-                        arguments = {"fips_concatenated_code": element_data_frame.loc[index, constant.GEO_ID_NAME]}
-                    # Redefines the address start date if it occurs before the data source start date
-                    if i == 0 and element_data_frame.loc[index, constant.ADDRESS_START_DATE] < data_source.start_date:
-                        element_data_frame.loc[index, constant.ADDRESS_START_DATE] = data_source.start_date
-                    # If address start date falls within the time range of the data source, address is enhanced with this variable
-                    if data_source.start_date <= element_data_frame.loc[index, constant.ADDRESS_START_DATE] <= data_source.end_date:
-                        if data_element in self.acs_data_elements:
-                            element_data_frame.loc[index, data_element.variable_name] = \
-                                value_getter.get_acs_data_frame_value(
-                                    comprehensive_data_frames[data_source.acs_year][data_sets[data_element]],
-                                    data_element, arguments, self.data_files, data_source.start_date)
-                        else:
-                            element_data_frame.loc[index, data_element.variable_name] = value_getter.get_value(
-                                data_element, arguments, data_source, version=2)
-                        # Redefines address end date to data source end date, and creates a new instance of the address
-                        # whose start date is that of the next data source and end date is the original address end date
-                        if element_data_frame.loc[index, constant.ADDRESS_END_DATE] > data_source.end_date:
-                            if i + 1 == len(self.data_files[data_element.data_source]):
-                                element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
-                            else:
-                                new_row = element_data_frame.iloc[[index]].copy()
-                                new_row.loc[index, constant.ADDRESS_START_DATE] = data_source.end_date + timedelta(days=1)
-                                element_data_frame.loc[index, constant.ADDRESS_END_DATE] = data_source.end_date
-                                element_data_frame = pd.concat([element_data_frame, new_row], ignore_index=True)
-            write_excel_sheet(excel_path, element_data_frame, data_element)
-
     def enhance(self):
         self.load_enhancement_job()
         if self.version == 'latest':
             return self.data_frame
 
-
-class GlobalCache:
-    def __init__(self):
-        self.data_frame = pd.DataFrame(columns=[constant.GEO_ID_NAME])
-        self.timeframe = 7  # days
-
-    def load_cache(self):
-        check_cache_dir()
-        if os.path.exists('./cache/global_cache.csv'):
-            self.data_frame = pd.read_csv('./cache/global_cache.csv', parse_dates=[constant.DATE_COLUMN],
-                                          infer_datetime_format=True)
-            self.data_frame.drop(self.data_frame.index[(datetime.today() - self.data_frame[
-                constant.DATE_COLUMN]).dt.days >= self.timeframe], inplace=True)
-
-    def in_cache(self, geo_id):
-        if geo_id in self.data_frame[constant.GEO_ID_NAME].values:
-            return True
-        else:
-            return False
-
-    def set_cache(self, geo_id, input_row):
-        if not self.in_cache(geo_id):
-            input_row.insert(len(input_row.columns), constant.DATE_COLUMN, [datetime.today()])
-            self.data_frame = pd.concat([self.data_frame, input_row], ignore_index=True)
-
-    def get_cache_row(self, geo_id):
-        index = self.data_frame.index[self.data_frame[constant.GEO_ID_NAME] == geo_id][0]
-        return self.data_frame.iloc[[index]]
-
-    def write_to_cache(self):
-        self.data_frame.to_csv('./cache/global_cache.csv')
