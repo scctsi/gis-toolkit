@@ -1,6 +1,5 @@
 from enum import Enum
 import importer
-import rasterio
 
 
 class GetStrategy(Enum):
@@ -63,8 +62,3 @@ class ACSSource:
         self.acs_year = acs_year
         self.start_date = start_date
         self.end_date = end_date
-
-# Currently not used
-# class DataStructure:
-#     def __init__(self, data_elements):
-#         self.data_elements = data_elements
