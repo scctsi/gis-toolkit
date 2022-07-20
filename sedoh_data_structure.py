@@ -47,9 +47,6 @@ class DataFiles:
                 ACSSource("2020",
                           datetime(2018, 1, 1),
                           datetime(2018, 12, 31))
-                # ACSSource("2021",
-                #           datetime(2019, latest, latest),
-                #           datetime(2019, 12, 31))
             ],
             # The following data sets include the data used for file-based variables. These data sets do not overlap
             SedohDataSource.CalEPA_CES: [
@@ -89,11 +86,11 @@ class DataFiles:
                            datetime(2019, 12, 31))
             ],
             SedohDataSource.Gazetteer: [
-                DataSource("gazetteer/gazetteer_2010.txt",
+                DataSource("gazetteer/gazetteer_2010.csv",
                            "GEOID",
                            datetime(2001, 1, 1),
                            datetime(2010, 12, 31)),
-                DataSource("gazetteer/gazetteer_2020.txt",
+                DataSource("gazetteer/gazetteer_2020.csv",
                            "GEOID",
                            datetime(2011, 1, 1),
                            datetime(2020, 12, 31))
