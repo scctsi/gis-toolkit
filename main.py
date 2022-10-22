@@ -29,17 +29,27 @@ def data_key_to_file_name(data_key):
 
 def input_file_validation(data_frame, version, geocode):
     if geocode:
-        if not ('street' in data_frame.columns and 'city' in data_frame.columns and
-                'state' in data_frame.columns and 'zip' in data_frame.columns):
-            raise Exception(f"Input file is missing at least one address column, (street, city, state, zip) are required.")
+        if (not ('street' in data_frame.columns and 'city' in data_frame.columns and
+                'state' in data_frame.columns and 'zip' in data_frame.columns)) or (not (
+                'latitude' in data_frame.columns and 'longitude' in data_frame.columns)):
+            raise Exception(f"Input file is missing at least one address/coordinate column, (street, city, state, zip)"
+                            f" or (latitude, longitude) are required.")
         if constant.GEO_ID_NAME in data_frame.columns:
             print(f"Warning: You have opted into geocoding, even though your input file already contains a {constant.GEO_ID_NAME} column.")
-        city_missing = data_frame.index[data_frame['city'] == ''].tolist()
-        zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
-        if len(city_missing) > 0:
-            print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
-        if len(zip_missing) > 0:
-            print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
+        if not ('latitude' in data_frame.columns and 'longitude' in data_frame.columns):
+            city_missing = data_frame.index[data_frame['city'] == ''].tolist()
+            zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
+            if len(city_missing) > 0:
+                print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
+            if len(zip_missing) > 0:
+                print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
+        else:
+            lat_missing = data_frame.index[data_frame['latitude'] == ''].tolist()
+            lon_missing = data_frame.index[data_frame['longitude'] == ''].tolist()
+            if len(lat_missing) > 0:
+                print(f"Warning: {len(lat_missing)} rows are missing latitude at these indexes: {lat_missing}")
+            if len(lon_missing) > 0:
+                print(f"Warning: {len(lon_missing)} rows are missing longitude at these indexes: {lon_missing}")
     elif constant.GEO_ID_NAME not in data_frame.columns:
         raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
@@ -75,8 +85,7 @@ def main(argument):
 
     # Optional Step: Geocode addresses
     if argument.geocode:
-        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key,
-                                                                    version=argument.version)
+        input_data_frame = geocoder.geocode_data_frame(input_data_frame, data_key, version=argument.version)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
