@@ -15,9 +15,9 @@ class Address:
 
 
 class Coordinate:
-    def __init__(self, latitude, longitude):
-        self.latitude = latitude
+    def __init__(self, longitude, latitude):
         self.longitude = longitude
+        self.latitude = latitude
 
     @classmethod
     def to_data_frame(cls, coordinates):
