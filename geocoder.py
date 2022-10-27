@@ -43,11 +43,10 @@ decade_dict = {
 
 
 def address_fields_present(data_frame):
-    if ('street' in data_frame and
-            'city' in data_frame and
-            'state' in data_frame and
-            'zip' in data_frame and
-            'SPATIAL_GEOID' not in data_frame):
+    if ('street' in data_frame.columns and
+            'city' in data_frame.columns and
+            'state' in data_frame.columns and
+            'zip' in data_frame.columns):
         return True
     else:
         return False
@@ -280,7 +279,10 @@ def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limi
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
         res = json.loads(response.text)
-        data_frame.loc[i, constant.GEO_ID_NAME] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
+        try:
+            data_frame.loc[i, constant.GEO_ID_NAME] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
+        except KeyError:
+            data_frame.loc[i, constant.GEO_ID_NAME] = constant.ADDRESS_NOT_GEOCODABLE
         if i == 0:
             data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv")
         else:
@@ -372,7 +374,6 @@ def geocode_coordinate_to_census_tract(coordinate):
 
     api_url = api.construct_url(geocoder_interpolation_string, arguments)
     response = api.get_response(api_url, test_mode=True)
-    print(response)
     # census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
     # return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
     return response
@@ -399,7 +400,6 @@ def geocode_address_to_census_tract(address):
     response = api.get_response(api_url)
 
     # TODO: Raise error if response returns multiple address matches
-    print(response)
     census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
     return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
 

@@ -29,14 +29,12 @@ def data_key_to_file_name(data_key):
 
 def input_file_validation(data_frame, version, geocode):
     if geocode:
-        if (not ('street' in data_frame.columns and 'city' in data_frame.columns and
-                'state' in data_frame.columns and 'zip' in data_frame.columns)) or (not (
-                'latitude' in data_frame.columns and 'longitude' in data_frame.columns)):
+        if (not geocoder.address_fields_present(data_frame)) and (not geocoder.coordinate_fields_present(data_frame)):
             raise Exception(f"Input file is missing at least one address/coordinate column, (street, city, state, zip)"
                             f" or (latitude, longitude) are required.")
         if constant.GEO_ID_NAME in data_frame.columns:
             print(f"Warning: You have opted into geocoding, even though your input file already contains a {constant.GEO_ID_NAME} column.")
-        if not ('latitude' in data_frame.columns and 'longitude' in data_frame.columns):
+        if not (geocoder.coordinate_fields_present(data_frame)):
             city_missing = data_frame.index[data_frame['city'] == ''].tolist()
             zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
             if len(city_missing) > 0:
@@ -53,7 +51,7 @@ def input_file_validation(data_frame, version, geocode):
     elif constant.GEO_ID_NAME not in data_frame.columns:
         raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
-    elif constant.LATITUDE not in data_frame.columns or constant.LONGITUDE not in data_frame.columns:
+    elif not geocoder.coordinate_fields_present(data_frame):
         print(f"Warning: {constant.LATITUDE} and/or {constant.LONGITUDE} columns are missing. Addresses will not be able "
               f"to be enhanced with pollutant data from raster files. Raster file data is geographic and requires the "
               f"latitude and longitude of address to be read.")
