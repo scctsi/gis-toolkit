@@ -66,7 +66,7 @@ def input_file_validation(data_frame, version, geocode):
 
 def main(argument):
     input_file_path = f'./input/{argument.filename}'
-
+    raise Exception("This is an expected Exception for executable testing")
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     data_key = get_data_key(input_file_path)
