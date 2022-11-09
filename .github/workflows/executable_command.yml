@@ -20,5 +20,5 @@ jobs:
     - name: Update Executable
       run: |
         pip install pyinstaller
-        pyinstaller --onefile --paths venv/Lib/site-packages main.spec
+        pyinstaller main.spec
         mv dist/main.exe enhance.exe
