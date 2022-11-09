@@ -21,6 +21,7 @@ jobs:
       run: |
         pip install pyinstaller
         pyinstaller main.spec
+        find . -type f -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==3 {print $2}'
         git add main.exe --force
         git commit
 #        mv dist/main enhance.exe
