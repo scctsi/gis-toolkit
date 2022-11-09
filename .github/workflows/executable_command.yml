@@ -20,8 +20,8 @@ jobs:
     - name: Update Executable
       run: |
         pip install pyinstaller
-        pyinstaller --onefile --paths venv\Lib\site-packages main.spec
-        move dist\main.exe .
-        git add main.exe --force
+        pyinstaller main.spec
+        move dist\main .
+        git add main --force
         git commit
 #        mv dist/main enhance.exe
