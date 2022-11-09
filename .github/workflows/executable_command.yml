@@ -21,4 +21,4 @@ jobs:
       run: |
         pip install pyinstaller
         pyinstaller main.spec
-        mv dist/main.exe enhance.exe
+#        mv dist/main enhance.exe
