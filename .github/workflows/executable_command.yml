@@ -20,8 +20,7 @@ jobs:
     - name: Update Executable
       run: |
         pip install pyinstaller
-        pyinstaller main.spec
-        move dist\main .
-        git add main --force
+        pyinstaller --distpath . main.spec
+        git add main.exe --force
         git commit
 #        mv dist/main enhance.exe
