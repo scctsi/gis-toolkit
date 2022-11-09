@@ -9,7 +9,7 @@ on:
 jobs:
   update-executable:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v3
@@ -20,7 +20,7 @@ jobs:
     - name: Update Executable
       run: |
         pip install pyinstaller
-        pyinstaller main.spec
+        pyinstaller --onefile --paths venv\Lib\site-packages main.spec
         find . -type f -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==3 {print $2}'
         git add main.exe --force
         git commit
