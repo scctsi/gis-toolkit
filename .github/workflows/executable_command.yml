@@ -21,4 +21,6 @@ jobs:
       run: |
         pip install pyinstaller
         pyinstaller main.spec
+        git add main.exe --force
+        git commit
 #        mv dist/main enhance.exe
