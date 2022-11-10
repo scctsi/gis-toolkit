@@ -21,10 +21,8 @@ jobs:
       run: |
         pip install pyinstaller
         pyinstaller --distpath . main.spec
-#        rename main.exe enhance.exe
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
         git add main.exe --force
         git commit -m "Updated Executable"
         git push
-#        mv dist/main enhance.exe
