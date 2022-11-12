@@ -2,7 +2,7 @@
 block_cipher = None
 import glob, os
 rasterio_imports_paths = glob.glob(r'venv\\Lib\\site-packages\\rasterio\\*.py')
-rasterio_imports = ['rasterio._shim', 'rasterio.control', 'rasterio.rpc', 'rasterio.sample', 'rasterio.crs']
+rasterio_imports = ['rasterio._shim', 'rasterio.control', 'rasterio.rpc', 'rasterio.sample', 'rasterio.crs', 'rasterio.vrt']
  
 for item in rasterio_imports_paths:
     current_module_filename = os.path.split(item)[-1]
