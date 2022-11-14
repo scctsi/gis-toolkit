@@ -62,7 +62,6 @@ def input_file_validation(data_frame, version, geocode):
 
 def main(argument):
     input_file_path = f'./input/{argument.filename}'
-    raise Exception("This is an expected Exception for executable testing")
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     data_key = get_data_key(input_file_path)
@@ -83,7 +82,7 @@ def main(argument):
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version, test_mode=True)
     if argument.version == 2:
         sedoh_enhancer.enhance()
     else:
