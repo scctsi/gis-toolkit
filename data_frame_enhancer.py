@@ -188,6 +188,8 @@ class DataFrameEnhancer:
         self.acs_data_elements, self.non_acs_data_elements = self.group_acs_elements()
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
         self.acs_cache = ACSCache(self.acs_data_source, self.data_files[sds.SedohDataSource.ACS], self.version, self.test_mode)
+        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
+            self.LatLon = True
 
     def group_raster_elements(self):
         non_raster_data_elements = []
@@ -242,7 +244,7 @@ class DataFrameEnhancer:
                     enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
                 self.data_frame = value_getter.enhance_data_element(
                     self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version)
-            else:
+            elif self.LatLon:
                 self.data_frame = value_getter.enhance_raster_element(
                     self.data_frame, data_element, self.data_files[data_element.data_source][-1])
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
@@ -269,7 +271,7 @@ class DataFrameEnhancer:
                             enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
                         element_data_frames.append(value_getter.enhance_data_element(
                             organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version))
-                    else:
+                    elif self.LatLon:
                         element_data_frames.append(value_getter.enhance_raster_element(
                             organized_data_frame, data_element, data_source))
             if len(element_data_frames) > 0:
