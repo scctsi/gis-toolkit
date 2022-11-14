@@ -82,7 +82,7 @@ def main(argument):
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version, test_mode=True)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version)
     if argument.version == 2:
         sedoh_enhancer.enhance()
     else:
