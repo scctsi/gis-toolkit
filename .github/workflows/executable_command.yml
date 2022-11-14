@@ -25,9 +25,8 @@ jobs:
       run: |
         pip install GDAL-3.4.2-cp310-cp310-win_amd64.whl
         pip install rasterio-1.2.10-cp310-cp310-win_amd64.whl
-        dir venv\Lib\site-packages\rasterio
         pip install pyinstaller
-        pyinstaller --distpath . main.spec
+        pyinstaller --distpath . main_gh.spec
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
         git add main.exe --force
