@@ -7,10 +7,8 @@ on:
   - push
 
 jobs:
-  update-executable:
-
+  windows-executable:
     runs-on: windows-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.10
@@ -26,9 +24,26 @@ jobs:
         pip install GDAL-3.4.2-cp310-cp310-win_amd64.whl
         pip install rasterio-1.2.10-cp310-cp310-win_amd64.whl
         pip install pyinstaller
-        pyinstaller --distpath . main_gh.spec
+        pyinstaller --distpath ./executables --specpath ./specs/main_win.spec --name enhance_win
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
         git add main.exe --force
         git commit -m "Updated Executable"
         git push
+  linux-executable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10.2"
+      - name: Install Dependencies
+        uses: py-actions/py-dependency-install@v4
+        with:
+          update-pip: "true"
+      - name: Update Executable
+        run: |
+          pip install GDAL-3.4.2-cp310-cp310-win_amd64.whl
+          pip install rasterio-1.2.10-cp310-cp310-win_amd64.whl
+          pip install pyinstaller
