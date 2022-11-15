@@ -21,5 +21,5 @@ jobs:
           update-pip: "true"
       - name: Update Executable
         run: |
-          apt-get install python-gdal
+          sudo apt-get install python-gdal
           pip install pyinstaller
