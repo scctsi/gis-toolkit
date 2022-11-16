@@ -19,6 +19,7 @@ jobs:
         uses: py-actions/py-dependency-install@v4
         with:
           update-pip: "true"
+      - name: Check Rasterio Dir
         run: |
           ls -d /opt/hostedtoolcache/Python/3.10.2/x64/bin/python/rasterio
       - name: Update Executable
