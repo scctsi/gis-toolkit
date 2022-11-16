@@ -24,11 +24,11 @@ jobs:
         pip install GDAL-3.4.2-cp310-cp310-win_amd64.whl
         pip install rasterio-1.2.10-cp310-cp310-win_amd64.whl
         pip install pyinstaller
-        pyinstaller --distpath ./executables ./specs/main_win.spec
+        pyinstaller --distpath . ./specs/main_win.spec
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
         git pull
-        git add ./executables/enhance_win.exe --force
+        git add enhance_win.exe --force
         git commit -m "Updated Executable"
         git push
   linux-executable:
@@ -49,10 +49,10 @@ jobs:
       - name: Update Executable
         run: |
           pip install pyinstaller
-          pyinstaller --distpath ./executables ./specs/main_lin.spec
+          pyinstaller --distpath . ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
           git pull
-          git add ./executables/enhance_lin --force
+          git add enhance_lin --force
           git commit -m "Updated Executable"
           git push
