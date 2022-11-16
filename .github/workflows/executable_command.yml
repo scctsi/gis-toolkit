@@ -25,7 +25,7 @@ jobs:
       - name: Update Executable
         run: |
           pip install pyinstaller
-          pyinstaller --distpath ./executables --name enhance_lin ./specs/main_lin.spec
+          pyinstaller --distpath ./executables ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
           git add main.exe --force
