@@ -19,7 +19,14 @@ jobs:
         uses: py-actions/py-dependency-install@v4
         with:
           update-pip: "true"
+        run: |
+          ls -d /opt/hostedtoolcache/Python/3.10.2/x64/bin/python/rasterio
       - name: Update Executable
         run: |
-          sudo apt-get install python-gdal
           pip install pyinstaller
+          pyinstaller --distpath ./executables --specpath ./specs/main_lin.spec --name enhance_lin
+          git config --global user.name 'Hakob Abajian'
+          git config --global user.email 'hakob.abajian@med.usc.edu'
+          git add main.exe --force
+          git commit -m "Updated Executable"
+          git push
