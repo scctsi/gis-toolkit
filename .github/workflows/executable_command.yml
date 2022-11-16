@@ -21,7 +21,7 @@ jobs:
           update-pip: "true"
       - name: Check Rasterio Dir
         run: |
-          sudo find / -type d -name "rasterio"
+          ls -d /opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
       - name: Update Executable
         run: |
           pip install pyinstaller
