@@ -11,7 +11,7 @@ for item in rasterio_imports_paths:
 
 
 
-a = Analysis(['main.py'],
+a = Analysis(['../main.py'],
              pathex=['venv\\Lib\\site-packages'],
              binaries=[],
              datas=[],
