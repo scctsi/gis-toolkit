@@ -28,6 +28,6 @@ jobs:
           pyinstaller --distpath ./executables ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
-          git add main.exe --force
+          git add ./executables/enhance_lin --force
           git commit -m "Updated Executable"
           git push
