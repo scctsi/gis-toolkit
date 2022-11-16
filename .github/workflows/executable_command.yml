@@ -21,7 +21,7 @@ jobs:
           update-pip: "true"
       - name: Check Rasterio Dir
         run: |
-          find / -type d -name "rasterio"
+          sudo find / -type d -name "rasterio"
       - name: Update Executable
         run: |
           pip install pyinstaller
