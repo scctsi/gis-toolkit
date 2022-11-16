@@ -21,11 +21,11 @@ jobs:
           update-pip: "true"
       - name: Check Rasterio Dir
         run: |
-          ls -d /opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
+          ls /opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
       - name: Update Executable
         run: |
           pip install pyinstaller
-          pyinstaller --distpath ./executables --specpath ./specs/main_lin.spec --name enhance_lin
+          pyinstaller --distpath ./executables --name enhance_lin ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
           git add main.exe --force
