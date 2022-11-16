@@ -27,7 +27,7 @@ jobs:
         pyinstaller --distpath ./executables ./specs/main_win.spec
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
-        git add main.exe --force
+        git add ./executables/enhance_win.exe --force
         git commit -m "Updated Executable"
         git push
   linux-executable:
