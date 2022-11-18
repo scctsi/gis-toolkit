@@ -31,8 +31,41 @@ jobs:
 #        git add enhance_win.exe --force
 #        git commit -m "Updated Executable"
 #        git push
-  linux-executable:
-    runs-on: ubuntu-latest
+#  linux-executable:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#      - name: Set up Python 3.10
+#        uses: actions/setup-python@v3
+#        with:
+#          python-version: "3.10.2"
+#      - name: Install Dependencies
+#        uses: py-actions/py-dependency-install@v4
+#        with:
+#          update-pip: "true"
+#      - name: Check Rasterio Dir
+#        run: |
+#          ls /opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
+#      - name: Update Executable
+#        run: |
+#          sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
+#          sudo apt-get update
+#          sudo apt-get install gdal-bin
+#          ogrinfo --version
+#          sudo apt-get install libgdal-dev
+#          export CPLUS_INCLUDE_PATH=/usr/include/gdal
+#          export C_INCLUDE_PATH=/usr/include/gdal
+#          pip install GDAL==3.3.2
+#          pip install pyinstaller
+#          pyinstaller --distpath . ./specs/main_lin.spec
+#          git config --global user.name 'Hakob Abajian'
+#          git config --global user.email 'hakob.abajian@med.usc.edu'
+#          git pull
+#          git add enhance_lin --force
+#          git commit -m "Updated Executable"
+#          git push
+  macOS-executable:
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -43,24 +76,16 @@ jobs:
         uses: py-actions/py-dependency-install@v4
         with:
           update-pip: "true"
-      - name: Check Rasterio Dir
-        run: |
-          ls /opt/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
       - name: Update Executable
         run: |
-          sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
-          sudo apt-get update
-          sudo apt-get install gdal-bin
-          ogrinfo --version
-          sudo apt-get install libgdal-dev
-          export CPLUS_INCLUDE_PATH=/usr/include/gdal
-          export C_INCLUDE_PATH=/usr/include/gdal
-          pip install GDAL==3.3.2
+          /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+          brew install gdal
+          pip3 install gdal
           pip install pyinstaller
-          pyinstaller --distpath . ./specs/main_lin.spec
+          pyinstaller --distpath . ./specs/main_mac.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
           git pull
-          git add enhance_lin --force
+          git add enhance_mac --force
           git commit -m "Updated Executable"
           git push
