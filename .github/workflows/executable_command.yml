@@ -76,9 +76,12 @@ jobs:
         uses: py-actions/py-dependency-install@v4
         with:
           update-pip: "true"
+      - name: Find Rasterio Directory
+        run: |
+          sudo find -type d -name "rasterio"
       - name: Update Executable
         run: |
-          /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install gdal
           pip3 install gdal
           pip install pyinstaller
