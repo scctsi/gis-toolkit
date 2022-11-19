@@ -81,14 +81,14 @@ jobs:
           sudo find . -type d -name "rasterio"
       - name: Update Executable
         run: |
-          sudo add-apt-repository ppa:ubuntugis/ppa && sudo apt-get update
-          sudo apt-get update
-          sudo apt-get install gdal-bin
-          ogrinfo --version
-          sudo apt-get install libgdal-dev
-          export CPLUS_INCLUDE_PATH=/usr/include/gdal
-          export C_INCLUDE_PATH=/usr/include/gdal
-          pip install GDAL==3.3.2
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          brew install gdal
+          pip download GDAL
+          tar -xpzf GDAL-3.6.0.tar.gz
+          cd GDAL-3.6.0
+          python setup.py build_ext --gdal-config /usr/local/Cellar/gdal/3.6.0/bin/gdal-config
+          python setup.py build
+          python setup.py install
           pip install pyinstaller
           pyinstaller --distpath . ./specs/main_mac.spec
           git config --global user.name 'Hakob Abajian'
