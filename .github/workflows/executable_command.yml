@@ -78,7 +78,7 @@ jobs:
           update-pip: "true"
       - name: Find Rasterio Directory
         run: |
-          sudo find -type d -name "rasterio"
+          sudo find ~/Users -type d -name "rasterio"
       - name: Update Executable
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
