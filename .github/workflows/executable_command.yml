@@ -83,7 +83,7 @@ jobs:
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           brew install gdal
-          pip install GDAL
+          pip install GDAL==3.5.3
           pip install pyinstaller
           pyinstaller --distpath . ./specs/main_mac.spec
           git config --global user.name 'Hakob Abajian'
