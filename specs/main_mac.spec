@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 block_cipher = None
 import glob, os
-rasterio_imports_paths = glob.glob(r'//Users//runner//hostedtoolcache//Python//3.10.2//x64//rasterio//*py')
+rasterio_imports_paths = glob.glob(r'//Users//runner//hostedtoolcache//Python//3.10.2//x64//lib//python3.10//site-packages//rasterio//*py')
 rasterio_imports = ['rasterio._shim', 'rasterio.control', 'rasterio.rpc', 'rasterio.sample', 'rasterio.crs', 'rasterio.vrt']
 
 for item in rasterio_imports_paths:
