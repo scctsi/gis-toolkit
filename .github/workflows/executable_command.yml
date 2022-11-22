@@ -76,11 +76,10 @@ jobs:
         uses: py-actions/py-dependency-install@v4
         with:
           update-pip: "true"
-      - name: Find/Check Rasterio Directory
+      - name: Find Rasterio Directory
         run: |
           sudo find . -type d -name "rasterio"
-          pwd
-          ls ./hostedtoolcache/Python/3.10.2/x64/rasterio
+          ls /Users/runner/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
       - name: Update Executable
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
