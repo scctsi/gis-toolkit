@@ -3,6 +3,11 @@ import pathlib
 import pandas as pd
 import rasterio
 import constant
+from dotenv import load_dotenv
+
+load_dotenv()
+
+format_key = {"year": constant.YEAR_FIRST, "month": constant.MONTH_FIRST, "day": constant.DAY_FIRST}
 
 
 def import_file(full_file_path, version='latest'):
@@ -35,10 +40,15 @@ def import_file(full_file_path, version='latest'):
                                 f"Please convert to CSV or Microsoft Excel")
     if version == 'comprehensive':
         try:
+            date_format = format_key[os.getenv('date_format')]
+        except KeyError:
+            date_format = None
+        print(date_format)
+        try:
             input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_START_DATE], infer_datetime_format=True)
+                input_data_frame[constant.ADDRESS_START_DATE], format=date_format, infer_datetime_format=True)
             input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_END_DATE], infer_datetime_format=True)
+                input_data_frame[constant.ADDRESS_END_DATE], format=date_format, infer_datetime_format=True)
         except KeyError:
             raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
     return input_data_frame
