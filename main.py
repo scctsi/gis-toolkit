@@ -2,9 +2,14 @@ import constant
 import geocoder
 from data_frame_enhancer import DataFrameEnhancer
 import sedoh_data_structure as sds
+from dotenv import load_dotenv
+import os
 import importer
 import exporter
 from optparse import OptionParser
+
+
+load_dotenv()
 
 sedoh_data_elements = sds.SedohDataElements()
 
@@ -21,6 +26,15 @@ def data_key_to_file_name(data_key):
     file_name = data_key[:index]
     extension = data_key[index + 1:]
     return file_name, extension
+
+
+def env_file_validation(version):
+    if not os.getenv("census_api_key"):
+        print(f"Warning: You have not added a census api key to the .env file. This will limit access the Census"
+              f" Geocoder and ACS data enhancement.")
+    if version == "comprehensive" and os.getenv("date_format") not in importer.format_key:
+        print(f"Warning: You have either not added date format to the .env file or the date format specified does not"
+              f" match the convention described in the .env file. Date columns may not be read correctly.")
 
 
 def input_file_validation(data_frame, version, geocode):
@@ -68,6 +82,7 @@ def main(argument):
     file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {input_file_path}")
     input_data_frame = importer.import_file(input_file_path, argument.version)
+    env_file_validation(argument.version)
     input_file_validation(input_data_frame, argument.version, argument.geocode)
 
     data_elements = sds.SedohDataElements().data_elements
