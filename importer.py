@@ -43,7 +43,6 @@ def import_file(full_file_path, version='latest'):
             date_format = format_key[os.getenv('date_format')]
         except KeyError:
             date_format = None
-        print(date_format)
         try:
             input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(
                 input_data_frame[constant.ADDRESS_START_DATE], format=date_format, infer_datetime_format=True)
