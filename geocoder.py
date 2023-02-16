@@ -1,5 +1,5 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 from enum import Enum
@@ -198,12 +198,16 @@ def separate_data_frame_by_decade(data_frame):
     for i in range(3):
         # Addresses starting within a decade are found and copied. If they extend into the next decade, a new instance
         # of the address is created with appropriate start and end dates
-        decade = data_frame.index[(decades[i] <= data_frame[constant.ADDRESS_START_DATE]) & (
-                    data_frame[constant.ADDRESS_START_DATE] < decades[i + 1])]
+        decade_start_date = decades[i]
+        next_decade_start_date = decades[i + 1]
+        decade_end_date = decades[i + 1] - timedelta(days=1)
+
+        decade = data_frame.index[(data_frame[constant.ADDRESS_START_DATE] >= decade_start_date) & (
+                    data_frame[constant.ADDRESS_START_DATE] <= decade_end_date)]
         decade_data_frame = data_frame.loc[decade].copy()
-        decade_remainder = decade_data_frame.index[decade_data_frame[constant.ADDRESS_END_DATE] >= decades[i + 1]]
-        data_frame.loc[decade_remainder, constant.ADDRESS_START_DATE] = decades[i + 1]
-        decade_data_frame.loc[decade_remainder, constant.ADDRESS_END_DATE] = decades[i + 1]
+        decade_remainder = decade_data_frame.index[decade_data_frame[constant.ADDRESS_END_DATE] > decade_end_date]
+        data_frame.loc[decade_remainder, constant.ADDRESS_START_DATE] = next_decade_start_date
+        decade_data_frame.loc[decade_remainder, constant.ADDRESS_END_DATE] = decade_end_date
         decade_data_frame.reset_index(drop=True, inplace=True)
         data_frames.update({Decade(i).name: decade_data_frame})
     return data_frames
@@ -326,7 +330,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
