@@ -94,6 +94,8 @@ def get_lambda_calculation(data_frame, variable_name, acs_year):
         data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S1701_C01_042E'], col['S1701_C01_001E']), axis=1)
     elif variable_name == "percent_below_300_of_fed_poverty_level":
         data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S1701_C01_043E'], col['S1701_C01_001E']), axis=1)
+    elif variable_name == "percent_households_that_receive_snap" and acs_year in ['2012', '2013', '2014']:
+        data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S2201_C02_001E'], col['S2201_C01_001E']), axis=1)
     elif variable_name == "population_density":
         data_frame[variable_name] = data_frame.apply(lambda col: population_density(col[variable_name], col['ALAND']), axis=1)
     elif variable_name == "food_fraction_of_population_with_low_access":
