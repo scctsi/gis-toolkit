@@ -249,7 +249,7 @@ class DataFrameEnhancer:
                 else:
                     enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
                 self.data_frame = value_getter.enhance_data_element(
-                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version)
+                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, self.data_files[data_element.data_source][-1])
             elif self.LatLon:
                 self.data_frame = value_getter.enhance_raster_element(
                     self.data_frame, data_element, self.data_files[data_element.data_source][-1])
@@ -276,7 +276,7 @@ class DataFrameEnhancer:
                         else:
                             enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
                         element_data_frames.append(value_getter.enhance_data_element(
-                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version))
+                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, data_source))
                     elif self.LatLon:
                         element_data_frames.append(value_getter.enhance_raster_element(
                             organized_data_frame, data_element, data_source))
