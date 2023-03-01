@@ -4,7 +4,9 @@
 name: Executable Command
 
 on:
-  - push
+  push:
+    branches:
+      - main
 
 jobs:
   windows-executable:
