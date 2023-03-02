@@ -4,6 +4,7 @@ import pandas as pd
 import rasterio
 import constant
 from dotenv import load_dotenv
+from config import input_config
 
 load_dotenv()
 
@@ -44,10 +45,10 @@ def import_file(full_file_path, version='latest'):
         except KeyError:
             date_format = None
         try:
-            input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_START_DATE], format=date_format, infer_datetime_format=True)
-            input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_END_DATE], format=date_format, infer_datetime_format=True)
+            input_data_frame[input_config["address_start_date"]] = pd.to_datetime(
+                input_data_frame[input_config["address_start_date"]], format=date_format, infer_datetime_format=True)
+            input_data_frame[input_config["address_end_date"]] = pd.to_datetime(
+                input_data_frame[input_config["address_end_date"]], format=date_format, infer_datetime_format=True)
         except KeyError:
             raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
     return input_data_frame

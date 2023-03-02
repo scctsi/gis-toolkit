@@ -1,6 +1,6 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
 from datetime import datetime, timedelta
-
+from config import input_config
 import requests
 from enum import Enum
 import api
@@ -43,18 +43,18 @@ decade_dict = {
 
 
 def address_fields_present(data_frame):
-    if (constant.STREET in data_frame.columns and
-            constant.CITY in data_frame.columns and
-            constant.STATE in data_frame.columns and
-            constant.ZIP in data_frame.columns):
+    if (input_config["street"] in data_frame.columns and
+            input_config["city"] in data_frame.columns and
+            input_config["state"] in data_frame.columns and
+            input_config["zip"] in data_frame.columns):
         return True
     else:
         return False
 
 
 def coordinate_fields_present(data_frame):
-    if (constant.LATITUDE in data_frame.columns and
-            constant.LONGITUDE in data_frame.columns):
+    if (input_config["latitude"] in data_frame.columns and
+            input_config["longitude"] in data_frame.columns):
         return True
     else:
         return False
@@ -69,11 +69,11 @@ def geocodable(data_frame):
 
 def geocode_address_in_data_frame(data_frame):
     # TODO: Rewrite using pandas.DataFrame.apply()
-    data_frame[constant.GEO_ID_NAME] = ''
+    data_frame[input_config["geo_id_name"]] = ''
 
     for index, row in data_frame.iterrows():
-        data_frame.iloc[index][constant.GEO_ID_NAME] = geocode_address_to_census_tract(
-            Address(row[constant.STREET], row[constant.CITY], row[constant.CITY], row[constant.ZIP]))
+        data_frame.iloc[index][input_config["geo_id_name"]] = geocode_address_to_census_tract(
+            Address(row[input_config["street"]], row[input_config["city"]], input_config["state"], row[input_config["zip"]]))
 
     return data_frame
 
@@ -86,7 +86,7 @@ def check_unnamed(data_frame):
 
 def geocode_data_frame(data_frame, data_key, version):
     if coordinate_fields_present(data_frame) and address_fields_present(data_frame):
-        coordinate_missing = data_frame.index[(data_frame[constant.LATITUDE] == '') | (data_frame[constant.LONGITUDE] == '')]
+        coordinate_missing = data_frame.index[(data_frame[input_config["latitude"]] == '') | (data_frame[input_config["longitude"]] == '')]
         coordinate_data_frame = data_frame.drop(coordinate_missing)
         address_data_frame = data_frame.loc[coordinate_missing]
         coordinate_data_frame = geocode_coordinates_in_data_frame(coordinate_data_frame, f"c_{data_key}", version)
@@ -101,20 +101,20 @@ def geocode_data_frame(data_frame, data_key, version):
 
 def geocode_coordinates_in_data_frame(data_frame, data_key, version):
     if version == 'latest':
-        data_frame[constant.GEO_ID_NAME] = ''
+        data_frame[input_config["geo_id_name"]] = ''
         coordinates_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
-        data_frame[constant.GEO_ID_NAME] = geocoded_data_frame[constant.GEO_ID_NAME]
+        data_frame[input_config["geo_id_name"]] = geocoded_data_frame[input_config["geo_id_name"]]
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                data_frames[decade.name][input_config["geo_id_name"]] = ''
                 # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
                 coordinates_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
                 geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-                data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame[constant.GEO_ID_NAME]
+                data_frames[decade.name][input_config["geo_id_name"]] = geocoded_data_frame[input_config["geo_id_name"]]
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
     return data_frame
@@ -122,13 +122,13 @@ def geocode_coordinates_in_data_frame(data_frame, data_key, version):
 
 def parse_lat_long(data_frame, geocoded_data_frame):
     # Latitude and longitude columns from the geocoder are added to the data. Will be used for reading raster file pollutant data
-    data_frame[constant.LATITUDE] = ''
-    data_frame[constant.LONGITUDE] = ''
+    data_frame[input_config["latitude"]] = ''
+    data_frame[input_config["longitude"]] = ''
     for index, row in geocoded_data_frame.iterrows():
         if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
             comma = row['latitude_longitude'].index(',')
-            data_frame.loc[index, constant.LONGITUDE] = row['latitude_longitude'][0: comma]
-            data_frame.loc[index, constant.LATITUDE] = row['latitude_longitude'][comma + 1:]
+            data_frame.loc[index, input_config["longitude"]] = row['latitude_longitude'][0: comma]
+            data_frame.loc[index, input_config["latitude"]] = row['latitude_longitude'][comma + 1:]
     return data_frame
 
 
@@ -140,21 +140,21 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
     if version == 'latest':
-        data_frame[constant.GEO_ID_NAME] = ''
+        data_frame[input_config["geo_id_name"]] = ''
         addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
         geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
-        data_frame[constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
+        data_frame[input_config["geo_id_name"]] = geocoded_data_frame['census_tract']
         data_frame = parse_lat_long(data_frame, geocoded_data_frame)
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_data_frame_by_decade(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                data_frames[decade.name][input_config["geo_id_name"]] = ''
                 # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
                 addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
                 geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-                data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
+                data_frames[decade.name][input_config["geo_id_name"]] = geocoded_data_frame['census_tract']
                 data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
@@ -162,7 +162,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
 
 
 def coordinates_to_geocoder(data_frame, data_key, decade):
-    data_frame[constant.GEO_ID_NAME] = ''
+    data_frame[input_config["geo_id_name"]] = ''
     try:
         geocode_coordinates_to_census_tract(data_frame, data_key, decade)
     except Exception as e:
@@ -176,10 +176,10 @@ def addresses_to_geocoder(data_frame, data_key, decade):
     :param decade: Sets vintage and benchmark values of geocoder
     :return:
     """
-    data_frame[constant.GEO_ID_NAME] = ''
+    data_frame[input_config["geo_id_name"]] = ''
     addresses = []
     for row in data_frame.itertuples():
-        addresses.append(Address(getattr(row, constant.STREET), getattr(row, constant.CITY), getattr(row, constant.STATE), getattr(row, constant.ZIP)))
+        addresses.append(Address(getattr(row, input_config["street"]), getattr(row, input_config["city"]), getattr(row, input_config["state"]), getattr(row, input_config["zip"])))
     try:
         geocode_addresses_to_census_tract(addresses, data_key, decade)
     except Exception as e:
@@ -192,9 +192,9 @@ def separate_data_frame_by_decade(data_frame):
     decades = [datetime(2001, 1, 1), datetime(2011, 1, 1), datetime(2021, 1, 1), datetime(2031, 1, 1)]
     # Addresses occurring entirely before the range of valid census information (2001-present) are cropped from data
     # Addresses only starting before this range have their start date redefined to the start of this range (2001)
-    data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= decades[0]], inplace=True)
-    before_first_decade = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < decades[0]]
-    data_frame.loc[before_first_decade, constant.ADDRESS_START_DATE] = decades[0]
+    data_frame.drop(data_frame.index[data_frame[input_config["address_end_date"]] <= decades[0]], inplace=True)
+    before_first_decade = data_frame.index[data_frame[input_config["address_start_date"]] < decades[0]]
+    data_frame.loc[before_first_decade, input_config["address_start_date"]] = decades[0]
     for i in range(3):
         # Addresses starting within a decade are found and copied. If they extend into the next decade, a new instance
         # of the address is created with appropriate start and end dates
@@ -202,12 +202,12 @@ def separate_data_frame_by_decade(data_frame):
         next_decade_start_date = decades[i + 1]
         decade_end_date = decades[i + 1] - timedelta(days=1)
 
-        decade = data_frame.index[(data_frame[constant.ADDRESS_START_DATE] >= decade_start_date) & (
-                    data_frame[constant.ADDRESS_START_DATE] <= decade_end_date)]
+        decade = data_frame.index[(data_frame[input_config["address_start_date"]] >= decade_start_date) & (
+                    data_frame[input_config["address_start_date"]] <= decade_end_date)]
         decade_data_frame = data_frame.loc[decade].copy()
-        decade_remainder = decade_data_frame.index[decade_data_frame[constant.ADDRESS_END_DATE] > decade_end_date]
-        data_frame.loc[decade_remainder, constant.ADDRESS_START_DATE] = next_decade_start_date
-        decade_data_frame.loc[decade_remainder, constant.ADDRESS_END_DATE] = decade_end_date
+        decade_remainder = decade_data_frame.index[decade_data_frame[input_config["address_end_date"]] > decade_end_date]
+        data_frame.loc[decade_remainder,input_config["address_start_date"]] = next_decade_start_date
+        decade_data_frame.loc[decade_remainder, input_config["address_end_date"]] = decade_end_date
         decade_data_frame.reset_index(drop=True, inplace=True)
         data_frames.update({Decade(i).name: decade_data_frame})
     return data_frames
@@ -276,7 +276,7 @@ def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limi
     # Loading the progress of a key-specific batch geocoding process
     batch_progress = load_geocode_progress(data_key)
     for i, row in data_frame.loc[batch_progress:].iterrows():
-        payload.update({'x': row[constant.LONGITUDE], 'y': row[constant.LATITUDE]})
+        payload.update({'x': row[input_config["longitude"]], 'y': row[input_config["latitude"]]})
         try:
             response = requests.post(api_url, data=payload)
         except requests.exceptions.RequestException as e:
@@ -284,9 +284,9 @@ def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limi
             raise SystemExit(e)
         res = json.loads(response.text)
         try:
-            data_frame.loc[i, constant.GEO_ID_NAME] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
+            data_frame.loc[i, input_config["geo_id_name"]] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
         except KeyError:
-            data_frame.loc[i, constant.GEO_ID_NAME] = constant.ADDRESS_NOT_GEOCODABLE
+            data_frame.loc[i, input_config["geo_id_name"]] = constant.ADDRESS_NOT_GEOCODABLE
         if i == 0:
             data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv")
         else:

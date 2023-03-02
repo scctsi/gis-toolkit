@@ -8,6 +8,7 @@ import os
 import importer
 import requests
 from data_structure import GetStrategy
+from config import input_config
 
 
 def check_temp_dir():
@@ -50,7 +51,7 @@ def write_xlsxwriter_output(excel_path, data_frames):
 
 def normalize_data_frame(data_frame):
     data_frame = data_frame.loc[:, ~data_frame.columns.duplicated()]
-    data_frame.index = data_frame[constant.GEO_ID_NAME]
+    data_frame.index = data_frame[input_config["geo_id_name"]]
     return data_frame
 
 
@@ -194,7 +195,7 @@ class DataFrameEnhancer:
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
         self.acs_cache = ACSCache(self.acs_data_source, self.data_files[sds.SedohDataSource.ACS], self.version, self.test_mode)
         self.LatLon = False
-        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
+        if input_config["latitude"] in self.data_frame.columns and input_config["longitude"] in self.data_frame.columns:
             self.LatLon = True
 
     def group_raster_elements(self):
