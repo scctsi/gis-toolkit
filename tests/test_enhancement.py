@@ -82,7 +82,7 @@ def test_comprehensive_geocoding():
     geocoded_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key, version='comprehensive')
     comprehensive_output = [3, 2, 2, 1, 0]
     for index, row in input_data_frame.iterrows():
-        address_count = geocoded_data_frame.index[geocoded_data_frame['street'] == row['street']].tolist()
+        address_count = geocoded_data_frame.index[geocoded_data_frame[constant.STREET] == row[constant.STREET]].tolist()
         assert len(address_count) == comprehensive_output[index]
 
 
@@ -92,6 +92,6 @@ def test_comprehensive_coordinate_geocoding():
     data_frame = importer.import_file(file_path, version='comprehensive')
     geocoded_data_frame = geocoder.geocode_data_frame(data_frame.copy(), data_key, 'latest')
     address_data_frame = geocoder.geocode_data_frame(data_frame.copy(), data_key, 'comprehensive')
-    coordinate_data_frame = geocoded_data_frame.drop(['street', 'city', 'state', 'zip', constant.GEO_ID_NAME], axis=1)
+    coordinate_data_frame = geocoded_data_frame.drop([constant.STREET, constant.CITY, constant.STATE, constant.ZIP, constant.GEO_ID_NAME], axis=1)
     coordinate_data_frame = geocoder.geocode_data_frame(coordinate_data_frame, data_key, 'comprehensive')
     assert address_data_frame[constant.GEO_ID_NAME].tolist() == coordinate_data_frame[constant.GEO_ID_NAME].tolist()

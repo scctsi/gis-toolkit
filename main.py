@@ -45,15 +45,15 @@ def input_file_validation(data_frame, version, geocode):
         if constant.GEO_ID_NAME in data_frame.columns:
             print(f"Warning: You have opted into geocoding, even though your input file already contains a {constant.GEO_ID_NAME} column.")
         if not (geocoder.coordinate_fields_present(data_frame)):
-            city_missing = data_frame.index[data_frame['city'] == ''].tolist()
-            zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
+            city_missing = data_frame.index[data_frame[constant.CITY] == ''].tolist()
+            zip_missing = data_frame.index[data_frame[constant.ZIP] == ''].tolist()
             if len(city_missing) > 0:
                 print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
             if len(zip_missing) > 0:
                 print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
         else:
-            lat_missing = data_frame.index[data_frame['latitude'] == ''].tolist()
-            lon_missing = data_frame.index[data_frame['longitude'] == ''].tolist()
+            lat_missing = data_frame.index[data_frame[constant.LATITUDE] == ''].tolist()
+            lon_missing = data_frame.index[data_frame[constant.LONGITUDE] == ''].tolist()
             if len(lat_missing) > 0:
                 print(f"Warning: {len(lat_missing)} rows are missing latitude at these indexes: {lat_missing}")
             if len(lon_missing) > 0:
@@ -66,8 +66,8 @@ def input_file_validation(data_frame, version, geocode):
               f"to be enhanced with pollutant data from raster files. Raster file data is geographic and requires the "
               f"latitude and longitude of address to be read.")
     if version == 'comprehensive':
-        address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
-        address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
+        address_start_date_missing = data_frame.index[data_frame[constant.ADDRESS_START_DATE] == ''].tolist()
+        address_end_date_missing = data_frame.index[data_frame[constant.ADDRESS_END_DATE] == ''].tolist()
         if len(address_start_date_missing) > 0:
             print(f"Warning: {len(address_start_date_missing)} rows are missing an address start date at these indexes: {address_start_date_missing}")
         if len(address_end_date_missing) > 0:

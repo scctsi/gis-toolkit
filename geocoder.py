@@ -43,18 +43,18 @@ decade_dict = {
 
 
 def address_fields_present(data_frame):
-    if ('street' in data_frame.columns and
-            'city' in data_frame.columns and
-            'state' in data_frame.columns and
-            'zip' in data_frame.columns):
+    if (constant.STREET in data_frame.columns and
+            constant.CITY in data_frame.columns and
+            constant.STATE in data_frame.columns and
+            constant.ZIP in data_frame.columns):
         return True
     else:
         return False
 
 
 def coordinate_fields_present(data_frame):
-    if ('latitude' in data_frame.columns and
-            'longitude' in data_frame.columns):
+    if (constant.LATITUDE in data_frame.columns and
+            constant.LONGITUDE in data_frame.columns):
         return True
     else:
         return False
@@ -73,7 +73,7 @@ def geocode_address_in_data_frame(data_frame):
 
     for index, row in data_frame.iterrows():
         data_frame.iloc[index][constant.GEO_ID_NAME] = geocode_address_to_census_tract(
-            Address(row['street'], row['city'], row['state'], row['zip']))
+            Address(row[constant.STREET], row[constant.CITY], row[constant.CITY], row[constant.ZIP]))
 
     return data_frame
 
@@ -86,7 +86,7 @@ def check_unnamed(data_frame):
 
 def geocode_data_frame(data_frame, data_key, version):
     if coordinate_fields_present(data_frame) and address_fields_present(data_frame):
-        coordinate_missing = data_frame.index[(data_frame['latitude'] == '') | (data_frame['longitude'] == '')]
+        coordinate_missing = data_frame.index[(data_frame[constant.LATITUDE] == '') | (data_frame[constant.LONGITUDE] == '')]
         coordinate_data_frame = data_frame.drop(coordinate_missing)
         address_data_frame = data_frame.loc[coordinate_missing]
         coordinate_data_frame = geocode_coordinates_in_data_frame(coordinate_data_frame, f"c_{data_key}", version)
@@ -179,7 +179,7 @@ def addresses_to_geocoder(data_frame, data_key, decade):
     data_frame[constant.GEO_ID_NAME] = ''
     addresses = []
     for row in data_frame.itertuples():
-        addresses.append(Address(row.street, row.city, row.state, row.zip))
+        addresses.append(Address(getattr(row, constant.STREET), getattr(row, constant.CITY), getattr(row, constant.STATE), getattr(row, constant.ZIP)))
     try:
         geocode_addresses_to_census_tract(addresses, data_key, decade)
     except Exception as e:
@@ -276,7 +276,7 @@ def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limi
     # Loading the progress of a key-specific batch geocoding process
     batch_progress = load_geocode_progress(data_key)
     for i, row in data_frame.loc[batch_progress:].iterrows():
-        payload.update({'x': row['longitude'], 'y': row['latitude']})
+        payload.update({'x': row[constant.LONGITUDE], 'y': row[constant.LATITUDE]})
         try:
             response = requests.post(api_url, data=payload)
         except requests.exceptions.RequestException as e:
