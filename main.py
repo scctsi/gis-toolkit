@@ -1,4 +1,3 @@
-import constant
 import geocoder
 from data_frame_enhancer import DataFrameEnhancer
 import sedoh_data_structure as sds

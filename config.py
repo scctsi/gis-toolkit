@@ -1,5 +1,4 @@
 import json
-import sedoh_data_structure as sds
 
 
 def get_input_column_names():
@@ -17,6 +16,7 @@ def get_input_column_names():
 
 
 def get_enhancement_variables():
+    import sedoh_data_structure as sds
     data_elements = sds.SedohDataElements().data_elements
     enhancement_variables = {data_element.variable_name: True for data_element in data_elements}
     return enhancement_variables
