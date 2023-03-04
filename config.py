@@ -1,7 +1,7 @@
 import json
 
 
-def get_input_column_names():
+def add_input_column_names():
     input_column_names = {}
     input_column_names.update({"geo_id_name": "SPATIAL_GEOID"})
     input_column_names.update({"address_start_date": "address_start_date"})
@@ -15,45 +15,53 @@ def get_input_column_names():
     return input_column_names
 
 
-def get_enhancement_variables():
+def add_enhancement_variables():
     import sedoh_data_structure as sds
     data_elements = sds.SedohDataElements().data_elements
-    enhancement_variables = {data_element.variable_name: True for data_element in data_elements}
+    enhancement_variables = {data_element.variable_name: {"enhance": True, "output_column_name": data_element.variable_name, "output_sheet_name": data_element.sheet_name} for data_element in data_elements}
     return enhancement_variables
 
 
-def get_config_key():
+def add_config_key():
     config = {}
-    config.update({"input_column_names": get_input_column_names()})
-    config.update({"enhancement_variables": get_enhancement_variables()})
+    config.update({"input_column_names": add_input_column_names()})
+    config.update({"enhancement_variables": add_enhancement_variables()})
     return config
 
 
 def write_config_key():
-    config_key = get_config_key()
+    config_key = add_config_key()
     with open("./config.json", "w+") as key_file:
         json.dump(config_key, key_file, indent=4)
 
 
 def read_config_key():
     with open("./config.json", "r+") as key_file:
-        config_key = json.load(key_file)
-    return config_key
+        config = json.load(key_file)
+    return config
 
 
-def flatten_dict(flat_dict, partial_dict):
-    for key, value in partial_dict.items():
-        flat_dict.update({key: value})
-    return flat_dict
+def get_input_column_names(config):
+    return config["input_column_names"]
 
 
-def get_flat_config_key():
-    config_key = read_config_key()
-    flat_config_key = {}
-    flatten_dict(flat_config_key, config_key["input_column_names"])
-    return flat_config_key
+def get_enhancement(config):
+    enhancement = {variable_name: options["enhance"] for variable_name, options in config["enhancement_variables"].items()}
+    return enhancement
 
 
-config = read_config_key()
-input_config = config["input_column_names"]
-enhancement_config = config["enhancement_variables"]
+def get_output_column_names(config):
+    output_column_names = {variable_name: options["output_column_name"] for variable_name, options in config["enhancement_variables"].items()}
+    return output_column_names
+
+
+def get_output_sheet_names(config):
+    output_sheet_names = {variable_name: options["output_sheet_name"] for variable_name, options in config["enhancement_variables"].items()}
+    return output_sheet_names
+
+
+config_key = read_config_key()
+input_config = get_input_column_names(config_key)
+enhancement_config = get_enhancement(config_key)
+output_columns_config = get_output_column_names(config_key)
+output_sheets_config = get_output_sheet_names(config_key)

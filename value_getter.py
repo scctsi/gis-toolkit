@@ -6,7 +6,7 @@ import math
 import sedoh_data_structure as sds
 from data_structure import GetStrategy
 import constant
-from config import input_config
+from config import input_config, output_columns_config
 
 load_dotenv()
 
@@ -145,10 +145,13 @@ def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_fil
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+
+    data_frame = rename_variable_column(data_frame, data_element, version)
+
     return data_frame
 
 
-def enhance_raster_element(data_frame, data_element, raster_source):
+def enhance_raster_element(data_frame, data_element, raster_source, version):
     idx_non_geocoded = data_frame.index[data_frame[input_config["geo_id_name"]] == constant.ADDRESS_NOT_GEOCODABLE]
     non_geocoded_data_frame = data_frame.loc[idx_non_geocoded]
     non_geocoded_data_frame[data_element.variable_name] = ''
@@ -170,6 +173,17 @@ def enhance_raster_element(data_frame, data_element, raster_source):
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+
+    data_frame = rename_variable_column(data_frame, data_element, version)
+
+    return data_frame
+
+
+def rename_variable_column(data_frame, data_element, version):
+    if version == "latest":
+        data_frame.rename(columns={data_element.variable_name: output_columns_config[data_element.variable_name]}, inplace=True)
+    elif version == "comprehensive":
+        data_frame.rename(columns={data_element.variable_name: 'NUMERIC'}, inplace=True)
     return data_frame
 
 

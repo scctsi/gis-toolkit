@@ -8,7 +8,7 @@ import os
 import importer
 import requests
 from data_structure import GetStrategy
-from config import input_config, enhancement_config
+from config import input_config, enhancement_config, output_sheets_config
 
 
 def check_temp_dir():
@@ -45,7 +45,7 @@ def get_geography():
 def write_xlsxwriter_output(excel_path, data_frames):
     writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
     for data_element in data_frames:
-        data_frames[data_element].to_excel(writer, sheet_name=data_element.sheet_name)
+        data_frames[data_element].to_excel(writer, sheet_name=output_sheets_config[data_element.variable_name])
     writer.save()
 
 
@@ -254,7 +254,7 @@ class DataFrameEnhancer:
                         self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, self.data_files[data_element.data_source][-1])
                 elif self.LatLon:
                     self.data_frame = value_getter.enhance_raster_element(
-                        self.data_frame, data_element, self.data_files[data_element.data_source][-1])
+                        self.data_frame, data_element, self.data_files[data_element.data_source][-1], self.version)
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def comprehensive_enhancement(self):
@@ -282,7 +282,7 @@ class DataFrameEnhancer:
                                 organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, data_source))
                         elif self.LatLon:
                             element_data_frames.append(value_getter.enhance_raster_element(
-                                organized_data_frame, data_element, data_source))
+                                organized_data_frame, data_element, data_source, self.version))
                 if len(element_data_frames) > 0:
                     element_data_frame = pd.concat(element_data_frames, ignore_index=True)
                     element_data_frame.reset_index(drop=True, inplace=True)
