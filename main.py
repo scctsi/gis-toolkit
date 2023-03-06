@@ -32,9 +32,6 @@ def env_file_validation(version):
     if not os.getenv("census_api_key"):
         print(f"Warning: You have not added a census api key to the .env file. This will limit access the Census"
               f" Geocoder and ACS data enhancement.")
-    if version == "comprehensive" and os.getenv("date_format") not in importer.format_key:
-        print(f"Warning: You have either not added date format to the .env file or the date format specified does not"
-              f" match the convention described in the .env file. Date columns may not be read correctly.")
 
 
 def input_file_validation(data_frame, version, geocode):

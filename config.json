@@ -10,6 +10,9 @@
         "state": "state",
         "zip": "zip"
     },
+    "datetime": {
+        "date_format": "year"
+    },
     "enhancement_variables": {
         "social_vulnerability_index": {
             "enhance": true,

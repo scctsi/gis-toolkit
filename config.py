@@ -45,6 +45,10 @@ def get_input_column_names(config):
     return config["input_column_names"]
 
 
+def get_datetime(config):
+    return config["datetime"]
+
+
 def get_enhancement(config):
     enhancement = {variable_name: options["enhance"] for variable_name, options in config["enhancement_variables"].items()}
     return enhancement
@@ -62,6 +66,7 @@ def get_output_sheet_names(config):
 
 config_key = read_config_key()
 input_config = get_input_column_names(config_key)
+datetime_config = get_datetime(config_key)
 enhancement_config = get_enhancement(config_key)
 output_columns_config = get_output_column_names(config_key)
 output_sheets_config = get_output_sheet_names(config_key)
