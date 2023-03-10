@@ -1,6 +1,6 @@
 # Test data: https://github.com/EthanRBrown/rrad which is taken from https://openaddresses.io/
 from datetime import datetime, timedelta
-from config import input_config
+from config import input_config, database_config
 import requests
 from enum import Enum
 import api
@@ -25,6 +25,7 @@ class Decade(Enum):
     Zero = 0  # 2001-2010
     Ten = 1  # 2011-2020
     Twenty = 2  # 2021-2030
+
 
 
 # Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
@@ -67,6 +68,66 @@ def geocodable(data_frame):
         return False
 
 
+def modify_column_names_to_default(data_frame):
+    for default, custom in input_config.items():
+        if custom in data_frame.columns:
+            data_frame.rename(columns={custom: default}, inplace=True)
+    return data_frame
+
+
+def modify_column_names_to_custom(data_frame):
+    for default, custom in input_config.items():
+        if default in data_frame.columns:
+            data_frame.rename(columns={default: custom}, inplace=True)
+    return data_frame
+
+
+def write_to_geocoded_cache(data_frame, data_key):
+    import sqlite3
+    conn = sqlite3.connect(database_config)
+    data_frame = modify_column_names_to_default(data_frame)
+    geo_cache_columns = ["address_id", "geo_id_name", "latitude", "longitude"]
+    data_frame.drop(columns=[column for column in data_frame.columns if column not in geo_cache_columns], inplace=True)
+    cache_data_frame = get_geocoded_cache()
+    cache_data_frame = pd.concat([cache_data_frame, data_frame], ignore_index=True)
+
+    cache_data_frame.to_csv(f'./geo_cache_testing/to_sql{data_key}.csv')
+
+    cache_data_frame.to_sql(name="geo_cache", con=conn, if_exists="replace", index=False)
+
+
+def get_geocoded_cache():
+    import sqlite3
+    conn = sqlite3.connect(database_config)
+    c = conn.cursor()
+    c.execute(f'''
+              CREATE TABLE IF NOT EXISTS geo_cache
+              ([address_id] TEXT, [geo_id_name] TEXT, [latitude] TEXT, [longitude] TEXT)
+              ''')
+    conn.commit()
+    return pd.read_sql_query("SELECT * FROM geo_cache", conn)
+
+
+def filter_data_frame_with_geocoded_cache(data_frame, data_key):
+    cache_data_frame = get_geocoded_cache()
+
+    cache_data_frame.to_csv(f'./geo_cache_testing/cache_data_frame_{data_key}.csv')
+
+    idx_in_cache = data_frame.index[
+        data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True]
+    geocoded_data_frame = data_frame.loc[idx_in_cache]
+    geocoded_data_frame = modify_column_names_to_default(geocoded_data_frame)
+    geocoded_data_frame = geocoded_data_frame.merge(cache_data_frame, on="address_id", suffixes=['_from_cache'])
+    geocoded_data_frame = modify_column_names_to_custom(geocoded_data_frame)
+    geocoded_data_frame = check_unnamed(geocoded_data_frame)
+
+    geocoded_data_frame.to_csv(f'./geo_cache_testing/joined_data_frame_{data_key}.csv')
+
+    data_frame.drop(idx_in_cache, inplace=True)
+    data_frame = check_unnamed(data_frame)
+    return data_frame, geocoded_data_frame
+
+
 def geocode_address_in_data_frame(data_frame):
     # TODO: Rewrite using pandas.DataFrame.apply()
     data_frame[input_config["geo_id_name"]] = ''
@@ -84,7 +145,14 @@ def check_unnamed(data_frame):
     return data_frame
 
 
-def geocode_data_frame(data_frame, data_key, version):
+def geocode_data_frame(input_data_frame, data_key, version):
+    data_frame, geocoded_cache_data_frame = filter_data_frame_with_geocoded_cache(input_data_frame, data_key)
+
+    data_frame.to_csv(f'./geo_cache_testing/data_frame_to_geocode_{data_key}.csv')
+
+    index = data_frame.index
+    data_frame.reset_index(drop=True, inplace=True)
+
     if coordinate_fields_present(data_frame) and address_fields_present(data_frame):
         coordinate_missing = data_frame.index[(data_frame[input_config["latitude"]] == '') | (data_frame[input_config["longitude"]] == '')]
         coordinate_data_frame = data_frame.drop(coordinate_missing)
@@ -96,6 +164,17 @@ def geocode_data_frame(data_frame, data_key, version):
         data_frame = geocode_coordinates_in_data_frame(data_frame, f"c_{data_key}", version)
     elif address_fields_present(data_frame):
         data_frame = geocode_addresses_in_data_frame(data_frame, data_key, version)
+
+    data_frame.set_index(index, inplace=True)
+    data_frame.to_csv(f'./geo_cache_testing/geocoded_data_frame_{data_key}.csv')
+
+    write_to_geocoded_cache(data_frame.copy(), data_key)
+
+    data_frame = pd.concat([geocoded_cache_data_frame, data_frame], ignore_index=False)
+    data_frame.sort_index(inplace=True)
+
+    data_frame.to_csv(f'./geo_cache_testing/final_data_frame_{data_key}.csv')
+
     return data_frame
 
 
@@ -278,7 +357,7 @@ def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limi
     for i, row in data_frame.loc[batch_progress:].iterrows():
         payload.update({'x': row[input_config["longitude"]], 'y': row[input_config["latitude"]]})
         try:
-            response = requests.post(api_url, data=payload)
+            response = requests.post(api_url, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
@@ -330,7 +409,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)

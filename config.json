@@ -1,5 +1,6 @@
 {
     "input_column_names": {
+        "address_id": "address_id",
         "geo_id_name": "SPATIAL_GEOID",
         "address_start_date": "address_start_date",
         "address_end_date": "address_end_date",
@@ -12,6 +13,12 @@
     },
     "datetime": {
         "date_format": "year"
+    },
+    "database": {
+        "username": "",
+        "database_name": "",
+        "host": "",
+        "port": ""
     },
     "enhancement_variables": {
         "social_vulnerability_index": {
