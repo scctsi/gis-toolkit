@@ -86,7 +86,7 @@ def write_to_geocoded_cache(data_frame, data_key):
     import sqlite3
     conn = sqlite3.connect(database_config)
     data_frame = modify_column_names_to_default(data_frame)
-    geo_cache_columns = ["address_id", "geo_id_name", "latitude", "longitude"]
+    geo_cache_columns = ["address_id", "geo_id_name", "latitude", "longitude", "decade"]
     data_frame.drop(columns=[column for column in data_frame.columns if column not in geo_cache_columns], inplace=True)
     cache_data_frame = get_geocoded_cache()
     cache_data_frame = pd.concat([cache_data_frame, data_frame], ignore_index=True)
@@ -116,12 +116,20 @@ def filter_data_frame_with_geocoded_cache(data_frame, data_key):
     idx_in_cache = data_frame.index[
         data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True]
     geocoded_data_frame = data_frame.loc[idx_in_cache]
+
+    geocoded_data_frame.to_csv(f'./geo_cache_testing/to_join_{data_key}.csv')
+
+    index = geocoded_data_frame.index
     geocoded_data_frame = modify_column_names_to_default(geocoded_data_frame)
-    geocoded_data_frame = geocoded_data_frame.merge(cache_data_frame, on="address_id", suffixes=['_from_cache'])
+    geocoded_data_frame = geocoded_data_frame.merge(cache_data_frame, on=["address_id", "decade"], suffixes=['_from_cache'])
     geocoded_data_frame = modify_column_names_to_custom(geocoded_data_frame)
     geocoded_data_frame = check_unnamed(geocoded_data_frame)
 
     geocoded_data_frame.to_csv(f'./geo_cache_testing/joined_data_frame_{data_key}.csv')
+
+    geocoded_data_frame.set_index(index, inplace=True)
+
+    geocoded_data_frame.to_csv(f'./geo_cache_testing/joined_and_set_index_{data_key}.csv')
 
     data_frame.drop(idx_in_cache, inplace=True)
     data_frame = check_unnamed(data_frame)
@@ -146,6 +154,11 @@ def check_unnamed(data_frame):
 
 
 def geocode_data_frame(input_data_frame, data_key, version):
+    if version == "latest":
+        input_data_frame[constant.DECADE] = Decade.Twenty
+    elif version == "comprehensive":
+        input_data_frame = arrange_data_frame_by_decade(input_data_frame)
+
     data_frame, geocoded_cache_data_frame = filter_data_frame_with_geocoded_cache(input_data_frame, data_key)
 
     data_frame.to_csv(f'./geo_cache_testing/data_frame_to_geocode_{data_key}.csv')
@@ -186,7 +199,7 @@ def geocode_coordinates_in_data_frame(data_frame, data_key, version):
         data_frame[input_config["geo_id_name"]] = geocoded_data_frame[input_config["geo_id_name"]]
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
-        data_frames = separate_data_frame_by_decade(data_frame)
+        data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
                 data_frames[decade.name][input_config["geo_id_name"]] = ''
@@ -226,7 +239,7 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
         data_frame = parse_lat_long(data_frame, geocoded_data_frame)
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
-        data_frames = separate_data_frame_by_decade(data_frame)
+        data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
                 data_frames[decade.name][input_config["geo_id_name"]] = ''
@@ -265,8 +278,16 @@ def addresses_to_geocoder(data_frame, data_key, decade):
         raise Exception(e)
 
 
-def separate_data_frame_by_decade(data_frame):
+def separate_arranged_data_frame(data_frame):
     data_frames = {}
+    for decade in Decade:
+        idx_matched_decade = data_frame.index[data_frame[constant.DECADE] == decade.value]
+        data_frames.update({decade.name: data_frame.loc[idx_matched_decade]})
+    return data_frames
+
+
+def arrange_data_frame_by_decade(data_frame):
+    data_frames = []
     # Decades are defined as starting on the first year after new census information is released (2001, 2011, etc)
     decades = [datetime(2001, 1, 1), datetime(2011, 1, 1), datetime(2021, 1, 1), datetime(2031, 1, 1)]
     # Addresses occurring entirely before the range of valid census information (2001-present) are cropped from data
@@ -282,14 +303,17 @@ def separate_data_frame_by_decade(data_frame):
         decade_end_date = decades[i + 1] - timedelta(days=1)
 
         decade = data_frame.index[(data_frame[input_config["address_start_date"]] >= decade_start_date) & (
-                    data_frame[input_config["address_start_date"]] <= decade_end_date)]
+                data_frame[input_config["address_start_date"]] <= decade_end_date)]
         decade_data_frame = data_frame.loc[decade].copy()
-        decade_remainder = decade_data_frame.index[decade_data_frame[input_config["address_end_date"]] > decade_end_date]
-        data_frame.loc[decade_remainder,input_config["address_start_date"]] = next_decade_start_date
+        decade_remainder = decade_data_frame.index[
+            decade_data_frame[input_config["address_end_date"]] > decade_end_date]
+        data_frame.loc[decade_remainder, input_config["address_start_date"]] = next_decade_start_date
         decade_data_frame.loc[decade_remainder, input_config["address_end_date"]] = decade_end_date
         decade_data_frame.reset_index(drop=True, inplace=True)
-        data_frames.update({Decade(i).name: decade_data_frame})
-    return data_frames
+        decade_data_frame[constant.DECADE] = Decade(i).value
+        data_frames.append(decade_data_frame)
+    data_frame = pd.concat(data_frames, ignore_index=True)
+    return data_frame
 
 
 def check_temp_dir():
