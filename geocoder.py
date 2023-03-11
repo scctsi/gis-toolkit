@@ -108,6 +108,18 @@ def get_geocoded_cache():
     return pd.read_sql_query("SELECT * FROM geo_cache", conn)
 
 
+def geocode_data_frame_from_cache(data_frame):
+    cache_data_frame = get_geocoded_cache()
+
+    index = data_frame.index
+    geocoded_data_frame = modify_column_names_to_default(data_frame)
+    geocoded_data_frame = geocoded_data_frame.merge(cache_data_frame, on=["address_id", "decade"], suffixes=['_from_cache'])
+    geocoded_data_frame = modify_column_names_to_custom(geocoded_data_frame)
+    geocoded_data_frame = check_unnamed(geocoded_data_frame)
+    geocoded_data_frame.set_index(index, inplace=True)
+    return geocoded_data_frame
+
+
 def filter_data_frame_with_geocoded_cache(data_frame, data_key):
     cache_data_frame = get_geocoded_cache()
 
@@ -181,8 +193,6 @@ def geocode_data_frame(input_data_frame, data_key, version):
     data_frame.set_index(index, inplace=True)
     data_frame.to_csv(f'./geo_cache_testing/geocoded_data_frame_{data_key}.csv')
 
-    write_to_geocoded_cache(data_frame.copy(), data_key)
-
     data_frame = pd.concat([geocoded_cache_data_frame, data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
 
@@ -193,34 +203,29 @@ def geocode_data_frame(input_data_frame, data_key, version):
 
 def geocode_coordinates_in_data_frame(data_frame, data_key, version):
     if version == 'latest':
-        data_frame[input_config["geo_id_name"]] = ''
         coordinates_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
-        geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
-        data_frame[input_config["geo_id_name"]] = geocoded_data_frame[input_config["geo_id_name"]]
+        data_frame = geocode_data_frame_from_cache(data_frame)
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                data_frames[decade.name][input_config["geo_id_name"]] = ''
                 # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
                 coordinates_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
-                geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-                data_frames[decade.name][input_config["geo_id_name"]] = geocoded_data_frame[input_config["geo_id_name"]]
+                data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
     return data_frame
 
 
-def parse_lat_long(data_frame, geocoded_data_frame):
-    # Latitude and longitude columns from the geocoder are added to the data. Will be used for reading raster file pollutant data
-    data_frame[input_config["latitude"]] = ''
-    data_frame[input_config["longitude"]] = ''
-    for index, row in geocoded_data_frame.iterrows():
-        if row['census_tract'] != constant.ADDRESS_NOT_GEOCODABLE:
-            comma = row['latitude_longitude'].index(',')
-            data_frame.loc[index, input_config["longitude"]] = row['latitude_longitude'][0: comma]
-            data_frame.loc[index, input_config["latitude"]] = row['latitude_longitude'][comma + 1:]
+def parse_batch_coordinates(data_frame):
+    data_frame["latitude"] = ''
+    data_frame["longitude"] = ''
+    for row in data_frame.itertuples():
+        if getattr(row, 'census_tract') != constant.ADDRESS_NOT_GEOCODABLE:
+            comma = getattr(row, 'latitude_longitude').index(',')
+            data_frame.loc[row.index, "latitude"] = getattr(row, 'latitude_longitude')[0: comma]
+            data_frame.loc[row.index, "longitude"] = getattr(row, 'latitude_longitude')[comma + 1:]
     return data_frame
 
 
@@ -232,22 +237,16 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
     if version == 'latest':
-        data_frame[input_config["geo_id_name"]] = ''
         addresses_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
-        geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
-        data_frame[input_config["geo_id_name"]] = geocoded_data_frame['census_tract']
-        data_frame = parse_lat_long(data_frame, geocoded_data_frame)
+        data_frame = geocode_data_frame_from_cache(data_frame)
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
         data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                data_frames[decade.name][input_config["geo_id_name"]] = ''
                 # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
                 addresses_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
-                geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
-                data_frames[decade.name][input_config["geo_id_name"]] = geocoded_data_frame['census_tract']
-                data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
+                data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
     return data_frame
@@ -273,7 +272,7 @@ def addresses_to_geocoder(data_frame, data_key, decade):
     for row in data_frame.itertuples():
         addresses.append(Address(getattr(row, input_config["street"]), getattr(row, input_config["city"]), getattr(row, input_config["state"]), getattr(row, input_config["zip"])))
     try:
-        geocode_addresses_to_census_tract(addresses, data_key, decade)
+        geocode_addresses_to_census_tract(data_frame, addresses, data_key, decade)
     except Exception as e:
         raise Exception(e)
 
@@ -322,86 +321,26 @@ def check_temp_dir():
     return None
 
 
-def check_save_file():
-    check_temp_dir()
-    if not os.path.exists('temp/geocoder_save_file.json'):
-        with open('temp/geocoder_save_file.json', "w") as save_file:
-            json.dump({}, save_file)
-    return None
-
-
-def save_geocode_progress(data_key, batch_index, status="Incomplete", error_message=""):
-    """
-    Saves the geocoding progress in case an error disrupts geocoding
-
-    :param data_key: Key of save file, associated with a file's geocoding process
-    :param batch_index: Progress of the geocoding process
-    :param status: Complete/Incomplete
-    :param error_message: Request exception message
-    :return: None
-    """
-    check_save_file()
-    with open('temp/geocoder_save_file.json', "r+") as save_file:
-        data = json.load(save_file)
-        if data_key not in data.keys():
-            data[data_key] = {'last_successful_batch': batch_index, "status": "Incomplete", "error_message": ""}
-        else:
-            data[data_key]['last_successful_batch'] = batch_index
-            data[data_key]['status'] = status
-            data[data_key]['error_message'] = error_message
-        save_file.seek(0)
-        json.dump(data, save_file, indent=4)
-        save_file.truncate()
-    return None
-
-
-def load_geocode_progress(data_key):
-    """
-    :param data_key: Key of save file, associated with a file's geocoding process
-    :return: Batch index of batch geocoding progress
-    """
-    check_save_file()
-    with open('temp/geocoder_save_file.json') as save_file:
-        data = json.load(save_file)
-        if data_key in data.keys():
-            batch_index = data[data_key]['last_successful_batch']
-        else:
-            batch_index = 0
-            save_geocode_progress(data_key, batch_index)
-    return batch_index
-
-
-def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limit=10000):
-    check_temp_dir()
+def geocode_coordinates_to_census_tract(data_frame, data_key, decade):
     # If there is a remainder, another batch is added to accommodate those addresses
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/coordinates"
     payload = {'benchmark': decade['Benchmark'], 'vintage': decade['Vintage']}
-    # Loading the progress of a key-specific batch geocoding process
-    batch_progress = load_geocode_progress(data_key)
-    for i, row in data_frame.loc[batch_progress:].iterrows():
+    for i, row in data_frame.iterrows():
         payload.update({'x': row[input_config["longitude"]], 'y': row[input_config["latitude"]]})
         try:
             response = requests.post(api_url, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
-            save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
         res = json.loads(response.text)
         try:
             data_frame.loc[i, input_config["geo_id_name"]] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
         except KeyError:
             data_frame.loc[i, input_config["geo_id_name"]] = constant.ADDRESS_NOT_GEOCODABLE
-        if i == 0:
-            data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv")
-        else:
-            data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv", header=False, mode='a')
-        # The index of the next batch to be geocoded is saved and once the loop ends, the completion status is saved
-        new_batch_index = i + 1
-        save_geocode_progress(data_key, new_batch_index)
-    save_geocode_progress(data_key, load_geocode_progress(data_key), "Complete")
+        write_to_geocoded_cache(data_frame.loc[i: i + 1], data_key)
     return None
 
 
-def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=10000):
+def geocode_addresses_to_census_tract(data_frame, addresses, data_key, decade, batch_limit=10000):
     """
     Batch geocodes more than 10,000 addresses
 
@@ -411,20 +350,17 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
     :param batch_limit: Default is census geocoder's maximum batch size
     :return: None
     """
-    check_temp_dir()
     batch_calls = int(len(addresses) / batch_limit)
     # If there is a remainder, another batch is added to accommodate those addresses
     if len(addresses) % batch_limit != 0:
         batch_calls += 1
     api_url = "https://geocoding.geo.census.gov/geocoder/geographies/addressbatch"
     payload = {'benchmark': decade['Benchmark'], 'vintage': decade['Vintage']}
-    column_names = ["address_id", "input_address", "match_indicator", "match_type", "output_address",
+    column_names = ["address_index", "input_address", "match_indicator", "match_type", "output_address",
                     "latitude_longitude", "line_id", "line_id_side",
                     "state_code", "county_code", "tract_code", "block_code"]
-    # Loading the progress of a key-specific batch geocoding process
-    batch_progress = load_geocode_progress(data_key)
     # Each batch needs its own API request
-    for i in range(batch_progress, batch_calls):
+    for i in range(batch_calls):
         # The end of addresses can only be read on the last batch
         if i + 1 == batch_calls:
             address_batch_data_frame = Address.to_data_frame(addresses[i * batch_limit:])
@@ -435,14 +371,13 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
         try:
             response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
-            save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
         geocoded_address_batch_data_frame = pd.read_csv(StringIO(response.text), sep=",", names=column_names,
                                                         dtype='str')
-        geocoded_address_batch_data_frame.index = geocoded_address_batch_data_frame['address_id'].astype(int).add(
+        geocoded_address_batch_data_frame.index = geocoded_address_batch_data_frame['address_index'].astype(int).add(
             i * batch_limit)
-        geocoded_address_batch_data_frame['address_id'] = geocoded_address_batch_data_frame.index
+        geocoded_address_batch_data_frame['address_index'] = geocoded_address_batch_data_frame.index
         geocoded_address_batch_data_frame = geocoded_address_batch_data_frame.sort_index()
         # The values created in 'census tract' are the "SPATIAL_GEOID" used in the enhancement process
         geocoded_address_batch_data_frame['census_tract'] = geocoded_address_batch_data_frame['state_code'] + \
@@ -452,16 +387,15 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
             (geocoded_address_batch_data_frame['match_indicator'] == 'No_Match') | (
                     geocoded_address_batch_data_frame['match_indicator'] == 'Tie')]
         geocoded_address_batch_data_frame.loc[non_matched_addresses, 'census_tract'] = constant.ADDRESS_NOT_GEOCODABLE
-        if i == 0:
-            geocoded_address_batch_data_frame.to_csv(f"./temp/geocoded_{data_key}.csv")
+        geocoded_data_frame = parse_batch_coordinates(geocoded_address_batch_data_frame)
+        if i + 1 == batch_calls:
+            batch_data_frame = data_frame.loc[i * batch_limit:]
         else:
-            geocoded_address_batch_data_frame.to_csv(f"./temp/geocoded_{data_key}.csv", header=False, mode='a')
-        # The index of the next batch to be geocoded is saved and once the loop ends, the completion status is saved
-        new_batch_index = i + 1
-        save_geocode_progress(data_key, new_batch_index)
-    save_geocode_progress(data_key, load_geocode_progress(data_key), "Complete")
-    pd.set_option('display.max_columns', None)
-    pd.reset_option('display.max_columns')
+            batch_data_frame = data_frame.loc[i * batch_limit: (i + 1) * batch_limit]
+        batch_data_frame["geo_id_name"] = geocoded_data_frame["census_tract"]
+        batch_data_frame["latitude"] = geocoded_data_frame["latitude"]
+        batch_data_frame["longitude"] = geocoded_data_frame["longitude"]
+        write_to_geocoded_cache(batch_data_frame, data_key)
     return None
 
 
