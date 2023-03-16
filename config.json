@@ -11,7 +11,7 @@
         "zip": "zip"
     },
     "datetime": {
-        "date_format": "year"
+        "date_format": "%Y/%m/%d"
     },
     "enhancement_variables": {
         "social_vulnerability_index": {
