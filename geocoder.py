@@ -320,7 +320,7 @@ def geocode_coordinates_to_census_tract(data_frame, decade):
     for i, row in data_frame.iterrows():
         payload.update({'x': row[input_config["longitude"]], 'y': row[input_config["latitude"]]})
         try:
-            response = requests.post(api_url, data=payload, verify=False)
+            response = requests.post(api_url, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         res = json.loads(response.text)
@@ -362,7 +362,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
