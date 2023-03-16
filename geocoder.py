@@ -22,33 +22,26 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = -1
-    One = 0  # 2001-2010
-    Ten = 1  # 2011-2020
-    Twenty = 2  # 2021-2030
+    Zero = 0 # -2009
+    Ten = 1  # 2010-2019
+    Twenty = 2  # 2020-2029
 
 
 # Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
 decade_dict = {
     Decade.Zero: {
         "start_date": datetime(1700, 1, 1),
-        "end_date": datetime(2000, 12, 31)},
-    Decade.One: {
-        "Benchmark": "Public_AR_Current",
-        "Vintage": "Census2010_Current",
-        "start_date": datetime(2001, 1, 1),
-        "end_date": datetime(2010, 12, 31)},
+        "end_date": datetime(2009, 12, 31)},
     Decade.Ten: {
         "Benchmark": "Public_AR_Current",
-        "Vintage": "Census2020_Current",
-        "start_date": datetime(2011, 1, 1),
-        "end_date": datetime(2020, 12, 31)
-    },
+        "Vintage": "Census2010_Current",
+        "start_date": datetime(2010, 1, 1),
+        "end_date": datetime(2019, 12, 31)},
     Decade.Twenty: {
         "Benchmark": "Public_AR_Current",
-        "Vintage": "ACS2021_Current",
-        "start_date": datetime(2021, 1, 1),
-        "end_date": datetime(2030, 12, 31)
+        "Vintage": "Census2020_Current",
+        "start_date": datetime(2020, 1, 1),
+        "end_date": datetime(2029, 12, 31)
     }
 }
 
@@ -320,7 +313,7 @@ def geocode_coordinates_to_census_tract(data_frame, decade):
     for i, row in data_frame.iterrows():
         payload.update({'x': row[input_config["longitude"]], 'y': row[input_config["latitude"]]})
         try:
-            response = requests.post(api_url, data=payload, verify=False)
+            response = requests.post(api_url, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         res = json.loads(response.text)
@@ -362,7 +355,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
