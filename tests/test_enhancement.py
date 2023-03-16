@@ -35,7 +35,7 @@ def run_around_tests():
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
     data_files = sds.DataFiles().data_files
-    file_path = './validation/addresses-us-all.csv'
+    file_path = './validation/all_us_addresses.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame[94:95]
@@ -64,7 +64,7 @@ def test_input_file_validation():
 
 
 def test_geocodable_address():
-    file_path = './validation/addresses-us-all.csv'
+    file_path = './validation/all_us_addresses.csv'
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
     input_data_frame.index = [0, 1]
@@ -73,7 +73,7 @@ def test_geocodable_address():
 
 
 def test_non_geocodable_address():
-    file_path = './validation/addresses-us-all.csv'
+    file_path = './validation/all_us_addresses.csv'
     input_data_frame = importer.import_file(file_path)
     input_data_frame = input_data_frame.iloc[50:52]
     input_data_frame.index = [0, 1]
