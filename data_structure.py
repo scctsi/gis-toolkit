@@ -1,4 +1,6 @@
+import os.path
 from enum import Enum
+import pandas as pd
 import importer
 
 
@@ -23,7 +25,11 @@ class DataElement:
 
 class DataSource:
     def __init__(self, file_name, tract_column, start_date, end_date):
-        self.data_frame = importer.import_file(f'./data_files/{file_name}')
+        if os.path.exists(f"./data_files/{file_name}"):
+            self.data_frame = importer.import_file(f'./data_files/{file_name}')
+        else:
+            self.data_frame = pd.DataFrame()
+            print(f"Data source {file_name} did not exist")
         self.file_name = file_name
         self.tract_column = tract_column
         self.start_date = start_date
@@ -32,10 +38,14 @@ class DataSource:
 
 class RasterSource:
     def __init__(self, file_name, latitude_range, longitude_range, precision, start_date, end_date):
-        raster_data = importer.import_file(f'./data_files/{file_name}')
         self.file_name = file_name
-        self.array = raster_data.read(1)
-        raster_data.close()
+        if os.path.exists(f"./data_files/{file_name}"):
+            raster_data = importer.import_file(f'./data_files/{file_name}')
+            self.array = raster_data.read(1)
+            raster_data.close()
+        else:
+            self.array = pd.DataFrame()
+            raise Exception("Enhancing Raster variable for which there is no data file.")
         self.latitude_range = latitude_range
         self.longitude_range = longitude_range
         self.precision = precision
@@ -52,7 +62,10 @@ class NasaSource:
         self.end_date = end_date
 
     def read(self):
-        self.raster_data = importer.import_file(f'./data_files/nasa/{self.file_name}')
+        if os.path.exists(f'./data_files/{self.file_name}'):
+            self.raster_data = importer.import_file(f'./data_files/{self.file_name}')
+        else:
+            raise Exception("Enhancing Nasa variable for which there is no data file.")
         return self.raster_data
 
     def close(self):

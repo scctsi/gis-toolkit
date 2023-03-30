@@ -61,13 +61,17 @@
                 "file_path": "gazetteer/gazetteer_2010.csv",
                 "census_tract_column_name": "GEOID",
                 "valid_start_date": "2001-01-01T00:00:00.000000Z",
-                "valid_end_date": "2010-12-31T00:00:00.000000Z"
+                "valid_end_date": "2010-12-31T00:00:00.000000Z",
+                "url": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_tracts_national.zip",
+                "file_name": "Gaz_tracts_national.txt"
             },
             {
                 "file_path": "gazetteer/gazetteer_2020.csv",
                 "census_tract_column_name": "GEOID",
                 "valid_start_date": "2011-01-01T00:00:00.000000Z",
-                "valid_end_date": "2020-12-31T00:00:00.000000Z"
+                "valid_end_date": "2020-12-31T00:00:00.000000Z",
+                "url": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_tracts_national.zip",
+                "file_name": "2020_Gaz_tracts_national.txt"
             }
         ]
     },
@@ -84,13 +88,16 @@
                 "file_path": "calepa_ces/calepa_ces_3.0.csv",
                 "census_tract_column_name": "Census Tract",
                 "valid_start_date": "2018-06-01T00:00:00.000000Z",
-                "valid_end_date": "2021-10-12T00:00:00.000000Z"
+                "valid_end_date": "2021-10-12T00:00:00.000000Z",
+                "url":  "https://data.ca.gov/dataset/0bd5f40b-c59b-4183-be22-d057eae8383c/resource/89b3f4e9-0bf8-4690-8c6f-715a717f3fae/download/calenviroscreen-3.0-results-june-2018-update.csv"
             },
             {
                 "file_path": "calepa_ces/calepa_ces_4.0.csv",
                 "census_tract_column_name": "Census Tract",
                 "valid_start_date": "2021-10-13T00:00:00.000000Z",
-                "valid_end_date": "2024-12-31T00:00:00.000000Z"
+                "valid_end_date": "2024-12-31T00:00:00.000000Z",
+                "url":  "https://oehha.ca.gov/media/downloads/calenviroscreen/document/calenviroscreen40resultsdatadictionaryf2021.zip",
+                "file_name": "calenviroscreen40resultsdatadictionary_F_2021.xlsx"
             }
         ]
     },
@@ -101,31 +108,43 @@
                 "file_path": "cdc/cdc_2000.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2000-01-01T00:00:00.000000Z",
-                "valid_end_date": "2009-12-31T00:00:00.000000Z"
+                "valid_end_date": "2009-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2000_SVI_Data/CSV/SVI2000_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2010.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2010-01-01T00:00:00.000000Z",
-                "valid_end_date": "2013-12-31T00:00:00.000000Z"
+                "valid_end_date": "2013-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2010_SVI_Data/CSV/SVI2010_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2014.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2014-01-01T00:00:00.000000Z",
-                "valid_end_date": "2015-12-31T00:00:00.000000Z"
+                "valid_end_date": "2015-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2014_SVI_Data/CSV/SVI2014_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2016.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2016-01-01T00:00:00.000000Z",
-                "valid_end_date": "2017-12-31T00:00:00.000000Z"
+                "valid_end_date": "2017-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2016_SVI_Data/CSV/SVI2016_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2018.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2018-01-01T00:00:00.000000Z",
-                "valid_end_date": "2019-12-31T00:00:00.000000Z"
+                "valid_end_date": "2019-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/SVI2018_US.csv"
+            },
+            {
+                "file_path": "cdc/cdc_2020.csv",
+                "census_tract_column_name": "FIPS",
+                "valid_start_date": "2020-01-01T00:00:00.000000Z",
+                "valid_end_date": "2021-12-31T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2020_SVI_Data/CSV/SVI2020_US.csv"
             }
         ]
     },
@@ -136,19 +155,25 @@
                 "file_path": "usda/usda_2010.csv",
                 "census_tract_column_name": "CensusTract",
                 "valid_start_date": "2010-01-01T00:00:00.000000Z",
-                "valid_end_date": "2014-12-31T00:00:00.000000Z"
+                "valid_end_date": "2014-12-31T00:00:00.000000Z",
+                "url": "https://www.ers.usda.gov/webdocs/DataFiles/80591/2010%20Food%20Access%20Research%20Atlas.zip?v=589.3",
+                "file_name": "FoodAccessResearchAtlasData2010.xlsx"
             },
             {
                 "file_path": "usda/usda_2015.csv",
                 "census_tract_column_name": "CensusTract",
                 "valid_start_date": "2015-01-01T00:00:00.000000Z",
-                "valid_end_date": "2018-12-31T00:00:00.000000Z"
+                "valid_end_date": "2018-12-31T00:00:00.000000Z",
+                "url": "https://www.ers.usda.gov/webdocs/DataFiles/80591/2015%20Food%20Access%20Research%20Atlas.zip?v=589.3",
+                "file_name": "FoodAccessResearchAtlasData2015.xlsx"
             },
             {
                 "file_path": "usda/usda_2019.csv",
                 "census_tract_column_name": "CensusTract",
                 "valid_start_date": "2019-01-01T00:00:00.000000Z",
-                "valid_end_date": "2024-12-31T00:00:00.000000Z"
+                "valid_end_date": "2024-12-31T00:00:00.000000Z",
+                "url": "https://www.ers.usda.gov/webdocs/DataFiles/80591/2019%20Food%20Access%20Research%20Atlas%20Data.zip?v=589.3",
+                "file_name": "Food Access Research Atlas.csv"
             }
         ]
     },
@@ -848,87 +873,88 @@
         "PM25": {
             "versions": [
                 {
-                    "file_path": "PM25/2000.tif",
+                    "file_path": "nasa/PM25/2000.tif",
                     "valid_start_date": "2000-01-01T00:00:00.000000Z",
-                    "valid_end_date": "2000-12-31T00:00:00.000000Z"
+                    "valid_end_date": "2000-12-31T00:00:00.000000Z",
+                    "url": "https://sedac.ciesin.columbia.edu/downloads/data/aqdh/aqdh-pm2-5-concentrations-contiguous-us-1-km-2000-2016/aqdh-pm2-5-concentrations-contiguous-us-1-km-2000-2016-annual-geotiff.zip"
                 },
                 {
-                    "file_path": "PM25/2001.tif",
+                    "file_path": "nasa/PM25/2001.tif",
                     "valid_start_date": "2001-01-01T00:00:00.000000Z",
                     "valid_end_date": "2001-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2002.tif",
+                    "file_path": "nasa/PM25/2002.tif",
                     "valid_start_date": "2002-01-01T00:00:00.000000Z",
                     "valid_end_date": "2002-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2003.tif",
+                    "file_path": "nasa/PM25/2003.tif",
                     "valid_start_date": "2003-01-01T00:00:00.000000Z",
                     "valid_end_date": "2003-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2004.tif",
+                    "file_path": "nasa/PM25/2004.tif",
                     "valid_start_date": "2004-01-01T00:00:00.000000Z",
                     "valid_end_date": "2004-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2005.tif",
+                    "file_path": "nasa/PM25/2005.tif",
                     "valid_start_date": "2005-01-01T00:00:00.000000Z",
                     "valid_end_date": "2005-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2006.tif",
+                    "file_path": "nasa/PM25/2006.tif",
                     "valid_start_date": "2006-01-01T00:00:00.000000Z",
                     "valid_end_date": "2006-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2007.tif",
+                    "file_path": "nasa/PM25/2007.tif",
                     "valid_start_date": "2007-01-01T00:00:00.000000Z",
                     "valid_end_date": "2007-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2008.tif",
+                    "file_path": "nasa/PM25/2008.tif",
                     "valid_start_date": "2008-01-01T00:00:00.000000Z",
                     "valid_end_date": "2008-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2009.tif",
+                    "file_path": "nasa/PM25/2009.tif",
                     "valid_start_date": "2009-01-01T00:00:00.000000Z",
                     "valid_end_date": "2009-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2010.tif",
+                    "file_path": "nasa/PM25/2010.tif",
                     "valid_start_date": "2010-01-01T00:00:00.000000Z",
                     "valid_end_date": "2010-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2011.tif",
+                    "file_path": "nasa/PM25/2011.tif",
                     "valid_start_date": "2011-01-01T00:00:00.000000Z",
                     "valid_end_date": "2011-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2012.tif",
+                    "file_path": "nasa/PM25/2012.tif",
                     "valid_start_date": "2012-01-01T00:00:00.000000Z",
                     "valid_end_date": "2012-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2013.tif",
+                    "file_path": "nasa/PM25/2013.tif",
                     "valid_start_date": "2013-01-01T00:00:00.000000Z",
                     "valid_end_date": "2013-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2014.tif",
+                    "file_path": "nasa/PM25/2014.tif",
                     "valid_start_date": "2014-01-01T00:00:00.000000Z",
                     "valid_end_date": "2014-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2015.tif",
+                    "file_path": "nasa/PM25/2015.tif",
                     "valid_start_date": "2015-01-01T00:00:00.000000Z",
                     "valid_end_date": "2015-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "PM25/2016.tif",
+                    "file_path": "nasa/PM25/2016.tif",
                     "valid_start_date": "2016-01-01T00:00:00.000000Z",
                     "valid_end_date": "2016-12-31T00:00:00.000000Z"
                 }
@@ -937,87 +963,88 @@
         "O3": {
             "versions": [
                 {
-                    "file_path": "O3/2000.tif",
+                    "file_path": "nasa/O3/2000.tif",
                     "valid_start_date": "2000-01-01T00:00:00.000000Z",
-                    "valid_end_date": "2000-12-31T00:00:00.000000Z"
+                    "valid_end_date": "2000-12-31T00:00:00.000000Z",
+                    "url": "https://sedac.ciesin.columbia.edu/downloads/data/aqdh/aqdh-o3-concentrations-contiguous-us-1-km-2000-2016/aqdh-o3-concentrations-contiguous-us-1-km-2000-2016-annual-geotiff.zip"
                 },
                 {
-                    "file_path": "O3/2001.tif",
+                    "file_path": "nasa/O3/2001.tif",
                     "valid_start_date": "2001-01-01T00:00:00.000000Z",
                     "valid_end_date": "2001-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2002.tif",
+                    "file_path": "nasa/O3/2002.tif",
                     "valid_start_date": "2002-01-01T00:00:00.000000Z",
                     "valid_end_date": "2002-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2003.tif",
+                    "file_path": "nasa/O3/2003.tif",
                     "valid_start_date": "2003-01-01T00:00:00.000000Z",
                     "valid_end_date": "2003-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2004.tif",
+                    "file_path": "nasa/O3/2004.tif",
                     "valid_start_date": "2004-01-01T00:00:00.000000Z",
                     "valid_end_date": "2004-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2005.tif",
+                    "file_path": "nasa/O3/2005.tif",
                     "valid_start_date": "2005-01-01T00:00:00.000000Z",
                     "valid_end_date": "2005-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2006.tif",
+                    "file_path": "nasa/O3/2006.tif",
                     "valid_start_date": "2006-01-01T00:00:00.000000Z",
                     "valid_end_date": "2006-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2007.tif",
+                    "file_path": "nasa/O3/2007.tif",
                     "valid_start_date": "2007-01-01T00:00:00.000000Z",
                     "valid_end_date": "2007-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2008.tif",
+                    "file_path": "nasa/O3/2008.tif",
                     "valid_start_date": "2008-01-01T00:00:00.000000Z",
                     "valid_end_date": "2008-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2009.tif",
+                    "file_path": "nasa/O3/2009.tif",
                     "valid_start_date": "2009-01-01T00:00:00.000000Z",
                     "valid_end_date": "2009-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2010.tif",
+                    "file_path": "nasa/O3/2010.tif",
                     "valid_start_date": "2010-01-01T00:00:00.000000Z",
                     "valid_end_date": "2010-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2011.tif",
+                    "file_path": "nasa/O3/2011.tif",
                     "valid_start_date": "2011-01-01T00:00:00.000000Z",
                     "valid_end_date": "2011-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2012.tif",
+                    "file_path": "nasa/O3/2012.tif",
                     "valid_start_date": "2012-01-01T00:00:00.000000Z",
                     "valid_end_date": "2012-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2013.tif",
+                    "file_path": "nasa/O3/2013.tif",
                     "valid_start_date": "2013-01-01T00:00:00.000000Z",
                     "valid_end_date": "2013-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2014.tif",
+                    "file_path": "nasa/O3/2014.tif",
                     "valid_start_date": "2014-01-01T00:00:00.000000Z",
                     "valid_end_date": "2014-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2015.tif",
+                    "file_path": "nasa/O3/2015.tif",
                     "valid_start_date": "2015-01-01T00:00:00.000000Z",
                     "valid_end_date": "2015-12-31T00:00:00.000000Z"
                 },
                 {
-                    "file_path": "O3/2016.tif",
+                    "file_path": "nasa/O3/2016.tif",
                     "valid_start_date": "2016-01-01T00:00:00.000000Z",
                     "valid_end_date": "2016-12-31T00:00:00.000000Z"
                 }

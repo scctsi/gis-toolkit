@@ -2,6 +2,7 @@ from data_structure import DataElement, DataSource, RasterSource, ACSSource, Get
 from enum import Enum
 from datetime import datetime
 import json
+from data_files import check_data_sources
 
 
 class SedohDataSource(Enum):
@@ -16,6 +17,7 @@ class SedohDataSource(Enum):
 
 class DataFiles:
     def __init__(self):
+        check_data_sources()
         with open('./data_files_key.json') as save_file:
             data = json.load(save_file)
         self.data_files = {}
