@@ -2,7 +2,7 @@ from data_structure import DataElement, DataSource, RasterSource, ACSSource, Get
 from enum import Enum
 from datetime import datetime
 import json
-from data_files import check_data_sources
+from data_files_downloader import check_data_sources
 
 
 class SedohDataSource(Enum):
@@ -16,8 +16,8 @@ class SedohDataSource(Enum):
 
 
 class DataFiles:
-    def __init__(self):
-        check_data_sources()
+    def __init__(self, directory="data_files"):
+        check_data_sources(directory)
         with open('./data_files_key.json') as save_file:
             data = json.load(save_file)
         self.data_files = {}
@@ -38,7 +38,8 @@ class DataFiles:
                         file_name=version["file_path"],
                         tract_column=version["census_tract_column_name"],
                         start_date=datetime.strptime(version["valid_start_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                        end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                        end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                        directory=directory
                     ))
                 self.data_files.update({vars(SedohDataSource)["_member_map_"][source]: data_sources})
             elif data[source]["type"] == "Raster":
@@ -52,7 +53,8 @@ class DataFiles:
                             longitude_range=version["longitude_range"],
                             precision=version["precision"],
                             start_date=datetime.strptime(version["valid_start_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                            end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                            end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                            directory=directory
                         ))
                     self.data_files.update({(vars(SedohDataSource)["_member_map_"][source], pollutant): data_sources})
             elif data[source]["type"] == "Nasa":
@@ -63,7 +65,8 @@ class DataFiles:
                         data_sources.append(NasaSource(
                             file_name=version["file_path"],
                             start_date=datetime.strptime(version["valid_start_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
-                            end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                            end_date=datetime.strptime(version["valid_end_date"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+                            directory=directory
                         ))
                     self.data_files.update({(vars(SedohDataSource)["_member_map_"][source], pollutant): data_sources})
 
