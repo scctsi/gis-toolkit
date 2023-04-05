@@ -40,7 +40,7 @@ def run_around_tests():
 
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
-    data_files = sds.DataFiles('data_files_3').data_files
+    data_files = sds.DataFiles().data_files
     file_path = './validation/all_us_addresses.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
