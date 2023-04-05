@@ -138,13 +138,6 @@
                 "valid_start_date": "2018-01-01T00:00:00.000000Z",
                 "valid_end_date": "2019-12-31T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/SVI2018_US.csv"
-            },
-            {
-                "file_path": "cdc/cdc_2020.csv",
-                "census_tract_column_name": "FIPS",
-                "valid_start_date": "2020-01-01T00:00:00.000000Z",
-                "valid_end_date": "2021-12-31T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2020_SVI_Data/CSV/SVI2020_US.csv"
             }
         ]
     },
@@ -157,7 +150,8 @@
                 "valid_start_date": "2010-01-01T00:00:00.000000Z",
                 "valid_end_date": "2014-12-31T00:00:00.000000Z",
                 "url": "https://www.ers.usda.gov/webdocs/DataFiles/80591/2010%20Food%20Access%20Research%20Atlas.zip?v=589.3",
-                "file_name": "FoodAccessResearchAtlasData2010.xlsx"
+                "file_name": "FoodAccessResearchAtlasData2010.xlsx",
+                "sheet_name": "Food Access Research Atlas"
             },
             {
                 "file_path": "usda/usda_2015.csv",
@@ -165,7 +159,8 @@
                 "valid_start_date": "2015-01-01T00:00:00.000000Z",
                 "valid_end_date": "2018-12-31T00:00:00.000000Z",
                 "url": "https://www.ers.usda.gov/webdocs/DataFiles/80591/2015%20Food%20Access%20Research%20Atlas.zip?v=589.3",
-                "file_name": "FoodAccessResearchAtlasData2015.xlsx"
+                "file_name": "FoodAccessResearchAtlasData2015.xlsx",
+                "sheet_name": "Food Access Research Atlas"
             },
             {
                 "file_path": "usda/usda_2019.csv",

@@ -29,7 +29,6 @@ class DataSource:
             self.data_frame = importer.import_file(f'./{directory}/{file_name}')
         else:
             self.data_frame = pd.DataFrame()
-            print(f"Data source {file_name} did not exist")
         self.file_name = file_name
         self.tract_column = tract_column
         self.start_date = start_date

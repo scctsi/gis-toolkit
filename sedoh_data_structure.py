@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime
 import json
 from data_files_downloader import check_data_sources
+from config import enhancement_config
 
 
 class SedohDataSource(Enum):
@@ -16,8 +17,8 @@ class SedohDataSource(Enum):
 
 
 class DataFiles:
-    def __init__(self, directory="data_files"):
-        check_data_sources(directory)
+    def __init__(self, directory="data_files", enhancement=enhancement_config):
+        check_data_sources(directory, enhancement)
         with open('./data_files_key.json') as save_file:
             data = json.load(save_file)
         self.data_files = {}
