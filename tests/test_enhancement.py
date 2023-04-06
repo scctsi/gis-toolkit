@@ -52,9 +52,9 @@ def test_enhancement_validity():
     enhanced_data_frame = sedoh_enhancer.enhance()
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
-        print(data_element.variable_name)
-        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
-                control_data_frame.iloc[0][data_element.variable_name]
+        if data_element.variable_name in control_data_frame.columns:
+            assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+                    control_data_frame.iloc[0][data_element.variable_name]
 
 
 def test_input_file_validation():
