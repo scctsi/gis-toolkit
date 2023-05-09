@@ -10,7 +10,7 @@ import sys
 from io import StringIO
 import pandas as pd
 import json
-
+from progress_bar import progress
 import constant
 from address import Address, Coordinate
 import importer
@@ -152,13 +152,20 @@ def check_unnamed(data_frame):
     return data_frame
 
 
+def check_decade(data_frame):
+    data_frame.drop(columns=[column for column in data_frame.columns if column == "decade"], inplace=True)
+    return data_frame
+
+
 def geocode_data_frame(input_data_frame, version):
     if version == "latest":
         input_data_frame[constant.DECADE] = str(Decade.Twenty.value)
     elif version == "comprehensive":
         input_data_frame = arrange_data_frame_by_decade(input_data_frame.copy())
 
-    data_frame, geocoded_cache_data_frame = filter_data_frame_with_geocoded_cache(input_data_frame)
+    data_frame, geocoded_cache_data_frame = filter_data_frame_with_geocoded_cache(input_data_frame.copy())
+
+    print(f'{len(geocoded_cache_data_frame)} addresses geocoded from cache ({round(len(geocoded_cache_data_frame)/len(input_data_frame), 2) * 100}%)')
 
     index = data_frame.index
     data_frame.reset_index(drop=True, inplace=True)
@@ -178,6 +185,7 @@ def geocode_data_frame(input_data_frame, version):
     data_frame.set_index(index, inplace=True)
     data_frame = pd.concat([geocoded_cache_data_frame, data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+    data_frame = check_decade(data_frame)
     return data_frame
 
 
@@ -321,7 +329,11 @@ def geocode_coordinates_to_census_tract(data_frame, decade):
             data_frame.loc[i, input_config["geo_id_name"]] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
         except KeyError:
             data_frame.loc[i, input_config["geo_id_name"]] = constant.ADDRESS_NOT_GEOCODABLE
-        write_to_geocoded_cache(data_frame.loc[i: i + 1])
+        write_to_geocoded_cache(data_frame.loc[i: i])
+        if i + 1 == len(data_frame):
+            progress(i + 1, len(data_frame), status='Geocoding complete')
+        else:
+            progress(i + 1, len(data_frame), status='Geocoding in progress')
     return None
 
 
@@ -376,8 +388,10 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         geocoded_data_frame = parse_batch_coordinates(geocoded_address_batch_data_frame)
         if i + 1 == batch_calls:
             batch_data_frame = data_frame.loc[i * batch_limit:]
+            progress((i + 1) * batch_limit, batch_calls * batch_limit, status='Geocoding complete')
         else:
-            batch_data_frame = data_frame.loc[i * batch_limit: (i + 1) * batch_limit]
+            batch_data_frame = data_frame.loc[i * batch_limit: (i + 1) * batch_limit - 1]
+            progress((i + 1) * batch_limit, batch_calls * batch_limit, status='Geocoding in progress')
         batch_data_frame["geo_id_name"] = geocoded_data_frame["census_tract"]
         batch_data_frame["latitude"] = geocoded_data_frame["latitude"]
         batch_data_frame["longitude"] = geocoded_data_frame["longitude"]
