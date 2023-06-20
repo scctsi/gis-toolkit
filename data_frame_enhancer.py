@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 import pandas as pd
 import constant
@@ -123,11 +124,13 @@ class ACSCache:
 class ACSDataSource:
     def __init__(self, acs_elements):
         self.acs_elements = acs_elements
-        self.omit_source_string = {"2012": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
-                                   "2013": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
-                                   "2014": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
-                                   "2015": ["S2801_C02_011E", "S2801_C02_019E"],
-                                   "2016": ["S2801_C02_011E", "S2801_C02_019E"]}
+        # self.omit_source_string = {"2012": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+        #                            "2013": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+        #                            "2014": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
+        #                            "2015": ["S2801_C02_011E", "S2801_C02_019E"],
+        #                            "2016": ["S2801_C02_011E", "S2801_C02_019E"]}
+        with open("source_key.json", "r+") as source_key_file:
+            self.source_key = json.load(source_key_file)
 
     def data_sets(self, data_year):
         """
@@ -135,13 +138,15 @@ class ACSDataSource:
         """
         data_sets = {}
         for data_element in self.acs_elements:
-            if data_year not in self.omit_source_string.keys() or data_element.source_variable not in \
-                    self.omit_source_string[data_year]:
-                data_set_name = value_getter.get_acs_dataset_name(data_element.source_variable)
+            source_variable = self.source_key[data_element.variable_name][data_year]
+            # if data_year not in self.omit_source_string.keys() or source_variable not in \
+            #         self.omit_source_string[data_year]:
+            if source_variable != "":
+                data_set_name = value_getter.get_acs_dataset_name(source_variable)
                 if data_set_name in data_sets.keys():
-                    data_sets[data_set_name] = data_sets[data_set_name] + ',' + data_element.source_variable
+                    data_sets[data_set_name] = data_sets[data_set_name] + ',' + source_variable
                 else:
-                    data_sets.update({data_set_name: data_element.source_variable})
+                    data_sets.update({data_set_name: source_variable})
         return data_sets
 
     def data_element_data_set(self):
@@ -244,7 +249,7 @@ class DataFrameEnhancer:
                 else:
                     enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
                 self.data_frame = value_getter.enhance_data_element(
-                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version)
+                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, self.data_files[data_element.data_source][-1])
             elif self.LatLon:
                 self.data_frame = value_getter.enhance_raster_element(
                     self.data_frame, data_element, self.data_files[data_element.data_source][-1])
@@ -271,7 +276,7 @@ class DataFrameEnhancer:
                         else:
                             enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
                         element_data_frames.append(value_getter.enhance_data_element(
-                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version))
+                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, data_source))
                     elif self.LatLon:
                         element_data_frames.append(value_getter.enhance_raster_element(
                             organized_data_frame, data_element, data_source))
