@@ -12,7 +12,7 @@ import pandas as pd
 import json
 
 import constant
-from address import Address
+from address import Address, Coordinate
 import importer
 
 load_dotenv()
@@ -43,11 +43,18 @@ decade_dict = {
 
 
 def address_fields_present(data_frame):
-    if ('street' in data_frame and
-            'city' in data_frame and
-            'state' in data_frame and
-            'zip' in data_frame and
-            'SPATIAL_GEOID' not in data_frame):
+    if ('street' in data_frame.columns and
+            'city' in data_frame.columns and
+            'state' in data_frame.columns and
+            'zip' in data_frame.columns):
+        return True
+    else:
+        return False
+
+
+def coordinate_fields_present(data_frame):
+    if ('latitude' in data_frame.columns and
+            'longitude' in data_frame.columns):
         return True
     else:
         return False
@@ -60,7 +67,7 @@ def geocodable(data_frame):
         return False
 
 
-def geocode_data_frame(data_frame):
+def geocode_address_in_data_frame(data_frame):
     # TODO: Rewrite using pandas.DataFrame.apply()
     data_frame[constant.GEO_ID_NAME] = ''
 
@@ -68,6 +75,48 @@ def geocode_data_frame(data_frame):
         data_frame.iloc[index][constant.GEO_ID_NAME] = geocode_address_to_census_tract(
             Address(row['street'], row['city'], row['state'], row['zip']))
 
+    return data_frame
+
+
+def check_unnamed(data_frame):
+    if 'Unnamed: 0' in data_frame.columns:
+        data_frame.drop(columns=['Unnamed: 0'], inplace=True)
+    return data_frame
+
+
+def geocode_data_frame(data_frame, data_key, version):
+    if coordinate_fields_present(data_frame) and address_fields_present(data_frame):
+        coordinate_missing = data_frame.index[(data_frame['latitude'] == '') | (data_frame['longitude'] == '')]
+        coordinate_data_frame = data_frame.drop(coordinate_missing)
+        address_data_frame = data_frame.loc[coordinate_missing]
+        coordinate_data_frame = geocode_coordinates_in_data_frame(coordinate_data_frame, f"c_{data_key}", version)
+        address_data_frame = geocode_addresses_in_data_frame(address_data_frame, data_key, version)
+        data_frame = pd.concat([coordinate_data_frame, address_data_frame], ignore_index=True)
+    elif coordinate_fields_present(data_frame):
+        data_frame = geocode_coordinates_in_data_frame(data_frame, f"c_{data_key}", version)
+    elif address_fields_present(data_frame):
+        data_frame = geocode_addresses_in_data_frame(data_frame, data_key, version)
+    return data_frame
+
+
+def geocode_coordinates_in_data_frame(data_frame, data_key, version):
+    if version == 'latest':
+        data_frame[constant.GEO_ID_NAME] = ''
+        coordinates_to_geocoder(data_frame, data_key, decade_dict[Decade.Twenty])
+        geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}.csv")
+        data_frame[constant.GEO_ID_NAME] = geocoded_data_frame[constant.GEO_ID_NAME]
+    if version == 'comprehensive':
+        # Addresses are first re-organized by decade as census tract geography is updated after each census
+        data_frames = separate_data_frame_by_decade(data_frame)
+        for decade in Decade:
+            if len(data_frames[decade.name]) > 0:
+                data_frames[decade.name][constant.GEO_ID_NAME] = ''
+                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
+                coordinates_to_geocoder(data_frames[decade.name], f"{data_key}_{decade.name}", decade_dict[decade])
+                geocoded_data_frame = importer.import_file(f"./temp/geocoded_{data_key}_{decade.name}.csv")
+                data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame[constant.GEO_ID_NAME]
+        data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
+    data_frame = check_unnamed(data_frame)
     return data_frame
 
 
@@ -108,8 +157,16 @@ def geocode_addresses_in_data_frame(data_frame, data_key, version):
                 data_frames[decade.name][constant.GEO_ID_NAME] = geocoded_data_frame['census_tract']
                 data_frames[decade.name] = parse_lat_long(data_frames[decade.name], geocoded_data_frame)
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
-        data_frame.drop(columns=['Unnamed: 0'], inplace=True)
+    data_frame = check_unnamed(data_frame)
     return data_frame
+
+
+def coordinates_to_geocoder(data_frame, data_key, decade):
+    data_frame[constant.GEO_ID_NAME] = ''
+    try:
+        geocode_coordinates_to_census_tract(data_frame, data_key, decade)
+    except Exception as e:
+        raise Exception(e)
 
 
 def addresses_to_geocoder(data_frame, data_key, decade):
@@ -207,6 +264,36 @@ def load_geocode_progress(data_key):
     return batch_index
 
 
+def geocode_coordinates_to_census_tract(data_frame, data_key, decade, batch_limit=10000):
+    check_temp_dir()
+    # If there is a remainder, another batch is added to accommodate those addresses
+    api_url = "https://geocoding.geo.census.gov/geocoder/geographies/coordinates"
+    payload = {'benchmark': decade['Benchmark'], 'vintage': decade['Vintage']}
+    # Loading the progress of a key-specific batch geocoding process
+    batch_progress = load_geocode_progress(data_key)
+    for i, row in data_frame.loc[batch_progress:].iterrows():
+        payload.update({'x': row['longitude'], 'y': row['latitude']})
+        try:
+            response = requests.post(api_url, data=payload)
+        except requests.exceptions.RequestException as e:
+            save_geocode_progress(data_key, i, "Incomplete", str(e))
+            raise SystemExit(e)
+        res = json.loads(response.text)
+        try:
+            data_frame.loc[i, constant.GEO_ID_NAME] = res['result']['geographies']['Census Tracts'][0]["GEOID"]
+        except KeyError:
+            data_frame.loc[i, constant.GEO_ID_NAME] = constant.ADDRESS_NOT_GEOCODABLE
+        if i == 0:
+            data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv")
+        else:
+            data_frame.iloc[[i]].to_csv(f"./temp/geocoded_{data_key}.csv", header=False, mode='a')
+        # The index of the next batch to be geocoded is saved and once the loop ends, the completion status is saved
+        new_batch_index = i + 1
+        save_geocode_progress(data_key, new_batch_index)
+    save_geocode_progress(data_key, load_geocode_progress(data_key), "Complete")
+    return None
+
+
 def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=10000):
     """
     Batch geocodes more than 10,000 addresses
@@ -239,7 +326,7 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             save_geocode_progress(data_key, i, "Incomplete", str(e))
             raise SystemExit(e)
@@ -271,6 +358,27 @@ def geocode_addresses_to_census_tract(addresses, data_key, decade, batch_limit=1
     return None
 
 
+def geocode_coordinate_to_census_tract(coordinate):
+    arguments = {
+        "host_name": "https://geocoding.geo.census.gov",
+        "latitude": coordinate.latitude,
+        "longitude": coordinate.longitude,
+        "benchmark": BENCHMARK,
+        "vintage": VINTAGE,
+        "format": "json",
+    }
+
+    geocoder_interpolation_string = "{host_name}/geocoder/geographies/coordinates?" \
+                                    "x={longitude}&y={latitude}" \
+                                    "&benchmark={benchmark}&vintage={vintage}&format={format}"
+
+    api_url = api.construct_url(geocoder_interpolation_string, arguments)
+    response = api.get_response(api_url, test_mode=True)
+    # census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
+    # return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
+    return response
+
+
 def geocode_address_to_census_tract(address):
     arguments = {
         "host_name": "https://geocoding.geo.census.gov",
@@ -292,7 +400,6 @@ def geocode_address_to_census_tract(address):
     response = api.get_response(api_url)
 
     # TODO: Raise error if response returns multiple address matches
-    print(response)
     census_tract_information = response["result"]["addressMatches"][0]["geographies"]["Census Tracts"][0]
     return census_tract_information["STATE"] + census_tract_information["COUNTY"] + census_tract_information["TRACT"]
 
