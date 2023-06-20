@@ -79,7 +79,10 @@ def calculate_raster_value(latitude, longitude, raster_source):
 
 def get_raster_value(src, lon, lat):
     py, px = src.index(float(lon), float(lat))
-    return str(src.read(1)[py][px])
+    try:
+        return str(src.read(1)[py][px])
+    except IndexError:
+        return constant.NOT_AVAILABLE
 
 
 def get_lambda_calculation(data_frame, variable_name):

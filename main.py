@@ -1,11 +1,7 @@
-import pandas as pd
-from datetime import datetime
 import constant
 import geocoder
 from data_frame_enhancer import DataFrameEnhancer
-from data_structure import DataElement, GetStrategy
 import sedoh_data_structure as sds
-import value_getter
 import importer
 import exporter
 from optparse import OptionParser
@@ -29,21 +25,29 @@ def data_key_to_file_name(data_key):
 
 def input_file_validation(data_frame, version, geocode):
     if geocode:
-        if not ('street' in data_frame.columns and 'city' in data_frame.columns and
-                'state' in data_frame.columns and 'zip' in data_frame.columns):
-            raise Exception(f"Input file is missing at least one address column, (street, city, state, zip) are required.")
+        if (not geocoder.address_fields_present(data_frame)) and (not geocoder.coordinate_fields_present(data_frame)):
+            raise Exception(f"Input file is missing at least one address/coordinate column, (street, city, state, zip)"
+                            f" or (latitude, longitude) are required.")
         if constant.GEO_ID_NAME in data_frame.columns:
             print(f"Warning: You have opted into geocoding, even though your input file already contains a {constant.GEO_ID_NAME} column.")
-        city_missing = data_frame.index[data_frame['city'] == ''].tolist()
-        zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
-        if len(city_missing) > 0:
-            print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
-        if len(zip_missing) > 0:
-            print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
+        if not (geocoder.coordinate_fields_present(data_frame)):
+            city_missing = data_frame.index[data_frame['city'] == ''].tolist()
+            zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
+            if len(city_missing) > 0:
+                print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
+            if len(zip_missing) > 0:
+                print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
+        else:
+            lat_missing = data_frame.index[data_frame['latitude'] == ''].tolist()
+            lon_missing = data_frame.index[data_frame['longitude'] == ''].tolist()
+            if len(lat_missing) > 0:
+                print(f"Warning: {len(lat_missing)} rows are missing latitude at these indexes: {lat_missing}")
+            if len(lon_missing) > 0:
+                print(f"Warning: {len(lon_missing)} rows are missing longitude at these indexes: {lon_missing}")
     elif constant.GEO_ID_NAME not in data_frame.columns:
         raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
-    elif constant.LATITUDE not in data_frame.columns or constant.LONGITUDE not in data_frame.columns:
+    elif not geocoder.coordinate_fields_present(data_frame):
         print(f"Warning: {constant.LATITUDE} and/or {constant.LONGITUDE} columns are missing. Addresses will not be able "
               f"to be enhanced with pollutant data from raster files. Raster file data is geographic and requires the "
               f"latitude and longitude of address to be read.")
@@ -58,7 +62,6 @@ def input_file_validation(data_frame, version, geocode):
 
 def main(argument):
     input_file_path = f'./input/{argument.filename}'
-
     # Step 1: Import the data to be enhanced. Currently supports .csv, .xls, .xlsx
     # Look at supporting Oracle, MySQL, PostgreSQL, SQL Server, REDCap
     data_key = get_data_key(input_file_path)
@@ -75,12 +78,11 @@ def main(argument):
 
     # Optional Step: Geocode addresses
     if argument.geocode:
-        input_data_frame = geocoder.geocode_addresses_in_data_frame(input_data_frame, data_key,
-                                                                    version=argument.version)
+        input_data_frame = geocoder.geocode_data_frame(input_data_frame, data_key, version=argument.version)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
-    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version)
+    sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version, test_mode=True)
     if argument.version == 2:
         sedoh_enhancer.enhance()
     else:
