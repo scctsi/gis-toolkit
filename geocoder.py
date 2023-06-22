@@ -363,7 +363,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
