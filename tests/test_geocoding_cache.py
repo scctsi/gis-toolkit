@@ -17,9 +17,6 @@ def run_around_tests():
                   ''')
     conn.commit()
 
-
-# test latest then comp
-# test comp then latest
 # tests with small batch limit
 
 
@@ -94,4 +91,3 @@ def test_comprehensive_then_latest():
     assert output_data_frame.index.equals(geocoded_data_frame.index)
     for index, row in output_data_frame.iterrows():
         assert row['street'] == geocoded_data_frame.iloc[index]['street']
-
