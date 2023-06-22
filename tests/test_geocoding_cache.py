@@ -77,3 +77,21 @@ def test_latest_then_comprehensive():
     for index, row in output_data_frame.iterrows():
         assert row['street'] == geocoded_data_frame.iloc[index]['street']
 
+
+def test_comprehensive_then_latest():
+    file_path = './tests/geocoding_cache_input_2.csv'
+    output_path = './tests/geocoding_cache_output.csv'
+    version = "comprehensive"
+    input_data_frame = importer.import_file(file_path, version=version)
+
+    geocoder.geocode_data_frame(input_data_frame.copy(), version=version)
+
+    version = "latest"
+    geocoded_data_frame = geocoder.geocode_data_frame(input_data_frame.copy(), version=version)
+
+    output_data_frame = importer.import_file(output_path, version=version)
+
+    assert output_data_frame.index.equals(geocoded_data_frame.index)
+    for index, row in output_data_frame.iterrows():
+        assert row['street'] == geocoded_data_frame.iloc[index]['street']
+
