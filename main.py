@@ -39,6 +39,8 @@ def input_file_validation(data_frame, version, geocode):
         if (not geocoder.address_fields_present(data_frame)) and (not geocoder.coordinate_fields_present(data_frame)):
             raise Exception(f"Input file is missing at least one address/coordinate column, (street, city, state, zip)"
                             f" or (latitude, longitude) are required.")
+        if input_config["address_id"] not in data_frame.columns:
+            raise Exception(f"Input file is missing an 'address_id' column which is required for geocoding.")
         if input_config["geo_id_name"] in data_frame.columns:
             print(f"Warning: You have opted into geocoding, even though your input file already contains a {input_config['geo_id_name']} column.")
         if not (geocoder.coordinate_fields_present(data_frame)):
@@ -90,7 +92,7 @@ def main(argument):
 
     # Optional Step: Geocode addresses
     if argument.geocode:
-        input_data_frame = geocoder.geocode_data_frame(input_data_frame, data_key, version=argument.version)
+        input_data_frame = geocoder.geocode_data_frame(input_data_frame, version=argument.version)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
