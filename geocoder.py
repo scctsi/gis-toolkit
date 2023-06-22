@@ -126,10 +126,17 @@ def geocode_data_frame_from_cache(data_frame):
 
 def filter_data_frame_with_geocoded_cache(data_frame):
     cache_data_frame = get_geocoded_cache()
+
+    print(f"Cache: {len(cache_data_frame)}")
+    cache_data_frame.to_csv('./geo_cache_testing/cache.csv')
+
     idx_in_cache = data_frame.index[
         (data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True) &
         (data_frame[constant.DECADE].isin(cache_data_frame[constant.DECADE].values) == True)]
     geocoded_data_frame = data_frame.loc[idx_in_cache]
+
+    print(f"Filtered from cache: {len(geocoded_data_frame)}")
+    geocoded_data_frame.to_csv('./geo_cache_testing/filtered.csv')
 
     index = geocoded_data_frame.index
     geocoded_data_frame = modify_column_names_to_default(geocoded_data_frame)
@@ -137,6 +144,8 @@ def filter_data_frame_with_geocoded_cache(data_frame):
     geocoded_data_frame = modify_column_names_to_custom(geocoded_data_frame)
     geocoded_data_frame = check_unnamed(geocoded_data_frame)
     geocoded_data_frame.set_index(index, inplace=True)
+
+    print(f"Merged from cache: {len(geocoded_data_frame)}")
 
     data_frame.drop(idx_in_cache, inplace=True)
     data_frame = check_unnamed(data_frame)
@@ -165,6 +174,9 @@ def geocode_data_frame(input_data_frame, version):
     elif version == "comprehensive":
         input_data_frame = arrange_data_frame_by_decade(input_data_frame.copy())
 
+    input_data_frame.to_csv('./geo_cache_testing/input.csv')
+    print(f"Input: {len(input_data_frame)}")
+
     data_frame, geocoded_cache_data_frame = filter_data_frame_with_geocoded_cache(input_data_frame)
 
     index = data_frame.index
@@ -185,6 +197,8 @@ def geocode_data_frame(input_data_frame, version):
     data_frame.set_index(index, inplace=True)
     data_frame = pd.concat([geocoded_cache_data_frame, data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+    print(f"Output: {len(data_frame)}")
+    print("")
     return data_frame
 
 
@@ -362,7 +376,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
