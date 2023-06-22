@@ -127,9 +127,14 @@ def geocode_data_frame_from_cache(data_frame):
 def filter_data_frame_with_geocoded_cache(data_frame):
     cache_data_frame = get_geocoded_cache()
 
-    idx_in_cache = data_frame.index[
-        (data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True) &
-        (data_frame[constant.DECADE].isin(cache_data_frame[constant.DECADE].values) == True)]
+    idx_in_cache = []
+    for row in data_frame.itertuples():
+        idx_of_address_id = cache_data_frame.index[
+            cache_data_frame["address_id"] == getattr(row, input_config["address_id"])]
+        if getattr(row, constant.DECADE) in cache_data_frame.copy().loc[idx_of_address_id][constant.DECADE].values:
+            idx_in_cache.append(getattr(row, "Index"))
+    idx_in_cache = pd.Index(idx_in_cache)
+
     geocoded_data_frame = data_frame.loc[idx_in_cache]
 
     index = geocoded_data_frame.index
@@ -363,7 +368,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
@@ -385,7 +390,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         if i + 1 == batch_calls:
             batch_data_frame = data_frame.loc[i * batch_limit:]
         else:
-            batch_data_frame = data_frame.loc[i * batch_limit: (i + 1) * batch_limit]
+            batch_data_frame = data_frame.loc[i * batch_limit: (i + 1) * batch_limit - 1]
         batch_data_frame["geo_id_name"] = geocoded_data_frame["census_tract"]
         batch_data_frame["latitude"] = geocoded_data_frame["latitude"]
         batch_data_frame["longitude"] = geocoded_data_frame["longitude"]

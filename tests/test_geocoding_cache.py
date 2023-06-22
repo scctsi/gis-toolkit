@@ -17,8 +17,6 @@ def run_around_tests():
                   ''')
     conn.commit()
 
-# tests with small batch limit
-
 
 def test_add_line():
     file_path_1 = './tests/geocoding_cache_input_1.csv'
@@ -85,6 +83,48 @@ def test_comprehensive_then_latest():
 
     version = "latest"
     geocoded_data_frame = geocoder.geocode_data_frame(input_data_frame.copy(), version=version)
+
+    output_data_frame = importer.import_file(output_path, version=version)
+
+    assert output_data_frame.index.equals(geocoded_data_frame.index)
+    for index, row in output_data_frame.iterrows():
+        assert row['street'] == geocoded_data_frame.iloc[index]['street']
+
+
+def test_add_line_small_batch():
+    file_path_1 = './tests/geocoding_cache_input_1.csv'
+    file_path_2 = './tests/geocoding_cache_input_2.csv'
+    output_path = './tests/geocoding_cache_output.csv'
+    version = "latest"
+    batch_limit = 2
+
+    input_data_frame_1 = importer.import_file(file_path_1, version=version)
+    input_data_frame_2 = importer.import_file(file_path_2, version=version)
+
+    geocoder.geocode_data_frame(input_data_frame_1.copy(), version=version, batch_limit=batch_limit)
+    geocoded_data_frame = geocoder.geocode_data_frame(
+        input_data_frame_2.copy(), version=version, batch_limit=batch_limit)
+
+    output_data_frame = importer.import_file(output_path, version=version)
+
+    assert output_data_frame.index.equals(geocoded_data_frame.index)
+    for index, row in output_data_frame.iterrows():
+        assert row['street'] == geocoded_data_frame.iloc[index]['street']
+
+
+def test_add_line_comprehensive_small_batch():
+    file_path_1 = './tests/geocoding_cache_input_1.csv'
+    file_path_2 = './tests/geocoding_cache_input_2.csv'
+    output_path = './tests/comprehensive_geocoding_cache_output.csv'
+    version = "comprehensive"
+    batch_limit = 2
+
+    input_data_frame_1 = importer.import_file(file_path_1, version=version)
+    input_data_frame_2 = importer.import_file(file_path_2, version=version)
+
+    geocoder.geocode_data_frame(input_data_frame_1.copy(), version=version, batch_limit=batch_limit)
+    geocoded_data_frame = geocoder.geocode_data_frame(
+        input_data_frame_2.copy(), version=version, batch_limit=batch_limit)
 
     output_data_frame = importer.import_file(output_path, version=version)
 
