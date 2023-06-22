@@ -1,0 +1,228 @@
+{
+    "input_column_names": {
+        "geo_id_name": "SPATIAL_GEOID",
+        "address_start_date": "address_start_date",
+        "address_end_date": "address_end_date",
+        "latitude": "latitude",
+        "longitude": "longitude",
+        "street": "street",
+        "city": "city",
+        "state": "state",
+        "zip": "zip"
+    },
+    "datetime": {
+        "date_format": "%Y/%m/%d"
+    },
+    "enhancement_variables": {
+        "social_vulnerability_index": {
+            "enhance": true,
+            "output_column_name": "social_vulnerability_index",
+            "output_sheet_name": "SVI"
+        },
+        "gini_inequality_coefficient": {
+            "enhance": true,
+            "output_column_name": "gini_inequality_coefficient",
+            "output_sheet_name": "GINI"
+        },
+        "old_age_dependency_ratio": {
+            "enhance": true,
+            "output_column_name": "old_age_dependency_ratio",
+            "output_sheet_name": "POP_OLD"
+        },
+        "child_dependency_ratio": {
+            "enhance": true,
+            "output_column_name": "child_dependency_ratio",
+            "output_sheet_name": "POP_CHILD"
+        },
+        "housing_median_year_built": {
+            "enhance": true,
+            "output_column_name": "housing_median_year_built",
+            "output_sheet_name": "HU_AGE"
+        },
+        "housing_percent_occupied_units_lacking_plumbing": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_units_lacking_plumbing",
+            "output_sheet_name": "HU_PLUMBING"
+        },
+        "housing_percent_occupied_lacking_complete_kitchen": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_lacking_complete_kitchen",
+            "output_sheet_name": "HU_KITCHEN"
+        },
+        "housing_percent_occupied_units_with_no_bedroom": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_units_with_no_bedroom",
+            "output_sheet_name": "HU_BEDROOM"
+        },
+        "housing_percent_occupied_units_with_no_vehicle_available": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_units_with_no_vehicle_available",
+            "output_sheet_name": "HU_VEHICLE"
+        },
+        "housing_percent_occupied_units_with_no_computer_included_smartphone": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_units_with_no_computer_included_smartphone",
+            "output_sheet_name": "HU_COMPUTER"
+        },
+        "housing_percent_occupied_units_with_no_internet_subscription": {
+            "enhance": true,
+            "output_column_name": "housing_percent_occupied_units_with_no_internet_subscription",
+            "output_sheet_name": "HU_INTERNET"
+        },
+        "population_density": {
+            "enhance": true,
+            "output_column_name": "population_density",
+            "output_sheet_name": "POP_DEN"
+        },
+        "percent_hispanic": {
+            "enhance": true,
+            "output_column_name": "percent_hispanic",
+            "output_sheet_name": "POP_HISPANIC"
+        },
+        "percent_non_hispanic": {
+            "enhance": true,
+            "output_column_name": "percent_non_hispanic",
+            "output_sheet_name": "POP_NON_HISPANIC"
+        },
+        "percent_american_indian_or_alaska_native": {
+            "enhance": true,
+            "output_column_name": "percent_american_indian_or_alaska_native",
+            "output_sheet_name": "POP_NATIVE_AMERICAN"
+        },
+        "percent_asian": {
+            "enhance": true,
+            "output_column_name": "percent_asian",
+            "output_sheet_name": "POP_ASIAN"
+        },
+        "percent_black": {
+            "enhance": true,
+            "output_column_name": "percent_black",
+            "output_sheet_name": "POP_BLACK"
+        },
+        "percent_native_hawaiian_or_other_pacific_islander": {
+            "enhance": true,
+            "output_column_name": "percent_native_hawaiian_or_other_pacific_islander",
+            "output_sheet_name": "POP_PACIFIC_ISLANDER"
+        },
+        "percent_multiple_race": {
+            "enhance": true,
+            "output_column_name": "percent_multiple_race",
+            "output_sheet_name": "POP_MULTIPLE_RACE"
+        },
+        "percent_white": {
+            "enhance": true,
+            "output_column_name": "percent_white",
+            "output_sheet_name": "POP_WHITE"
+        },
+        "percent_some_other_race": {
+            "enhance": true,
+            "output_column_name": "percent_some_other_race",
+            "output_sheet_name": "POP_OTHER_RACE"
+        },
+        "percent_below_100_of_fed_poverty_level": {
+            "enhance": true,
+            "output_column_name": "percent_below_100_of_fed_poverty_level",
+            "output_sheet_name": "INCOME_100FPL"
+        },
+        "percent_below_200_of_fed_poverty_level": {
+            "enhance": true,
+            "output_column_name": "percent_below_200_of_fed_poverty_level",
+            "output_sheet_name": "INCOME_200FPL"
+        },
+        "percent_below_300_of_fed_poverty_level": {
+            "enhance": true,
+            "output_column_name": "percent_below_300_of_fed_poverty_level",
+            "output_sheet_name": "INCOME_300FPL"
+        },
+        "percent_households_that_receive_snap": {
+            "enhance": true,
+            "output_column_name": "percent_households_that_receive_snap",
+            "output_sheet_name": "FOOD_SNAP"
+        },
+        "percent_households_with_limited_english": {
+            "enhance": true,
+            "output_column_name": "percent_households_with_limited_english",
+            "output_sheet_name": "LIMITED_ENGLISH"
+        },
+        "percent_high_school_grad_age_25_or_over": {
+            "enhance": true,
+            "output_column_name": "percent_high_school_grad_age_25_or_over",
+            "output_sheet_name": "EDUCATION_HIGH_SCHOOL"
+        },
+        "percent_bachelors_degree_age_25_or_over": {
+            "enhance": true,
+            "output_column_name": "percent_bachelors_degree_age_25_or_over",
+            "output_sheet_name": "EDUCATION_BACHELORS"
+        },
+        "median_household_income": {
+            "enhance": true,
+            "output_column_name": "median_household_income",
+            "output_sheet_name": "INCOME_MHH"
+        },
+        "unemployment_rate_age_16_or_over": {
+            "enhance": true,
+            "output_column_name": "unemployment_rate_age_16_or_over",
+            "output_sheet_name": "UNEMPLOYMENT"
+        },
+        "air_quality_indicator_ozone_o3": {
+            "enhance": true,
+            "output_column_name": "air_quality_indicator_ozone_o3",
+            "output_sheet_name": "OZONE_CES"
+        },
+        "air_quality_indicator_pm25": {
+            "enhance": true,
+            "output_column_name": "air_quality_indicator_pm25",
+            "output_sheet_name": "PM_2.5_CES"
+        },
+        "drinking_water_quality_indicator": {
+            "enhance": true,
+            "output_column_name": "drinking_water_quality_indicator",
+            "output_sheet_name": "DRINKING_WATER"
+        },
+        "air_quality_indicator_asthma_er_visits": {
+            "enhance": true,
+            "output_column_name": "air_quality_indicator_asthma_er_visits",
+            "output_sheet_name": "ASTHMA"
+        },
+        "food_fraction_of_population_with_low_access": {
+            "enhance": true,
+            "output_column_name": "food_fraction_of_population_with_low_access",
+            "output_sheet_name": "FOOD_LOW_ACCESS"
+        },
+        "food_low_access_tract": {
+            "enhance": true,
+            "output_column_name": "food_low_access_tract",
+            "output_sheet_name": "FOOD_LOW_ACCESS_TRACT"
+        },
+        "scehsc_annual_pollutant_ozone_ppb": {
+            "enhance": true,
+            "output_column_name": "scehsc_annual_pollutant_ozone_ppb",
+            "output_sheet_name": "OZONE"
+        },
+        "scehsc_annual_pollutant_nitrogen_dioxide_ppb": {
+            "enhance": true,
+            "output_column_name": "scehsc_annual_pollutant_nitrogen_dioxide_ppb",
+            "output_sheet_name": "NITROGEN DIOXIDE"
+        },
+        "scehsc_annual_pollutant_pm25_ug/m^3": {
+            "enhance": true,
+            "output_column_name": "scehsc_annual_pollutant_pm25_ug/m^3",
+            "output_sheet_name": "PM_2.5"
+        },
+        "scehsc_annual_pollutant_pm10_ug/m^3": {
+            "enhance": true,
+            "output_column_name": "scehsc_annual_pollutant_pm10_ug/m^3",
+            "output_sheet_name": "PM_10"
+        },
+        "nasa_annual_pollutant_ozone_ppb": {
+            "enhance": true,
+            "output_column_name": "nasa_annual_pollutant_ozone_ppb",
+            "output_sheet_name": "NASA_O3"
+        },
+        "nasa_annual_pollutant_pm25_ug/m^3": {
+            "enhance": true,
+            "output_column_name": "nasa_annual_pollutant_pm25_ug/m^3",
+            "output_sheet_name": "NASA_PM_2.5"
+        }
+    }
+}

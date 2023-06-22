@@ -10,3 +10,7 @@ LONGITUDE = "longitude"  # Column name of address longitude in input file or fro
 DAY_FIRST = "%d/%m/%Y"  # Date format when reading date columns in input files
 MONTH_FIRST = "%m/%d/%Y"  # Date format when reading date columns in input files
 YEAR_FIRST = "%Y/%m/%d"  # Date format when reading date columns in input files
+STREET = "street"
+CITY = "city"
+STATE = "state"
+ZIP = "zip"
