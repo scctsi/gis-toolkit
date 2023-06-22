@@ -4,7 +4,9 @@
 name: Executable Command
 
 on:
-  - push
+  pull_request:
+    branches:
+      - main
 
 jobs:
   windows-executable:
