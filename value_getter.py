@@ -6,6 +6,7 @@ import math
 import sedoh_data_structure as sds
 from data_structure import GetStrategy
 import constant
+from config import input_config, output_columns_config
 
 load_dotenv()
 
@@ -19,18 +20,18 @@ def join_gazetteer_source(data_frame, data_files, version):
     gazetteer_index = -1
     if version == 'comprehensive':
         for i, data_source in enumerate(data_files[sds.SedohDataSource.Gazetteer]):
-            if data_source.start_date <= data_frame.loc[0, constant.ADDRESS_START_DATE] < data_source.end_date:
+            if data_source.start_date <= data_frame.loc[0, input_config["address_start_date"]] < data_source.end_date:
                 gazetteer_index = i
                 break
     enhancer_data_frame = get_enhancer_data_frame(data_files[sds.SedohDataSource.Gazetteer][gazetteer_index])
-    data_frame = data_frame.join(enhancer_data_frame, on=constant.GEO_ID_NAME, rsuffix='_other')
+    data_frame = data_frame.join(enhancer_data_frame, on=input_config["geo_id_name"], rsuffix='_other')
     return data_frame
 
 
 def get_enhancer_data_frame(data_source):
     enhancer_data_frame = data_source.data_frame.copy()
-    enhancer_data_frame.rename(columns={data_source.tract_column: constant.GEO_ID_NAME}, inplace=True)
-    enhancer_data_frame.index = enhancer_data_frame[constant.GEO_ID_NAME]
+    enhancer_data_frame.rename(columns={data_source.tract_column: input_config["geo_id_name"]}, inplace=True)
+    enhancer_data_frame.index = enhancer_data_frame[input_config["geo_id_name"]]
     return enhancer_data_frame
 
 
@@ -85,13 +86,17 @@ def get_raster_value(src, lon, lat):
         return constant.NOT_AVAILABLE
 
 
-def get_lambda_calculation(data_frame, variable_name):
+def get_lambda_calculation(data_frame, variable_name, acs_year):
     if variable_name in ['housing_percent_occupied_units_lacking_plumbing', 'housing_percent_occupied_lacking_complete_kitchen']:
         data_frame[variable_name] = data_frame.apply(lambda col: complementary_percent(col[variable_name]), axis=1)
+    elif variable_name == "percent_below_200_of_fed_poverty_level" and acs_year in ['2012', '2013', '2014']:
+        data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S1701_C01_038E'], col['S1701_C01_001E']), axis=1)
     elif variable_name == "percent_below_200_of_fed_poverty_level":
         data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S1701_C01_042E'], col['S1701_C01_001E']), axis=1)
     elif variable_name == "percent_below_300_of_fed_poverty_level":
         data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S1701_C01_043E'], col['S1701_C01_001E']), axis=1)
+    elif variable_name == "percent_households_that_receive_snap" and acs_year in ['2012', '2013', '2014']:
+        data_frame[variable_name] = data_frame.apply(lambda col: percent_below_fed_poverty_level(col['S2201_C02_001E'], col['S2201_C01_001E']), axis=1)
     elif variable_name == "population_density":
         data_frame[variable_name] = data_frame.apply(lambda col: population_density(col[variable_name], col['ALAND']), axis=1)
     elif variable_name == "food_fraction_of_population_with_low_access":
@@ -99,28 +104,40 @@ def get_lambda_calculation(data_frame, variable_name):
     return data_frame
 
 
-def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_files, version):
-    idx_non_geocoded = data_frame.index[data_frame[constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE]
+def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_files, version, acs_data_source, data_source):
+    idx_non_geocoded = data_frame.index[data_frame[input_config["geo_id_name"]] == constant.ADDRESS_NOT_GEOCODABLE]
     non_geocoded_data_frame = data_frame.loc[idx_non_geocoded]
     non_geocoded_data_frame[data_element.variable_name] = ''
     data_frame.drop(idx_non_geocoded, inplace=True)
 
-    idx_missing = data_frame.index[data_frame[constant.GEO_ID_NAME].isin(enhancer_data_frame[constant.GEO_ID_NAME].values) == False]
+    idx_missing = data_frame.index[data_frame[input_config["geo_id_name"]].isin(enhancer_data_frame[input_config["geo_id_name"]].values) == False]
     missing_data_frame = data_frame.loc[idx_missing]
     missing_data_frame[data_element.variable_name] = constant.NOT_AVAILABLE
     data_frame.drop(idx_missing, inplace=True)
 
     data_frame_columns = data_frame.columns
-    data_frame = data_frame.join(enhancer_data_frame, on=constant.GEO_ID_NAME, rsuffix='_other')
-    if type(data_element.source_variable) == str and data_element.source_variable in data_frame.columns:
-        data_frame.rename(columns={data_element.source_variable: data_element.variable_name}, inplace=True)
+    data_frame = data_frame.join(enhancer_data_frame, on=input_config["geo_id_name"], rsuffix='_other')
+
+    source_key = acs_data_source.source_key
+
+    if version == "comprehensive" and data_element.data_source == sds.SedohDataSource.ACS:
+        source_variable = source_key[data_element.variable_name][data_source.acs_year]
+        if source_variable == "":
+            data_frame[data_element.variable_name] = constant.MISSING
+        acs_year = data_source.acs_year
+    else:
+        source_variable = data_element.source_variable
+        acs_year = "2018"
+
+    if type(source_variable) == str and source_variable in data_frame.columns:
+        data_frame.rename(columns={source_variable: data_element.variable_name}, inplace=True)
 
     if data_element.variable_name == 'population_density':
-        data_frame.drop(columns=[f"{constant.GEO_ID_NAME}_other"], inplace=True)
+        data_frame.drop(columns=[f"{input_config['geo_id_name']}_other"], inplace=True)
         data_frame = join_gazetteer_source(data_frame, data_files, version)
 
-    if data_element.get_strategy in [GetStrategy.CALCULATION, GetStrategy.FILE_AND_CALCULATION]:
-        data_frame = get_lambda_calculation(data_frame, data_element.variable_name)
+    if data_element.get_strategy in [GetStrategy.CALCULATION, GetStrategy.FILE_AND_CALCULATION] and source_variable != "":
+        data_frame = get_lambda_calculation(data_frame, data_element.variable_name, acs_year)
 
     for column in data_frame.columns:
         if column not in data_frame_columns and column != data_element.variable_name:
@@ -128,49 +145,63 @@ def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_fil
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+
+    data_frame = rename_variable_column(data_frame, data_element, version)
+
     return data_frame
 
 
-def enhance_raster_element(data_frame, data_element, raster_source):
-    idx_non_geocoded = data_frame.index[data_frame[constant.GEO_ID_NAME] == constant.ADDRESS_NOT_GEOCODABLE]
+def enhance_raster_element(data_frame, data_element, raster_source, version):
+    idx_non_geocoded = data_frame.index[data_frame[input_config["geo_id_name"]] == constant.ADDRESS_NOT_GEOCODABLE]
     non_geocoded_data_frame = data_frame.loc[idx_non_geocoded]
     non_geocoded_data_frame[data_element.variable_name] = ''
     data_frame.drop(idx_non_geocoded, inplace=True)
 
-    idx_missing = data_frame.index[(data_frame[constant.LATITUDE] == '') | (data_frame[constant.LONGITUDE] == '')]
+    idx_missing = data_frame.index[(data_frame[input_config["latitude"]] == '') | (data_frame[input_config["longitude"]] == '')]
     missing_data_frame = data_frame.loc[idx_missing]
     missing_data_frame[data_element.variable_name] = constant.NOT_AVAILABLE
     data_frame.drop(idx_missing, inplace=True)
 
     if sds.SedohDataSource.SCEHSC in data_element.data_source:
         data_frame[data_element.variable_name] = data_frame.apply(lambda col: calculate_raster_value(
-            col[constant.LATITUDE], col[constant.LONGITUDE], raster_source), axis=1)
+            col[input_config["latitude"]], col[input_config["longitude"]], raster_source), axis=1)
     else:
         nasa_source = raster_source.read()
         data_frame[data_element.variable_name] = data_frame.apply(lambda col: get_raster_value(
-            nasa_source, col[constant.LONGITUDE], col[constant.LATITUDE]), axis=1)
+            nasa_source, col[input_config["longitude"]], col[input_config["latitude"]]), axis=1)
         raster_source.close()
 
     data_frame = pd.concat([data_frame, non_geocoded_data_frame, missing_data_frame], ignore_index=False)
     data_frame.sort_index(inplace=True)
+
+    data_frame = rename_variable_column(data_frame, data_element, version)
+
+    return data_frame
+
+
+def rename_variable_column(data_frame, data_element, version):
+    if version == "latest":
+        data_frame.rename(columns={data_element.variable_name: output_columns_config[data_element.variable_name]}, inplace=True)
+    elif version == "comprehensive":
+        data_frame.rename(columns={data_element.variable_name: 'NUMERIC'}, inplace=True)
     return data_frame
 
 
 def organize_data_frame_by_source(data_frame, data_sources):
     data_frames = {}
-    data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_START_DATE] > data_sources[-1].end_date], inplace=True)
-    data_frame.drop(data_frame.index[data_frame[constant.ADDRESS_END_DATE] <= data_sources[0].start_date], inplace=True)
+    data_frame.drop(data_frame.index[data_frame[input_config["address_start_date"]] > data_sources[-1].end_date], inplace=True)
+    data_frame.drop(data_frame.index[data_frame[input_config["address_end_date"]] <= data_sources[0].start_date], inplace=True)
     data_frame.reset_index(drop=True, inplace=True)
     for i, data_source in enumerate(data_sources):
         if i == 0:
-            before_time_int = data_frame.index[data_frame[constant.ADDRESS_START_DATE] < data_source.start_date]
-            data_frame.loc[before_time_int, constant.ADDRESS_START_DATE] = data_source.start_date
-        time_int = data_frame.index[(data_frame[constant.ADDRESS_START_DATE] >= data_source.start_date) & (data_frame[constant.ADDRESS_START_DATE] <= data_source.end_date)]
+            before_time_int = data_frame.index[data_frame[input_config["address_start_date"]] < data_source.start_date]
+            data_frame.loc[before_time_int, input_config["address_start_date"]] = data_source.start_date
+        time_int = data_frame.index[(data_frame[input_config["address_start_date"]] >= data_source.start_date) & (data_frame[input_config["address_start_date"]] <= data_source.end_date)]
         new_data_frame = data_frame.loc[time_int].copy()
-        after_time_int = new_data_frame.index[new_data_frame[constant.ADDRESS_END_DATE] > data_source.end_date]
-        new_data_frame.loc[after_time_int, constant.ADDRESS_END_DATE] = data_source.end_date
+        after_time_int = new_data_frame.index[new_data_frame[input_config["address_end_date"]] > data_source.end_date]
+        new_data_frame.loc[after_time_int, input_config["address_end_date"]] = data_source.end_date
         if i + 1 < len(data_sources):
-            data_frame.loc[after_time_int, constant.ADDRESS_START_DATE] = data_sources[i + 1].start_date
+            data_frame.loc[after_time_int, input_config["address_start_date"]] = data_sources[i + 1].start_date
         new_data_frame.reset_index(drop=True, inplace=True)
         data_frames.update({data_source.start_date: new_data_frame})
     return data_frames

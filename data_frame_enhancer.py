@@ -8,6 +8,7 @@ import os
 import importer
 import requests
 from data_structure import GetStrategy
+from config import input_config, enhancement_config, output_sheets_config
 
 
 def check_temp_dir():
@@ -44,13 +45,13 @@ def get_geography():
 def write_xlsxwriter_output(excel_path, data_frames):
     writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
     for data_element in data_frames:
-        data_frames[data_element].to_excel(writer, sheet_name=data_element.sheet_name)
+        data_frames[data_element].to_excel(writer, sheet_name=output_sheets_config[data_element.variable_name])
     writer.save()
 
 
 def normalize_data_frame(data_frame):
     data_frame = data_frame.loc[:, ~data_frame.columns.duplicated()]
-    data_frame.index = data_frame[constant.GEO_ID_NAME]
+    data_frame.index = data_frame[input_config["geo_id_name"]]
     return data_frame
 
 
@@ -194,7 +195,7 @@ class DataFrameEnhancer:
         self.acs_data_source = ACSDataSource(self.acs_data_elements)
         self.acs_cache = ACSCache(self.acs_data_source, self.data_files[sds.SedohDataSource.ACS], self.version, self.test_mode)
         self.LatLon = False
-        if constant.LATITUDE in self.data_frame.columns and constant.LONGITUDE in self.data_frame.columns:
+        if input_config["latitude"] in self.data_frame.columns and input_config["longitude"] in self.data_frame.columns:
             self.LatLon = True
 
     def group_raster_elements(self):
@@ -243,16 +244,17 @@ class DataFrameEnhancer:
         acs_data_frames = self.acs_cache.load_single()
         acs_data_sets = self.acs_data_source.data_element_data_set()
         for data_element in self.data_elements:
-            if data_element in self.non_raster_elements:
-                if data_element in self.acs_data_elements:
-                    enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
-                else:
-                    enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
-                self.data_frame = value_getter.enhance_data_element(
-                    self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version)
-            elif self.LatLon:
-                self.data_frame = value_getter.enhance_raster_element(
-                    self.data_frame, data_element, self.data_files[data_element.data_source][-1])
+            if enhancement_config[data_element.variable_name]:
+                if data_element in self.non_raster_elements:
+                    if data_element in self.acs_data_elements:
+                        enhancer_data_frame = acs_data_frames[acs_data_sets[data_element]]
+                    else:
+                        enhancer_data_frame = value_getter.get_enhancer_data_frame(self.data_files[data_element.data_source][-1])
+                    self.data_frame = value_getter.enhance_data_element(
+                        self.data_frame, enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, self.data_files[data_element.data_source][-1])
+                elif self.LatLon:
+                    self.data_frame = value_getter.enhance_raster_element(
+                        self.data_frame, data_element, self.data_files[data_element.data_source][-1], self.version)
         self.data_frame.to_csv(f"./temp/enhanced_{self.data_key}.csv")
 
     def comprehensive_enhancement(self):
@@ -263,27 +265,28 @@ class DataFrameEnhancer:
         data_source_addresses = {}
         element_data_frames_output = {}
         for data_element in self.data_elements:
-            element_data_frames = []
-            if data_element.data_source not in data_source_addresses.keys():
-                data_source_addresses.update({data_element.data_source: value_getter.organize_data_frame_by_source(
-                    self.data_frame.copy(), self.data_files[data_element.data_source])})
-            for data_source in self.data_files[data_element.data_source]:
-                organized_data_frame = data_source_addresses[data_element.data_source][data_source.start_date]
-                if len(organized_data_frame) > 0:
-                    if data_element in self.non_raster_elements:
-                        if data_element in self.acs_data_elements:
-                            enhancer_data_frame = comprehensive_data_frames[data_source.acs_year][data_sets[data_element]]
-                        else:
-                            enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
-                        element_data_frames.append(value_getter.enhance_data_element(
-                            organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version))
-                    elif self.LatLon:
-                        element_data_frames.append(value_getter.enhance_raster_element(
-                            organized_data_frame, data_element, data_source))
-            if len(element_data_frames) > 0:
-                element_data_frame = pd.concat(element_data_frames, ignore_index=True)
-                element_data_frame.reset_index(drop=True, inplace=True)
-                element_data_frames_output.update({data_element: element_data_frame})
+            if enhancement_config[data_element.variable_name]:
+                element_data_frames = []
+                if data_element.data_source not in data_source_addresses.keys():
+                    data_source_addresses.update({data_element.data_source: value_getter.organize_data_frame_by_source(
+                        self.data_frame.copy(), self.data_files[data_element.data_source])})
+                for data_source in self.data_files[data_element.data_source]:
+                    organized_data_frame = data_source_addresses[data_element.data_source][data_source.start_date]
+                    if len(organized_data_frame) > 0:
+                        if data_element in self.non_raster_elements:
+                            if data_element in self.acs_data_elements:
+                                enhancer_data_frame = comprehensive_data_frames[data_source.acs_year][data_sets[data_element]]
+                            else:
+                                enhancer_data_frame = value_getter.get_enhancer_data_frame(data_source)
+                            element_data_frames.append(value_getter.enhance_data_element(
+                                organized_data_frame.copy(), enhancer_data_frame, data_element, self.data_files, self.version, self.acs_data_source, data_source))
+                        elif self.LatLon:
+                            element_data_frames.append(value_getter.enhance_raster_element(
+                                organized_data_frame, data_element, data_source, self.version))
+                if len(element_data_frames) > 0:
+                    element_data_frame = pd.concat(element_data_frames, ignore_index=True)
+                    element_data_frame.reset_index(drop=True, inplace=True)
+                    element_data_frames_output.update({data_element: element_data_frame})
         write_xlsxwriter_output(excel_path, element_data_frames_output)
 
     def enhance(self):
