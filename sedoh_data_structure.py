@@ -243,7 +243,7 @@ class SedohDataElements:
                         "Percent Households that Receive SNAP",
                         "percent_households_that_receive_snap",
                         "S2201_C04_001E",
-                        GetStrategy.PRIVATE_API,
+                        GetStrategy.CALCULATION,
                         "FOOD_SNAP"),
             # Percent Households with Limited English
             DataElement(SedohDataSource.ACS,
