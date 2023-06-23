@@ -22,26 +22,22 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Zero = 0 # -2009
-    Ten = 1  # 2010-2019
-    Twenty = 2  # 2020-2029
+    Ten = 1  # 2001-2010
+    Twenty = 2  # 2011-2020
 
 
 # Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
 decade_dict = {
-    Decade.Zero: {
-        "start_date": datetime(1700, 1, 1),
-        "end_date": datetime(2009, 12, 31)},
     Decade.Ten: {
         "Benchmark": "Public_AR_Current",
         "Vintage": "Census2010_Current",
-        "start_date": datetime(2010, 1, 1),
-        "end_date": datetime(2019, 12, 31)},
+        "start_date": datetime(2001, 1, 1),
+        "end_date": datetime(2010, 12, 31)},
     Decade.Twenty: {
         "Benchmark": "Public_AR_Current",
         "Vintage": "Census2020_Current",
-        "start_date": datetime(2020, 1, 1),
-        "end_date": datetime(2029, 12, 31)
+        "start_date": datetime(2011, 1, 1),
+        "end_date": datetime(2020, 12, 31)
     }
 }
 
@@ -198,11 +194,8 @@ def geocode_coordinates_in_data_frame(data_frame, version):
         data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                if decade.name == "Zero":
-                    write_old_decade_to_cache(data_frames[decade.name].copy())
-                else:
-                    # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
-                    coordinates_to_geocoder(data_frames[decade.name], decade_dict[decade])
+                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
+                coordinates_to_geocoder(data_frames[decade.name], decade_dict[decade])
                 data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
@@ -235,11 +228,9 @@ def geocode_addresses_in_data_frame(data_frame, version):
         data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                if decade.name == "Zero":
-                    write_old_decade_to_cache(data_frames[decade.name].copy())
-                else:
-                    # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
-                    addresses_to_geocoder(data_frames[decade.name], decade_dict[decade])
+                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography
+                # of that decade
+                addresses_to_geocoder(data_frames[decade.name], decade_dict[decade])
                 data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
@@ -269,13 +260,6 @@ def addresses_to_geocoder(data_frame, decade):
         raise Exception(e)
 
 
-def write_old_decade_to_cache(data_frame):
-    data_frame["geo_id_name"] = constant.NOT_AVAILABLE
-    data_frame["latitude"] = constant.NOT_AVAILABLE
-    data_frame["longitude"] = constant.NOT_AVAILABLE
-    write_to_geocoded_cache(data_frame)
-
-
 def separate_arranged_data_frame(data_frame):
     data_frames = {}
     for decade in Decade:
@@ -291,6 +275,15 @@ def arrange_data_frame_by_decade(data_frame):
     # Decades are defined as starting on the first year after new census information is released (2001, 2011, etc)
     # Addresses occurring entirely before the range of valid census information (2001-present) are cropped from data
     # Addresses only starting before this range have their start date redefined to the start of this range (2001)
+    decades = list(decade_dict.keys())
+    data_frame.drop(data_frame.index[data_frame[input_config["address_start_date"]] > decade_dict[decades[-1]]["end_date"]],
+                    inplace=True)
+    data_frame.drop(data_frame.index[data_frame[input_config["address_end_date"]] <= decade_dict[decades[0]]["start_date"]],
+                    inplace=True)
+    data_frame.reset_index(drop=True, inplace=True)
+
+    before_time_int = data_frame.index[data_frame[input_config["address_start_date"]] < decade_dict[decades[0]]["start_date"]]
+    data_frame.loc[before_time_int, input_config["address_start_date"]] = decade_dict[decades[0]]["start_date"]
     for decade in Decade:
         # Addresses starting within a decade are found and copied. If they extend into the next decade, a new instance
         # of the address is created with appropriate start and end dates
