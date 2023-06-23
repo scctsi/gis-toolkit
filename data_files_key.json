@@ -60,16 +60,16 @@
             {
                 "file_path": "gazetteer/gazetteer_2010.csv",
                 "census_tract_column_name": "GEOID",
-                "valid_start_date": "2001-01-01T00:00:00.000000Z",
-                "valid_end_date": "2010-12-31T00:00:00.000000Z",
+                "valid_start_date": "2012-01-01T00:00:00.000000Z",
+                "valid_end_date": "2019-12-31T00:00:00.000000Z",
                 "url": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_tracts_national.zip",
                 "file_name": "Gaz_tracts_national.txt"
             },
             {
                 "file_path": "gazetteer/gazetteer_2020.csv",
                 "census_tract_column_name": "GEOID",
-                "valid_start_date": "2011-01-01T00:00:00.000000Z",
-                "valid_end_date": "2020-12-31T00:00:00.000000Z",
+                "valid_start_date": "2020-01-01T00:00:00.000000Z",
+                "valid_end_date": "2021-12-31T00:00:00.000000Z",
                 "url": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2020_Gazetteer/2020_Gaz_tracts_national.zip",
                 "file_name": "2020_Gaz_tracts_national.txt"
             }
