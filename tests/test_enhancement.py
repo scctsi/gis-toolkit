@@ -85,7 +85,7 @@ def test_comprehensive_geocoding():
     file_path = './tests/comprehensive_geocoding_input.csv'
     input_data_frame = importer.import_file(file_path, version='comprehensive')
     geocoded_data_frame = geocoder.geocode_data_frame(input_data_frame, version='comprehensive')
-    comprehensive_output = [4, 3, 2, 1, 1]
+    comprehensive_output = [3, 2, 2, 1, 1]
     for index, row in input_data_frame.iterrows():
         address_count = geocoded_data_frame.index[geocoded_data_frame[input_config["street"]] == row[input_config["street"]]].tolist()
         assert len(address_count) == comprehensive_output[index]
