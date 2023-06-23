@@ -22,8 +22,8 @@ VINTAGE = "Census2020_Census2020"
 
 
 class Decade(Enum):
-    Ten = 1  # 2001-2010
-    Twenty = 2  # 2011-2020
+    Ten = 1  # 2010-2019
+    Twenty = 2  # 2020-2029
 
 
 # Decade 'Twenty' extends from 2021-present, so the vintage value needs to be updated yearly
@@ -31,13 +31,13 @@ decade_dict = {
     Decade.Ten: {
         "Benchmark": "Public_AR_Current",
         "Vintage": "Census2010_Current",
-        "start_date": datetime(2001, 1, 1),
-        "end_date": datetime(2010, 12, 31)},
+        "start_date": datetime(2010, 1, 1),
+        "end_date": datetime(2019, 12, 31)},
     Decade.Twenty: {
         "Benchmark": "Public_AR_Current",
         "Vintage": "Census2020_Current",
-        "start_date": datetime(2011, 1, 1),
-        "end_date": datetime(2020, 12, 31)
+        "start_date": datetime(2020, 1, 1),
+        "end_date": datetime(2029, 12, 31)
     }
 }
 
@@ -360,7 +360,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload)
+            response = requests.post(api_url, files=files, data=payload, verify=False)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
