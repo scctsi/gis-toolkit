@@ -131,6 +131,13 @@
                 "valid_start_date": "2015-07-01T00:00:00.000000Z",
                 "valid_end_date": "2018-06-30T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/SVI2018_US.csv"
+            },
+            {
+                "file_path": "cdc/cdc_2020.csv",
+                "census_tract_column_name": "FIPS",
+                "valid_start_date": "2018-07-01T00:00:00.000000Z",
+                "valid_end_date": "2021-06-30T00:00:00.000000Z",
+                "url": "https://svi.cdc.gov/Documents/Data/2020_SVI_Data/CSV/SVI2020_US.csv"
             }
         ]
     },
