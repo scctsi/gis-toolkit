@@ -115,9 +115,15 @@ def geocode_data_frame_from_cache(data_frame):
 
 def filter_data_frame_with_geocoded_cache(data_frame):
     cache_data_frame = get_geocoded_cache()
-    idx_in_cache = data_frame.index[
-        (data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True) &
-        (data_frame[constant.DECADE].isin(cache_data_frame[constant.DECADE].values) == True)]
+
+    idx_in_cache = []
+    for row in data_frame.itertuples():
+        idx_of_address_id = cache_data_frame.index[
+            cache_data_frame["address_id"] == getattr(row, input_config["address_id"])]
+        if getattr(row, constant.DECADE) in cache_data_frame.copy().loc[idx_of_address_id][constant.DECADE].values:
+            idx_in_cache.append(getattr(row, "Index"))
+    idx_in_cache = pd.Index(idx_in_cache)
+
     geocoded_data_frame = data_frame.loc[idx_in_cache]
 
     index = geocoded_data_frame.index
@@ -153,7 +159,7 @@ def check_decade(data_frame):
     return data_frame
 
 
-def geocode_data_frame(input_data_frame, version):
+def geocode_data_frame(input_data_frame, version, batch_limit=10000):
     if version == "latest":
         input_data_frame[constant.DECADE] = str(Decade.Twenty.value)
     elif version == "comprehensive":
@@ -171,12 +177,12 @@ def geocode_data_frame(input_data_frame, version):
         coordinate_data_frame = data_frame.drop(coordinate_missing)
         address_data_frame = data_frame.loc[coordinate_missing]
         coordinate_data_frame = geocode_coordinates_in_data_frame(coordinate_data_frame, version)
-        address_data_frame = geocode_addresses_in_data_frame(address_data_frame, version)
+        address_data_frame = geocode_addresses_in_data_frame(address_data_frame, version, batch_limit)
         data_frame = pd.concat([coordinate_data_frame, address_data_frame], ignore_index=True)
     elif coordinate_fields_present(data_frame):
         data_frame = geocode_coordinates_in_data_frame(data_frame, version)
     elif address_fields_present(data_frame):
-        data_frame = geocode_addresses_in_data_frame(data_frame, version)
+        data_frame = geocode_addresses_in_data_frame(data_frame, version, batch_limit)
 
     data_frame.set_index(index, inplace=True)
     data_frame = pd.concat([geocoded_cache_data_frame, data_frame], ignore_index=False)
@@ -194,7 +200,8 @@ def geocode_coordinates_in_data_frame(data_frame, version):
         data_frames = separate_arranged_data_frame(data_frame)
         for decade in Decade:
             if len(data_frames[decade.name]) > 0:
-                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography of that decade
+                # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography
+                # of that decade
                 coordinates_to_geocoder(data_frames[decade.name], decade_dict[decade])
                 data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
@@ -213,7 +220,7 @@ def parse_batch_coordinates(data_frame):
     return data_frame
 
 
-def geocode_addresses_in_data_frame(data_frame, version):
+def geocode_addresses_in_data_frame(data_frame, version, batch_limit):
     """
     :param data_frame: Data frame of addresses, to be geocoded
     :param data_key: Key of save file, associated with a file's geocoding process
@@ -221,7 +228,7 @@ def geocode_addresses_in_data_frame(data_frame, version):
     :return: Data frame with new "SPATIAL_GEOID" column, to be enhanced
     """
     if version == 'latest':
-        addresses_to_geocoder(data_frame, decade_dict[Decade.Twenty])
+        addresses_to_geocoder(data_frame, decade_dict[Decade.Twenty], batch_limit)
         data_frame = geocode_data_frame_from_cache(data_frame)
     if version == 'comprehensive':
         # Addresses are first re-organized by decade as census tract geography is updated after each census
@@ -230,7 +237,8 @@ def geocode_addresses_in_data_frame(data_frame, version):
             if len(data_frames[decade.name]) > 0:
                 # Addresses from a given decade are geocoded with a "vintage" and "benchmark" specific to the geography
                 # of that decade
-                addresses_to_geocoder(data_frames[decade.name], decade_dict[decade])
+                addresses_to_geocoder(data_frames[decade.name], decade_dict[decade], batch_limit)
+
                 data_frames[decade.name] = geocode_data_frame_from_cache(data_frames[decade.name])
         data_frame = pd.concat(list(data_frames.values()), ignore_index=True)
     data_frame = check_unnamed(data_frame)
@@ -244,7 +252,7 @@ def coordinates_to_geocoder(data_frame, decade):
         raise Exception(e)
 
 
-def addresses_to_geocoder(data_frame, decade):
+def addresses_to_geocoder(data_frame, decade, batch_limit):
     """
     :param data_frame: Data frame of addresses, to be geocoded
     :param data_key: Key of save file, associated with a file's geocoding process
@@ -255,7 +263,7 @@ def addresses_to_geocoder(data_frame, decade):
     for row in data_frame.itertuples():
         addresses.append(Address(getattr(row, input_config["street"]), getattr(row, input_config["city"]), getattr(row, input_config["state"]), getattr(row, input_config["zip"])))
     try:
-        geocode_addresses_to_census_tract(data_frame, addresses, decade)
+        geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit=batch_limit)
     except Exception as e:
         raise Exception(e)
 
@@ -360,7 +368,7 @@ def geocode_addresses_to_census_tract(data_frame, addresses, decade, batch_limit
         address_batch_data_frame.to_csv('./temp/addresses.csv', header=False, index=True)
         files = {'addressFile': ('addresses.csv', open('./temp/addresses.csv', 'rb'), 'text/csv')}
         try:
-            response = requests.post(api_url, files=files, data=payload, verify=False)
+            response = requests.post(api_url, files=files, data=payload)
         except requests.exceptions.RequestException as e:
             raise SystemExit(e)
         # Geocoded address can be returned in a different order, the following lines correct their indexes and sort them
