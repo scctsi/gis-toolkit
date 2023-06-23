@@ -119,6 +119,7 @@ def geocode_data_frame_from_cache(data_frame):
 
 def filter_data_frame_with_geocoded_cache(data_frame):
     cache_data_frame = get_geocoded_cache()
+
     idx_in_cache = data_frame.index[
         (data_frame[input_config["address_id"]].isin(cache_data_frame["address_id"].values) == True) &
         (data_frame[constant.DECADE].isin(cache_data_frame[constant.DECADE].values) == True)]
