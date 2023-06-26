@@ -55,7 +55,8 @@ def food_fraction_with_low_access(urban, la_pop_one, la_pop_ten):
         if math.isnan(float(la_pop_one)):
             return constant.NOT_AVAILABLE
         else:
-            return str(float(la_pop_one) * 100)
+            # return str(float(la_pop_one) * 100)
+            return la_pop_one
     else:
         if math.isnan(float(la_pop_ten)):
             return constant.NOT_AVAILABLE

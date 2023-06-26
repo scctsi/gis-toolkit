@@ -130,7 +130,7 @@ class ACSDataSource:
         #                            "2014": ["S2801_C02_011E", "S2801_C02_019E", "S2201_C04_001E", "S1602_C04_001E"],
         #                            "2015": ["S2801_C02_011E", "S2801_C02_019E"],
         #                            "2016": ["S2801_C02_011E", "S2801_C02_019E"]}
-        with open("source_key.json", "r+") as source_key_file:
+        with open("./source_key.json", "r+") as source_key_file:
             self.source_key = json.load(source_key_file)
 
     def data_sets(self, data_year):

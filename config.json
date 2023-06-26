@@ -202,22 +202,22 @@
             "output_sheet_name": "FOOD_LOW_ACCESS_TRACT"
         },
         "scehsc_annual_pollutant_ozone_ppb": {
-            "enhance": true,
+            "enhance": false,
             "output_column_name": "scehsc_annual_pollutant_ozone_ppb",
             "output_sheet_name": "OZONE"
         },
         "scehsc_annual_pollutant_nitrogen_dioxide_ppb": {
-            "enhance": true,
+            "enhance": false,
             "output_column_name": "scehsc_annual_pollutant_nitrogen_dioxide_ppb",
             "output_sheet_name": "NITROGEN DIOXIDE"
         },
         "scehsc_annual_pollutant_pm25_ug/m^3": {
-            "enhance": true,
+            "enhance": false,
             "output_column_name": "scehsc_annual_pollutant_pm25_ug/m^3",
             "output_sheet_name": "PM_2.5"
         },
         "scehsc_annual_pollutant_pm10_ug/m^3": {
-            "enhance": true,
+            "enhance": false,
             "output_column_name": "scehsc_annual_pollutant_pm10_ug/m^3",
             "output_sheet_name": "PM_10"
         },

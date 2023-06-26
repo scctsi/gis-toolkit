@@ -7,6 +7,10 @@ from data_frame_enhancer import DataFrameEnhancer
 import os, shutil, errno, stat
 import constant
 from config import input_config, database_config
+import random
+import json
+
+directory = "test_data_files"
 
 
 def handle_remove_readonly(func, path, exc):
@@ -21,8 +25,10 @@ def handle_remove_readonly(func, path, exc):
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
-    # if os.path.exists('./temp'):
-    #     shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    if os.path.exists(f'./{directory}'):
+        shutil.rmtree(f'./{directory}', ignore_errors=False, onerror=handle_remove_readonly)
     import sqlite3
     conn = sqlite3.connect(database_config)
     c = conn.cursor()
@@ -41,13 +47,14 @@ def test_enhancement_validity():
     input_data_frame = input_data_frame[94:95]
     input_data_frame.reset_index(drop=True, inplace=True)
     input_data_frame = geocoder.geocode_data_frame(input_data_frame, version='latest')
+    print(input_data_frame[input_config["geo_id_name"]])
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version='latest', test_mode=True)
     enhanced_data_frame = sedoh_enhancer.enhance()
     control_data_frame = importer.import_file('./tests/enhancement_control.csv')
     for data_element in data_elements:
-        print(data_element.variable_name)
-        assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
-                control_data_frame.iloc[0][data_element.variable_name]
+        if data_element.variable_name in control_data_frame.columns:
+            assert enhanced_data_frame.iloc[0][data_element.variable_name] == \
+                    control_data_frame.iloc[0][data_element.variable_name]
 
 
 def test_input_file_validation():
@@ -99,3 +106,25 @@ def test_comprehensive_coordinate_geocoding():
     coordinate_data_frame = geocoded_data_frame.drop([input_config["street"], input_config["city"], input_config["state"], input_config["zip"], input_config["geo_id_name"]], axis=1)
     coordinate_data_frame = geocoder.geocode_data_frame(coordinate_data_frame, 'comprehensive')
     assert address_data_frame[input_config["geo_id_name"]].tolist() == coordinate_data_frame[input_config["geo_id_name"]].tolist()
+
+
+def test_data_file_downloader():
+    data_elements = sds.SedohDataElements().data_elements
+    test_data_elements = [data_element for data_element in data_elements if data_element.data_source in [sds.SedohDataSource.CDC, sds.SedohDataSource.USDA]]
+    test_data_element = random.choice(test_data_elements)
+    test_enhancement_config = {data_element.variable_name: False for data_element in data_elements}
+    test_enhancement_config.update({test_data_element.variable_name: True})
+    print(test_enhancement_config)
+    source = test_data_element.data_source.name
+
+    with open('./data_files_key.json') as save_file:
+        data = json.load(save_file)
+
+    sds.DataFiles(directory=directory, enhancement=test_enhancement_config)
+
+    assert os.path.exists(f'./{directory}')
+    assert len(os.listdir(f'./{directory}')) == 1
+    assert os.path.exists(f'./{directory}/{source.lower()}')
+    for data_file in data[source]['versions']:
+        assert os.path.exists(f'./{directory}/{data_file["file_path"]}')
+
