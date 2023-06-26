@@ -81,21 +81,21 @@
             {
                 "file_path": "calepa_ces/calepa_ces_2.0.csv",
                 "census_tract_column_name": "Census Tract",
-                "valid_start_date": "2014-10-01T00:00:00.000000Z",
-                "valid_end_date": "2018-05-31T00:00:00.000000Z"
+                "valid_start_date": "2009-01-01T00:00:00.000000Z",
+                "valid_end_date": "2011-12-31T00:00:00.000000Z"
             },
             {
                 "file_path": "calepa_ces/calepa_ces_3.0.csv",
                 "census_tract_column_name": "Census Tract",
-                "valid_start_date": "2018-06-01T00:00:00.000000Z",
-                "valid_end_date": "2021-10-12T00:00:00.000000Z",
+                "valid_start_date": "2012-01-01T00:00:00.000000Z",
+                "valid_end_date": "2014-12-31T00:00:00.000000Z",
                 "url":  "https://data.ca.gov/dataset/0bd5f40b-c59b-4183-be22-d057eae8383c/resource/89b3f4e9-0bf8-4690-8c6f-715a717f3fae/download/calenviroscreen-3.0-results-june-2018-update.csv"
             },
             {
                 "file_path": "calepa_ces/calepa_ces_4.0.csv",
                 "census_tract_column_name": "Census Tract",
-                "valid_start_date": "2021-10-13T00:00:00.000000Z",
-                "valid_end_date": "2024-12-31T00:00:00.000000Z",
+                "valid_start_date": "2015-01-01T00:00:00.000000Z",
+                "valid_end_date": "2021-12-31T00:00:00.000000Z",
                 "url":  "https://oehha.ca.gov/media/downloads/calenviroscreen/document/calenviroscreen40resultsdatadictionaryf2021.zip",
                 "file_name": "calenviroscreen40resultsdatadictionary_F_2021.xlsx"
             }
@@ -105,38 +105,31 @@
         "type": "Census",
         "versions": [
             {
-                "file_path": "cdc/cdc_2000.csv",
+                "file_path": "cdc/cdc_2010.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2000-01-01T00:00:00.000000Z",
                 "valid_end_date": "2009-12-31T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2000_SVI_Data/CSV/SVI2000_US.csv"
-            },
-            {
-                "file_path": "cdc/cdc_2010.csv",
-                "census_tract_column_name": "FIPS",
-                "valid_start_date": "2010-01-01T00:00:00.000000Z",
-                "valid_end_date": "2013-12-31T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2010_SVI_Data/CSV/SVI2010_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2014.csv",
                 "census_tract_column_name": "FIPS",
-                "valid_start_date": "2014-01-01T00:00:00.000000Z",
-                "valid_end_date": "2015-12-31T00:00:00.000000Z",
+                "valid_start_date": "2010-01-01T00:00:00.000000Z",
+                "valid_end_date": "2013-06-30T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2014_SVI_Data/CSV/SVI2014_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2016.csv",
                 "census_tract_column_name": "FIPS",
-                "valid_start_date": "2016-01-01T00:00:00.000000Z",
-                "valid_end_date": "2017-12-31T00:00:00.000000Z",
+                "valid_start_date": "2013-07-01T00:00:00.000000Z",
+                "valid_end_date": "2015-06-30T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2016_SVI_Data/CSV/SVI2016_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2018.csv",
                 "census_tract_column_name": "FIPS",
-                "valid_start_date": "2018-01-01T00:00:00.000000Z",
-                "valid_end_date": "2019-12-31T00:00:00.000000Z",
+                "valid_start_date": "2015-07-01T00:00:00.000000Z",
+                "valid_end_date": "2018-06-30T00:00:00.000000Z",
                 "url": "https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/SVI2018_US.csv"
             }
         ]
