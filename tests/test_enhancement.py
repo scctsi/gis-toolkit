@@ -25,8 +25,8 @@ def handle_remove_readonly(func, path, exc):
 @pytest.fixture(autouse=True)
 def run_around_tests():
     yield
-    # if os.path.exists('./temp'):
-    #     shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
+    if os.path.exists('./temp'):
+        shutil.rmtree('./temp', ignore_errors=False, onerror=handle_remove_readonly)
     if os.path.exists(f'./{directory}'):
         shutil.rmtree(f'./{directory}', ignore_errors=False, onerror=handle_remove_readonly)
     import sqlite3
