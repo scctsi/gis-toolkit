@@ -7,9 +7,6 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - GT-115
 
 jobs:
   windows-executable:
@@ -32,10 +29,10 @@ jobs:
         pyinstaller --distpath ./executables ./specs/main_win.spec
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
-        git pull
+        git pull main
         git add ./executables/enhance_win.exe --force
         git commit -m "Updated Windows Executable"
-        git push
+        git push origin HEAD:main
   linux-executable:
     runs-on: ubuntu-20.04
     steps:
@@ -65,10 +62,10 @@ jobs:
           pyinstaller --distpath ./executables ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
-          git pull
+          git pull main
           git add ./executables/enhance_lin --force
           git commit -m "Updated Linux Executable"
-          git push
+          git push origin HEAD:main
   macOS-executable:
     runs-on: macos-11
     steps:
