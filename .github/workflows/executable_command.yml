@@ -70,13 +70,13 @@ jobs:
           git commit -m "Updated Linux Executable"
           git push
   macOS-executable:
-    runs-on: macos-11
+    runs-on: macos-10
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.11
+      - name: Set up Python 3.10.2
         uses: actions/setup-python@v3
         with:
-          python-version: "3.11"
+          python-version: "3.10.2"
       - name: Install Dependencies
         uses: py-actions/py-dependency-install@v4
         with:
@@ -87,7 +87,6 @@ jobs:
       - name: Update Executable
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew search gdal@
           brew install gdal
           gdal-config --version
           pip install GDAL==3.5.3
