@@ -87,7 +87,7 @@ jobs:
       - name: Update Executable
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew search gdal
+          brew search gdal@
           brew install gdal
           gdal-config --version
           pip install GDAL==3.5.3
