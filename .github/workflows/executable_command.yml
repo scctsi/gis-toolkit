@@ -89,7 +89,8 @@ jobs:
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           sudo rm /usr/local/bin/2to3-3.11
           sudo rm /usr/local/bin/2to3
-          sudo brew link --overwrite python@3.11
+          sudo rm /usr/local/bin/idle3
+          brew link --overwrite --dry-run python@3.11
           brew install gdal
           gdal-config --version
           pip install GDAL==3.5.3
