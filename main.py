@@ -1,10 +1,15 @@
-import constant
 import geocoder
 from data_frame_enhancer import DataFrameEnhancer
 import sedoh_data_structure as sds
+from dotenv import load_dotenv
+import os
 import importer
 import exporter
 from optparse import OptionParser
+from config import input_config
+
+
+load_dotenv()
 
 sedoh_data_elements = sds.SedohDataElements()
 
@@ -23,37 +28,45 @@ def data_key_to_file_name(data_key):
     return file_name, extension
 
 
+def env_file_validation(version):
+    if not os.getenv("census_api_key"):
+        print(f"Warning: You have not added a census api key to the .env file. This will limit access the Census"
+              f" Geocoder and ACS data enhancement.")
+
+
 def input_file_validation(data_frame, version, geocode):
     if geocode:
         if (not geocoder.address_fields_present(data_frame)) and (not geocoder.coordinate_fields_present(data_frame)):
             raise Exception(f"Input file is missing at least one address/coordinate column, (street, city, state, zip)"
                             f" or (latitude, longitude) are required.")
-        if constant.GEO_ID_NAME in data_frame.columns:
-            print(f"Warning: You have opted into geocoding, even though your input file already contains a {constant.GEO_ID_NAME} column.")
+        if input_config["address_id"] not in data_frame.columns:
+            raise Exception(f"Input file is missing an 'address_id' column which is required for geocoding.")
+        if input_config["geo_id_name"] in data_frame.columns:
+            print(f"Warning: You have opted into geocoding, even though your input file already contains a {input_config['geo_id_name']} column.")
         if not (geocoder.coordinate_fields_present(data_frame)):
-            city_missing = data_frame.index[data_frame['city'] == ''].tolist()
-            zip_missing = data_frame.index[data_frame['zip'] == ''].tolist()
+            city_missing = data_frame.index[data_frame[input_config["city"]] == ''].tolist()
+            zip_missing = data_frame.index[data_frame[input_config["zip"]] == ''].tolist()
             if len(city_missing) > 0:
                 print(f"Warning: {len(city_missing)} rows are missing a city in their address at these indexes: {city_missing}")
             if len(zip_missing) > 0:
                 print(f"Warning: {len(zip_missing)} rows are missing a zip code in their address at these indexes: {zip_missing}")
         else:
-            lat_missing = data_frame.index[data_frame['latitude'] == ''].tolist()
-            lon_missing = data_frame.index[data_frame['longitude'] == ''].tolist()
+            lat_missing = data_frame.index[data_frame[input_config["latitude"]] == ''].tolist()
+            lon_missing = data_frame.index[data_frame[input_config["longitude"]] == ''].tolist()
             if len(lat_missing) > 0:
                 print(f"Warning: {len(lat_missing)} rows are missing latitude at these indexes: {lat_missing}")
             if len(lon_missing) > 0:
                 print(f"Warning: {len(lon_missing)} rows are missing longitude at these indexes: {lon_missing}")
-    elif constant.GEO_ID_NAME not in data_frame.columns:
-        raise Exception(f"Input file is missing {constant.GEO_ID_NAME} column, and you have not opted into geocoding. "
+    elif input_config["geo_id_name"] not in data_frame.columns:
+        raise Exception(f"Input file is missing {input_config['geo_id_name']} column, and you have not opted into geocoding. "
                         f"Address census tracts are required for enhancement process.")
     elif not geocoder.coordinate_fields_present(data_frame):
-        print(f"Warning: {constant.LATITUDE} and/or {constant.LONGITUDE} columns are missing. Addresses will not be able "
+        print(f"Warning: {input_config['latitude']} and/or {input_config['longitude']} columns are missing. Addresses will not be able "
               f"to be enhanced with pollutant data from raster files. Raster file data is geographic and requires the "
               f"latitude and longitude of address to be read.")
     if version == 'comprehensive':
-        address_start_date_missing = data_frame.index[data_frame['address_start_date'] == ''].tolist()
-        address_end_date_missing = data_frame.index[data_frame['address_end_date'] == ''].tolist()
+        address_start_date_missing = data_frame.index[data_frame[input_config["address_start_date"]] == ''].tolist()
+        address_end_date_missing = data_frame.index[data_frame[input_config["address_end_date"]] == ''].tolist()
         if len(address_start_date_missing) > 0:
             print(f"Warning: {len(address_start_date_missing)} rows are missing an address start date at these indexes: {address_start_date_missing}")
         if len(address_end_date_missing) > 0:
@@ -68,6 +81,7 @@ def main(argument):
     file_name, extension = data_key_to_file_name(data_key)
     print(f"Importing input file located at {input_file_path}")
     input_data_frame = importer.import_file(input_file_path, argument.version)
+    env_file_validation(argument.version)
     input_file_validation(input_data_frame, argument.version, argument.geocode)
 
     data_elements = sds.SedohDataElements().data_elements
@@ -78,7 +92,7 @@ def main(argument):
 
     # Optional Step: Geocode addresses
     if argument.geocode:
-        input_data_frame = geocoder.geocode_data_frame(input_data_frame, data_key, version=argument.version)
+        input_data_frame = geocoder.geocode_data_frame(input_data_frame, version=argument.version)
 
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")

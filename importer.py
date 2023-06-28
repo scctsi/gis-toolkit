@@ -2,7 +2,10 @@ import os
 import pathlib
 import pandas as pd
 import rasterio
-import constant
+from dotenv import load_dotenv
+from config import input_config, datetime_config
+
+load_dotenv()
 
 
 def import_file(full_file_path, version='latest'):
@@ -34,11 +37,16 @@ def import_file(full_file_path, version='latest'):
         raise FileNotFoundError(f"{file_extension} files are not currently supported. "
                                 f"Please convert to CSV or Microsoft Excel")
     if version == 'comprehensive':
+        date_format = datetime_config["date_format"]
         try:
-            input_data_frame[constant.ADDRESS_START_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_START_DATE], infer_datetime_format=True)
-            input_data_frame[constant.ADDRESS_END_DATE] = pd.to_datetime(
-                input_data_frame[constant.ADDRESS_END_DATE], infer_datetime_format=True)
+            input_data_frame[input_config["address_start_date"]] = pd.to_datetime(
+                input_data_frame[input_config["address_start_date"]], format=date_format, infer_datetime_format=False)
+            input_data_frame[input_config["address_end_date"]] = pd.to_datetime(
+                input_data_frame[input_config["address_end_date"]], format=date_format, infer_datetime_format=False)
         except KeyError:
             raise Exception(f"{full_file_path} is missing 'address_start_date' and/or 'address_end_date' columns.")
+        except ValueError:
+            raise Exception(f"{full_file_path} date columns have a different date format than the format specified in the config file "
+                            f"or the format specified in the config file is unrecognized."
+                            f" Please check config.json and documentation.")
     return input_data_frame

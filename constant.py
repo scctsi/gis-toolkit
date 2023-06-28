@@ -7,4 +7,11 @@ ADDRESS_START_DATE = "address_start_date"  # Column name of address start date i
 ADDRESS_END_DATE = "address_end_date"  # Column name of address end date in input file
 LATITUDE = "latitude"  # Column name of address latitude in input file or from geocoder
 LONGITUDE = "longitude"  # Column name of address longitude in input file or from geocoder
-
+DAY_FIRST = "%d/%m/%Y"  # Date format when reading date columns in input files
+MONTH_FIRST = "%m/%d/%Y"  # Date format when reading date columns in input files
+YEAR_FIRST = "%Y/%m/%d"  # Date format when reading date columns in input files
+STREET = "street"
+CITY = "city"
+STATE = "state"
+ZIP = "zip"
+DECADE = "decade"
