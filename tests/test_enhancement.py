@@ -38,6 +38,7 @@ def run_around_tests():
     conn.commit()
 
 
+@pytest.mark.vcr
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
     data_files = sds.DataFiles().data_files

@@ -1,0 +1,57 @@
+interactions:
+- request:
+    body: "--a4059c268f8f7e909a36ebd51b090d27\r\nContent-Disposition: form-data; name=\"benchmark\"\r\n\r\nPublic_AR_Current\r\n--a4059c268f8f7e909a36ebd51b090d27\r\nContent-Disposition:
+      form-data; name=\"vintage\"\r\n\r\nCensus2020_Current\r\n--a4059c268f8f7e909a36ebd51b090d27\r\nContent-Disposition:
+      form-data; name=\"addressFile\"; filename=\"addresses.csv\"\r\nContent-Type:
+      text/csv\r\n\r\n0,21950 Arnold Center Road,Carson,CA,90810\r\n\r\n--a4059c268f8f7e909a36ebd51b090d27--\r\n"
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '437'
+      Content-Type:
+      - multipart/form-data; boundary=a4059c268f8f7e909a36ebd51b090d27
+      User-Agent:
+      - python-requests/2.27.1
+    method: POST
+    uri: https://geocoding.geo.census.gov/geocoder/geographies/addressbatch
+  response:
+    body:
+      string: '"0","21950 Arnold Center Road, Carson, CA, 90810","Match","Exact","21950
+        ARNOLD CENTER RD, CARSON, CA, 90810","-118.23057355699996,33.82981788200004","142767185","R","06","037","543306","3002"
+
+        '
+    headers:
+      Cache-Control:
+      - private, no-store
+      Connection:
+      - keep-alive
+      Content-Disposition:
+      - attachment; filename=GeocodeResults.csv
+      Content-Length:
+      - '193'
+      Content-Type:
+      - text/plain
+      Date:
+      - Wed, 28 Jun 2023 18:11:43 GMT
+      Set-Cookie:
+      - TS0193e6a1=01283c52a40c547dbb1b2bf6f37ef7aebf45177bc0cbf7ab304d2b0b338a0722e767949dc32db78d84165478e7bfac34bc5e1d3768;
+        Path=/; Domain=.geocoding.geo.census.gov
+      Strict-Transport-Security:
+      - max-age=31536000
+      Vary:
+      - Origin
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - Deny
+      X-XSS-Protection:
+      - 1;mode=block
+    status:
+      code: 200
+      message: ''
+version: 1

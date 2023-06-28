@@ -6,6 +6,8 @@ name: Executable Command
 on:
   pull_request:
     branches:
+      #  Needs fix
+      - None
 
 
 jobs:
