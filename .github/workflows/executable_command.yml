@@ -26,15 +26,15 @@ jobs:
         pip install GDAL-3.4.2-cp310-cp310-win_amd64.whl
         pip install rasterio-1.2.10-cp310-cp310-win_amd64.whl
         pip install pyinstaller
-        pyinstaller --distpath . ./specs/main_win.spec
+        pyinstaller --distpath ./executables ./specs/main_win.spec
         git config --global user.name 'Hakob Abajian'
         git config --global user.email 'hakob.abajian@med.usc.edu'
-        git pull
-        git add enhance_win.exe --force
-        git commit -m "Updated Executable"
-        git push
+        git pull main
+        git add ./executables/enhance_win.exe --force
+        git commit -m "Updated Windows Executable"
+        git push origin HEAD:main
   linux-executable:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
@@ -59,18 +59,18 @@ jobs:
           export C_INCLUDE_PATH=/usr/include/gdal
           pip install GDAL==3.3.2
           pip install pyinstaller
-          pyinstaller --distpath . ./specs/main_lin.spec
+          pyinstaller --distpath ./executables ./specs/main_lin.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
-          git pull
-          git add enhance_lin --force
-          git commit -m "Updated Executable"
-          git push
+          git pull main
+          git add ./executables/enhance_lin --force
+          git commit -m "Updated Linux Executable"
+          git push origin HEAD:main
   macOS-executable:
-    runs-on: macos-latest
+    runs-on: macos-11
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.10
+      - name: Set up Python 3.10.2
         uses: actions/setup-python@v3
         with:
           python-version: "3.10.2"
@@ -81,17 +81,23 @@ jobs:
       - name: Find Rasterio Directory
         run: |
           sudo find . -type d -name "rasterio"
-          ls /Users/runner/hostedtoolcache/Python/3.10.2/x64/lib/python3.10/site-packages/rasterio
       - name: Update Executable
         run: |
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          ls /usr/local/bin
+          sudo rm /usr/local/bin/2to3-3.11
+          sudo rm /usr/local/bin/2to3
+          sudo rm /usr/local/bin/idle3
+          sudo rm /usr/local/bin/idle3.11
+          brew link --overwrite --dry-run python@3.11
           brew install gdal
+          gdal-config --version
           pip install GDAL==3.5.3
           pip install pyinstaller
-          pyinstaller --distpath . ./specs/main_mac.spec
+          pyinstaller --distpath ./executables ./specs/main_mac.spec
           git config --global user.name 'Hakob Abajian'
           git config --global user.email 'hakob.abajian@med.usc.edu'
           git pull
-          git add enhance_mac --force
-          git commit -m "Updated Executable"
+          git add ./executables/enhance_mac --force
+          git commit -m "Updated MacOS Executable"
           git push
