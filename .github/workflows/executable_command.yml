@@ -6,10 +6,7 @@ name: Executable Command
 on:
   pull_request:
     branches:
-      - main
-  push:
-    branches:
-      - GT-115
+
 
 jobs:
   windows-executable:
