@@ -27,6 +27,6 @@ Please visit the home page of the Wiki here: [Wiki home](https://github.com/scct
 The GIS Toolkit was developed at the Southern California Clinical and Translational Institute [(SC CTSI)](https://www.sc-ctsi.org) in collaboration with the [USC mHealth Collaboratory](https://mhealth.usc.edu/)
 
 ## Appendices
-1. [Data sources]()
-2. [Data elements]()
+1. [Data sources](https://sc-ctsi-cri.atlassian.net/wiki/external/YmRiMThkZGExNzQyNGIxZDk0NTk4NTc3NDg2NGJkOTk)
+2. [Data elements](https://sc-ctsi-cri.atlassian.net/wiki/external/NWI2MDA1ZWFiZGYyNDY0YzhmOGY5NjQ5NjBkMjYyMjY)
 
