@@ -51,7 +51,9 @@ def write_xlsxwriter_output(excel_path, data_frames):
 
 def normalize_data_frame(data_frame):
     data_frame = data_frame.loc[:, ~data_frame.columns.duplicated()]
+    data_frame.rename(columns={"SPATIAL_GEOID": input_config["geo_id_name"]}, inplace=True)
     data_frame.index = data_frame[input_config["geo_id_name"]]
+    data_frame[input_config["geo_id_name"]] = data_frame[input_config["geo_id_name"]].astype(str)
     return data_frame
 
 
