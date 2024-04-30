@@ -40,7 +40,10 @@ def complementary_percent(percent):
 
 
 def percent_below_fed_poverty_level(numerator, denominator):
-    return str(round(100 * float(numerator) / float(denominator), 2))
+    if float(denominator) != 0:
+        return str(round(100 * float(numerator) / float(denominator), 4))
+    else:
+        return constant.NOT_AVAILABLE
 
 
 def population_density(population, area_land):
