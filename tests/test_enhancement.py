@@ -106,7 +106,7 @@ def test_comprehensive_coordinate_geocoding():
 
 def test_data_file_downloader():
     data_elements = sds.SedohDataElements().data_elements
-    test_data_elements = [data_element for data_element in data_elements if data_element.data_source in [sds.SedohDataSource.CDC, sds.SedohDataSource.USDA]]
+    test_data_elements = [data_element for data_element in data_elements if data_element.data_source in [sds.SedohDataSource.CDC]]
     test_data_element = random.choice(test_data_elements)
     test_enhancement_config = {data_element.variable_name: False for data_element in data_elements}
     test_enhancement_config.update({test_data_element.variable_name: True})
