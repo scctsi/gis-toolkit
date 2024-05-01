@@ -42,10 +42,9 @@ def run_around_tests():
 def test_enhancement_validity():
     data_elements = sds.SedohDataElements().data_elements
     data_files = sds.DataFiles().data_files
-    file_path = './validation/all_us_addresses.csv'
+    file_path = './tests/enhancement_validity_address.csv'
     data_key = main.get_data_key(file_path)
     input_data_frame = importer.import_file(file_path)
-    input_data_frame = input_data_frame[94:95]
     input_data_frame.reset_index(drop=True, inplace=True)
     input_data_frame = geocoder.geocode_data_frame(input_data_frame, version='latest')
     print(input_data_frame[input_config["geo_id_name"]])
@@ -72,19 +71,15 @@ def test_input_file_validation():
 
 
 def test_geocodable_address():
-    file_path = './validation/all_us_addresses.csv'
+    file_path = './tests/geocoding_addresses.csv'
     input_data_frame = importer.import_file(file_path)
-    input_data_frame = input_data_frame.iloc[50:52]
-    input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_data_frame(input_data_frame, version='latest')
     assert input_data_frame.iloc[0][input_config["geo_id_name"]] == "04013618000"
 
 
 def test_non_geocodable_address():
-    file_path = './validation/all_us_addresses.csv'
+    file_path = './tests/geocoding_addresses.csv'
     input_data_frame = importer.import_file(file_path)
-    input_data_frame = input_data_frame.iloc[50:52]
-    input_data_frame.index = [0, 1]
     input_data_frame = geocoder.geocode_data_frame(input_data_frame, version='latest')
     assert input_data_frame.iloc[1][input_config["geo_id_name"]] == constant.ADDRESS_NOT_GEOCODABLE
 
