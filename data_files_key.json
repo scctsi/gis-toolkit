@@ -109,35 +109,35 @@
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2000-01-01T00:00:00.000000Z",
                 "valid_end_date": "2009-12-31T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2010_SVI_Data/CSV/SVI2010_US.csv"
+                "url": "https://svi.cdc.gov/Documents/Data/2010/csv/states/SVI_2010_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2014.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2010-01-01T00:00:00.000000Z",
                 "valid_end_date": "2013-06-30T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2014_SVI_Data/CSV/SVI2014_US.csv"
+                "url": "https://svi.cdc.gov/Documents/Data/2014/csv/states/SVI_2014_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2016.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2013-07-01T00:00:00.000000Z",
                 "valid_end_date": "2015-06-30T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2016_SVI_Data/CSV/SVI2016_US.csv"
+                "url": "https://svi.cdc.gov/Documents/Data/2016/csv/states/SVI_2016_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2018.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2015-07-01T00:00:00.000000Z",
                 "valid_end_date": "2018-06-30T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/SVI2018_US.csv"
+                "url": "https://svi.cdc.gov/Documents/Data/2018/csv/states/SVI_2018_US.csv"
             },
             {
                 "file_path": "cdc/cdc_2020.csv",
                 "census_tract_column_name": "FIPS",
                 "valid_start_date": "2018-07-01T00:00:00.000000Z",
                 "valid_end_date": "2021-06-30T00:00:00.000000Z",
-                "url": "https://svi.cdc.gov/Documents/Data/2020_SVI_Data/CSV/SVI2020_US.csv"
+                "url": "https://svi.cdc.gov/Documents/Data/2020/csv/states/SVI_2020_US.csv"
             }
         ]
     },
