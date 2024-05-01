@@ -42,7 +42,7 @@ def complementary_percent(percent):
 
 def percent_below_fed_poverty_level(numerator, denominator):
     if float(denominator) != 0:
-        return str(round(100 * float(numerator) / float(denominator), 4))
+        return str(round(100 * float(numerator) / float(denominator), 2))
     else:
         return constant.NOT_AVAILABLE
 
