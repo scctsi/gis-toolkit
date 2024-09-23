@@ -32,6 +32,7 @@ def get_enhancer_data_frame(data_source):
     enhancer_data_frame = data_source.data_frame.copy()
     enhancer_data_frame.rename(columns={data_source.tract_column: input_config["geo_id_name"]}, inplace=True)
     enhancer_data_frame.index = enhancer_data_frame[input_config["geo_id_name"]]
+    enhancer_data_frame[input_config["geo_id_name"]] = enhancer_data_frame[input_config["geo_id_name"]].astype(str)
     return enhancer_data_frame
 
 
@@ -117,7 +118,8 @@ def enhance_data_element(data_frame, enhancer_data_frame, data_element, data_fil
     missing_data_frame = data_frame.loc[idx_missing]
     missing_data_frame[data_element.variable_name] = constant.NOT_AVAILABLE
     data_frame.drop(idx_missing, inplace=True)
-
+    #  Add boolean to skip this enhancement code if after 'missing' check returns empty dataframe
+    #  Reset index after cropping missing indexes
     data_frame_columns = data_frame.columns
     data_frame = data_frame.join(enhancer_data_frame, on=input_config["geo_id_name"], rsuffix='_other')
 
