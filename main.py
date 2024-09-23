@@ -97,7 +97,7 @@ def main(argument):
     # Step 2: Enhance the data with the requested data elements
     print("Starting enhancement with SEDoH data")
     sedoh_enhancer = DataFrameEnhancer(input_data_frame, data_elements, data_files, data_key, version=argument.version, test_mode=True)
-    if argument.version == 2:
+    if argument.version == "comprehensive":
         sedoh_enhancer.enhance()
     else:
         enhanced_data_frame = sedoh_enhancer.enhance()
