@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       #  Needs fix
-      - None
+      - GT-120
 
 
 jobs:
