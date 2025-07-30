@@ -43,10 +43,11 @@ def get_geography():
 
 
 def write_xlsxwriter_output(excel_path, data_frames):
-    writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
-    for data_element in data_frames:
-        data_frames[data_element].to_excel(writer, sheet_name=output_sheets_config[data_element.variable_name])
-    writer.save()
+    # writer = pd.ExcelWriter(excel_path, engine='xlsxwriter')
+    with pd.ExcelWriter(excel_path, engine='xlsxwriter') as writer:
+        for data_element in data_frames:
+            data_frames[data_element].to_excel(writer, sheet_name=output_sheets_config[data_element.variable_name])
+    # writer.save()
 
 
 def normalize_data_frame(data_frame):
